@@ -18,4 +18,11 @@ app.use(express.urlencoded({ extended: false }));
 // Use routers
 app.use('/users', usersRouter);
 
+// Error handler
+app.use((err, req, res, next) => {
+	res.status(err.status || 500).send({
+		err: { ...err, message: err.message },
+	});
+});
+
 module.exports = app;
