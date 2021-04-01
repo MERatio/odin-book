@@ -1,7 +1,7 @@
-var express = require('express');
-var logger = require('morgan');
+const express = require('express');
+const logger = require('morgan');
 
-var app = express();
+const app = express();
 
 app.use(logger('dev'));
 app.use(express.json());
