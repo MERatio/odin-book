@@ -12,24 +12,24 @@ passport.use(
 		{
 			usernameField: 'email',
 		},
-		(email, password, done) => {
-			User.findOne({ email }, (err, currentUser) => {
-				if (err) {
-					done(err);
-				} else if (!currentUser) {
+		async (email, password, done) => {
+			try {
+				const currentUser = await User.findOne({ email }).exec();
+				if (!currentUser) {
 					done(null, false, { message: 'Incorrect email or password.' });
 				} else {
-					bcrypt.compare(password, currentUser.password, (err, res) => {
-						if (res) {
-							// Passwords match! log currentUser in
-							done(null, currentUser);
-						} else {
-							// Passwords do not match!
-							done(null, false, { message: 'Incorrect email or password.' });
-						}
-					});
+					const res = await bcrypt.compare(password, currentUser.password);
+					if (res) {
+						// Passwords match! log currentUser in
+						done(null, currentUser);
+					} else {
+						// Passwords do not match!
+						done(null, false, { message: 'Incorrect email or password.' });
+					}
 				}
-			});
+			} catch (err) {
+				done(err);
+			}
 		}
 	)
 );
@@ -41,10 +41,15 @@ passport.use(
 			jwtFromRequest: ExtractJWT.fromAuthHeaderAsBearerToken(),
 			secretOrKey: process.env.JWT_SECRET,
 		},
-		(jwtPayload, done) => {
-			User.findById(jwtPayload.currentUserId, (err, currentUser) => {
-				err ? done(err) : done(null, currentUser);
-			});
+		async (jwtPayload, done) => {
+			try {
+				const currentUser = await User.findById(
+					jwtPayload.currentUserId
+				).exec();
+				done(null, currentUser);
+			} catch (err) {
+				done(err);
+			}
 		}
 	)
 );

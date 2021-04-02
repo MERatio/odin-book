@@ -44,7 +44,7 @@ exports.create = [
 		}
 	}),
 	// Process request after validation and sanitization.
-	(req, res, next) => {
+	async (req, res, next) => {
 		// Extract the validation errors from a request.
 		const errors = validationResult(req);
 		if (!errors.isEmpty()) {
@@ -56,26 +56,20 @@ exports.create = [
 		} else {
 			// Data form is valid.
 			// Create the new user with hashed password
-			bcrypt.hash(req.body.password, 10, (err, hashedPassword) => {
-				if (err) {
-					next(err);
-				} else {
-					const user = new User({
-						firstName: req.body.firstName,
-						lastName: req.body.lastName,
-						email: req.body.email,
-						password: hashedPassword,
-					});
-					user.save((err) => {
-						if (err) {
-							next(err);
-						} else {
-							// Successful
-							res.json({ user });
-						}
-					});
-				}
-			});
+			try {
+				const hashedPassword = await bcrypt.hash(req.body.password, 10);
+				const user = new User({
+					firstName: req.body.firstName,
+					lastName: req.body.lastName,
+					email: req.body.email,
+					password: hashedPassword,
+				});
+				const savedUser = await user.save();
+				// Successful
+				res.json({ user: savedUser });
+			} catch (err) {
+				next(err);
+			}
 		}
 	},
 ];
