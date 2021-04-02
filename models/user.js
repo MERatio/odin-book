@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const omit = require('just-omit');
 
 const Schema = mongoose.Schema;
 
@@ -13,5 +14,11 @@ const UserSchema = new Schema(
 		timestamps: true,
 	}
 );
+
+UserSchema.set('toJSON', {
+	transform(doc, ret) {
+		return omit(ret, ['password']);
+	},
+});
 
 module.exports = mongoose.model('User', UserSchema);
