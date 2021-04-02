@@ -47,7 +47,7 @@ async function userCreate(firstName, lastName, email, password, cb) {
 async function emptyCollections(models, cb) {
   try {
     console.log('Emptying collections...');
-    for (model of models) {
+    for (const model of models) {
       await model.deleteMany({});
     }
     console.log('Collections emptied');
@@ -98,7 +98,7 @@ function createUsers(cb) {
 async.series(
   [(cb) => emptyCollections([User], cb), createUsers],
   // Optional callback
-  (err, results) => {
+  (err) => {
     if (err) {
       console.log('FINAL ERR: ' + err);
     } else {

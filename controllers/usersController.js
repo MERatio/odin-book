@@ -25,7 +25,7 @@ exports.create = [
 		.isEmail()
 		.withMessage('Email is invalid.')
 		.normalizeEmail()
-		.custom(async (value, { req }) => {
+		.custom(async (value) => {
 			const user = await User.findOne({ email: value });
 			if (user) {
 				throw new Error('Email is already taken. Pick another');
