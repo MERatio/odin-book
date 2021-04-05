@@ -12,7 +12,7 @@ const authRouter = require('./routes/auth');
 const usersRouter = require('./routes/users');
 
 // Set up default mongoose connection
-require('./configs/dbConfig');
+require('./configs/mongoConfig');
 
 app.use(logger('dev'));
 app.use(express.json());
