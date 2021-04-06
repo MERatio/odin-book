@@ -11,8 +11,11 @@ const app = express();
 const authRouter = require('./routes/auth');
 const usersRouter = require('./routes/users');
 
-// Set up default mongoose connection
-require('./configs/mongoConfig');
+// Exlcude connecting to the real database
+if (process.env.NODE_ENV !== 'test') {
+	// Set up default mongoose connection
+	require('./configs/mongoConfig');
+}
 
 app.use(logger('dev'));
 app.use(express.json());
