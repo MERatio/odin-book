@@ -49,7 +49,7 @@ exports.create = [
 		const errors = validationResult(req);
 		if (!errors.isEmpty()) {
 			// There are errors.
-			res.json({
+			res.status(422).json({
 				user: req.body,
 				errors: errors.array(),
 			});
