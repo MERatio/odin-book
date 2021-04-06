@@ -66,7 +66,7 @@ exports.create = [
 				});
 				const savedUser = await user.save();
 				// Successful
-				res.json({ user: savedUser });
+				res.status(201).json({ user: savedUser });
 			} catch (err) {
 				next(err);
 			}
