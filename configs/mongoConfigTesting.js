@@ -41,7 +41,7 @@ exports.close = async () => {
 exports.clear = async () => {
   const collections = mongoose.connection.collections;
   for (const prop in collections) {
-    if (collections.hasOwnProperty(prop)) {
+    if (Object.prototype.hasOwnProperty.call(collections, prop)) {
       await collections[prop].deleteMany({});
     }
   }

@@ -2,25 +2,25 @@
 	 That's why i create these non DRY functions.
 */
 exports.bodyHasUserProperty = (res) => {
-	if (!res.body.hasOwnProperty('user')) {
+	if (!Object.prototype.hasOwnProperty.call(res.body, 'user')) {
 		throw new Error('missing user property');
 	}
 };
 
 exports.bodyHasErrorsProperty = (res) => {
-	if (!res.body.hasOwnProperty('errors')) {
+	if (!Object.prototype.hasOwnProperty.call(res.body, 'errors')) {
 		throw new Error('missing errors property');
 	}
 };
 
 exports.bodyHasNoErrorsProperty = (res) => {
-	if (res.body.hasOwnProperty('errors')) {
+	if (Object.prototype.hasOwnProperty.call(res.body, 'errors')) {
 		throw new Error('errors property should not exists');
 	}
 };
 
 exports.bodyHasErrProperty = (res) => {
-	if (!res.body.hasOwnProperty('err')) {
+	if (!Object.prototype.hasOwnProperty.call(res.body, 'err')) {
 		throw new Error('missing err property');
 	}
 };
