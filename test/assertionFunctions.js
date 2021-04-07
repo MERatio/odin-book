@@ -15,7 +15,7 @@ exports.bodyHasErrorsProperty = (res) => {
 
 exports.bodyHasNoErrorsProperty = (res) => {
 	if (res.body.hasOwnProperty('errors')) {
-		throw new Error('missing errors property');
+		throw new Error('errors property should not exists');
 	}
 };
 
