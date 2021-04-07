@@ -13,7 +13,7 @@ exports.local = [
 					next(err);
 				} else if (!currentUser) {
 					const err = new Error(info.message);
-					err.status = 404;
+					err.status = 401;
 					next(err);
 				} else {
 					req.logIn(currentUser, { session: false }, (err) => {
