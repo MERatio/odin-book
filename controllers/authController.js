@@ -21,7 +21,7 @@ exports.local = [
 							next(err);
 						} else {
 							/* 
-								Username and password matched.
+								Email and password matched.
 								Generate a signed json web token 
 								with object containing the currentUser._id as its payload.
 							*/
