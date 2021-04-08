@@ -67,7 +67,7 @@ describe('local', () => {
 			.expect('Content-Type', /json/)
 			.expect(bodyHasJwtProperty)
 			.expect(bodyHasCurrentUserProperty)
-			.expect((req) => (jwt = req.body.jwtt))
+			.expect((req) => (jwt = req.body.jwt))
 			.expect(200);
 
 		request(app)
@@ -80,6 +80,6 @@ describe('local', () => {
 			.set('Authorization', `Bearer ${jwt}`)
 			.expect('Content-Type', /json/)
 			.expect(bodyHasErrProperty)
-			.expect(401, done);
+			.expect(403, done);
 	});
 });
