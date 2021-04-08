@@ -4,7 +4,6 @@ const mongoConfigTesting = require('../../configs/mongoConfigTesting');
 const {
 	bodyHasUserProperty,
 	bodyHasErrorsProperty,
-	bodyHasNoErrorsProperty,
 } = require('../assertionFunctions');
 
 beforeAll(async () => await mongoConfigTesting.connect());
@@ -25,7 +24,6 @@ describe('create', () => {
 			.set('Accept', 'application/json')
 			.expect('Content-Type', /json/)
 			.expect(bodyHasUserProperty)
-			.expect(bodyHasNoErrorsProperty)
 			.expect(201, done);
 	});
 
@@ -168,7 +166,6 @@ describe('create', () => {
 					.set('Accept', 'application/json')
 					.expect('Content-Type', /json/)
 					.expect(bodyHasUserProperty)
-					.expect(bodyHasNoErrorsProperty)
 					.expect(201);
 
 				request(app)

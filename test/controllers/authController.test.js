@@ -4,11 +4,8 @@ const mongoConfigTesting = require('../../configs/mongoConfigTesting');
 const {
 	bodyHasUserProperty,
 	bodyHasErrProperty,
-	bodyHasNoErrorsProperty,
 	bodyHasJwtProperty,
-	bodyHasNoJwtProperty,
 	bodyHasCurrentUserProperty,
-	bodyHasNoCurrentUserProperty,
 } = require('../assertionFunctions');
 
 beforeAll(async () => {
@@ -25,7 +22,6 @@ beforeAll(async () => {
 		.set('Accept', 'application/json')
 		.expect('Content-Type', /json/)
 		.expect(bodyHasUserProperty)
-		.expect(bodyHasNoErrorsProperty)
 		.expect(201);
 });
 afterAll(async () => await mongoConfigTesting.close());
@@ -55,8 +51,6 @@ describe('local', () => {
 			.set('Accept', 'application/json')
 			.expect('Content-Type', /json/)
 			.expect(bodyHasErrProperty)
-			.expect(bodyHasNoJwtProperty)
-			.expect(bodyHasNoCurrentUserProperty)
 			.expect(401, done);
 	});
 
@@ -86,8 +80,6 @@ describe('local', () => {
 			.set('Authorization', `Bearer ${jwt}`)
 			.expect('Content-Type', /json/)
 			.expect(bodyHasErrProperty)
-			.expect(bodyHasNoJwtProperty)
-			.expect(bodyHasNoCurrentUserProperty)
 			.expect(401, done);
 	});
 });
