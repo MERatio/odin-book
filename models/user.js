@@ -9,11 +9,36 @@ const UserSchema = new Schema(
 		lastName: { type: String, required: true, maxlength: 255 },
 		email: { type: String, required: true, index: true, unique: true },
 		password: { type: String, required: true },
+		friendships: [{ type: Schema.Types.ObjectId, ref: 'Friendship' }],
 	},
 	{
 		timestamps: true,
 	}
 );
+
+// UserSchema.methods methods still works even if cb parameter is supplied or not.
+UserSchema.methods.sendFriendRequest = function (requesteeId, cb) {
+	return mongoose.model('Friendship').create(
+		{
+			requestor: this._id,
+			requestee: requesteeId,
+			status: 'pending',
+		},
+		cb
+	);
+};
+
+UserSchema.methods.findRelationshipWith = function (otherUserId, cb) {
+	return mongoose.model('Friendship').findOne(
+		{
+			$or: [
+				{ requestor: this._id, requestee: otherUserId },
+				{ requestor: otherUserId, requestee: this._id },
+			],
+		},
+		cb
+	);
+};
 
 UserSchema.set('toJSON', {
 	transform(doc, ret) {

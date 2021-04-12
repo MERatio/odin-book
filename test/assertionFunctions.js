@@ -30,3 +30,9 @@ exports.bodyHasCurrentUserProperty = (res) => {
 		throw new Error('missing currentUser property');
 	}
 };
+
+exports.bodyHasFriendshipProperty = (res) => {
+	if (!Object.prototype.hasOwnProperty.call(res.body, 'friendship')) {
+		throw new Error('missing friendship property');
+	}
+};

@@ -10,6 +10,7 @@ const app = express();
 // Routers
 const authRouter = require('./routes/auth');
 const usersRouter = require('./routes/users');
+const friendshipsRouter = require('./routes/friendships');
 
 // Exlcude connecting to the real database
 if (process.env.NODE_ENV !== 'test') {
@@ -26,6 +27,7 @@ app.use(setCurrentUser);
 // Use routers
 app.use('/auth', authRouter);
 app.use('/users', usersRouter);
+app.use('/friendships', friendshipsRouter);
 
 // Error handler
 app.use((err, req, res, next) => {
