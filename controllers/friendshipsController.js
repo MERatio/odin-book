@@ -1,7 +1,8 @@
 const { body, validationResult } = require('express-validator');
-const { authenticated } = require('../lib/middlewares');
-// Friendship model is needed to be registered to use in UserSchema.methods
-// eslint-disable-next-line no-unused-vars
+const {
+	authenticated,
+	validMongoObjectIdRouteParams,
+} = require('../lib/middlewares');
 const Friendship = require('../models/friendship');
 
 exports.create = [
@@ -55,6 +56,34 @@ exports.create = [
 			} catch (err) {
 				next(err);
 			}
+		}
+	},
+];
+
+exports.update = [
+	authenticated,
+	validMongoObjectIdRouteParams,
+	async (req, res, next) => {
+		try {
+			const friendship = await Friendship.findById(req.params.friendshipId);
+			if (friendship === null) {
+				const error = new Error('Friend request does not exists.');
+				error.status = 404;
+				throw error;
+			} else if (!friendship.requestee.equals(req.currentUser._id)) {
+				// Check if requestee is not the currentUser
+				const error = new Error('Not a valid friend request.');
+				error.status = 403;
+				throw error;
+			} else {
+				// Successful
+				// Accept friend request.
+				friendship.status = 'friends';
+				const updatedFriendship = await friendship.save();
+				res.status(201).json({ friendship: updatedFriendship });
+			}
+		} catch (err) {
+			next(err);
 		}
 	},
 ];
