@@ -270,3 +270,62 @@ describe('update', () => {
 		});
 	});
 });
+
+describe('delete', () => {
+	it('should remove the friendship', (done) => {
+		request(app)
+			.del(`/friendships/${user1AndUser3FriendshipId}`)
+			.set('Accept', 'application/json')
+			.set('Authorization', `Bearer ${user3Jwt}`)
+			.expect('Content-Type', /json/)
+			.expect(bodyHasFriendshipProperty)
+			.expect((res) => res.body.friendship.status === 'pending')
+			.expect(200, done);
+	});
+
+	describe('body has err property', () => {
+		test('if JWT is not valid or not supplied', (done) => {
+			request(app)
+				.del(`/friendships/${user1AndUser3FriendshipId}`)
+				.set('Accept', 'application/json')
+				.expect('Content-Type', /json/)
+				.expect(bodyHasErrProperty)
+				.expect(401, done);
+		});
+
+		test('if friendshipId route parameter is not valid', (done) => {
+			request(app)
+				.del(`/friendships/${user1AndUser3FriendshipId}` + '123')
+				.set('Accept', 'application/json')
+				.set('Authorization', `Bearer ${user3Jwt}`)
+				.expect('Content-Type', /json/)
+				.expect(bodyHasErrProperty)
+				.expect(404, done);
+		});
+
+		test('if friendship does not exists', (done) => {
+			request(app)
+				.del(
+					`/friendships/${user1AndUser3FriendshipId.substring(
+						0,
+						user1AndUser3FriendshipId.length - 3
+					)}` + '123'
+				)
+				.set('Accept', 'application/json')
+				.set('Authorization', `Bearer ${user3Jwt}`)
+				.expect('Content-Type', /json/)
+				.expect(bodyHasErrProperty)
+				.expect(404, done);
+		});
+
+		test('if requestee is not the currentUser', (done) => {
+			request(app)
+				.del(`/friendships/${user1AndUser3FriendshipId}`)
+				.set('Accept', 'application/json')
+				.set('Authorization', `Bearer ${user2Jwt}`)
+				.expect('Content-Type', /json/)
+				.expect(bodyHasErrProperty)
+				.expect(403, done);
+		});
+	});
+});

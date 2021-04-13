@@ -100,3 +100,30 @@ exports.update = [
 		}
 	},
 ];
+
+exports.destroy = [
+	authenticated,
+	validMongoObjectIdRouteParams,
+	async (req, res, next) => {
+		try {
+			const friendship = await Friendship.findById(req.params.friendshipId);
+			if (friendship === null) {
+				const error = new Error('Friend request does not exists.');
+				error.status = 404;
+				throw error;
+			} else if (!friendship.requestee.equals(req.currentUser._id)) {
+				// Check if requestee is not the currentUser
+				const error = new Error('Not a valid friend request.');
+				error.status = 403;
+				throw error;
+			} else {
+				// Successful
+				// Remove friendship.
+				const removedFriendship = await friendship.remove();
+				res.status(200).json({ friendship: removedFriendship });
+			}
+		} catch (err) {
+			next(err);
+		}
+	},
+];

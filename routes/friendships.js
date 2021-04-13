@@ -7,4 +7,6 @@ router.post('/', friendshipsController.create);
 
 router.put('/:friendshipId', friendshipsController.update);
 
+router.delete('/:friendshipId', friendshipsController.destroy);
+
 module.exports = router;
