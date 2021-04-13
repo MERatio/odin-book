@@ -84,6 +84,10 @@ exports.update = [
 				const error = new Error('Not a valid friend request.');
 				error.status = 403;
 				throw error;
+			} else if (friendship.status !== 'pending') {
+				const error = new Error('Friend request is already accepted.');
+				error.status = 400;
+				throw error;
 			} else {
 				// Successful
 				// Accept friend request.

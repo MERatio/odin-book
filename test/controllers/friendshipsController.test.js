@@ -249,5 +249,24 @@ describe('update', () => {
 				.expect(bodyHasErrProperty)
 				.expect(403, done);
 		});
+
+		test('if friend request is already accepted', async (done) => {
+			await request(app)
+				.put(`/friendships/${user1AndUser3FriendshipId}`)
+				.set('Accept', 'application/json')
+				.set('Authorization', `Bearer ${user3Jwt}`)
+				.expect('Content-Type', /json/)
+				.expect(bodyHasFriendshipProperty)
+				.expect((res) => res.body.friendship.status === 'friends')
+				.expect(201);
+
+			request(app)
+				.put(`/friendships/${user1AndUser3FriendshipId}`)
+				.set('Accept', 'application/json')
+				.set('Authorization', `Bearer ${user3Jwt}`)
+				.expect('Content-Type', /json/)
+				.expect(bodyHasErrProperty)
+				.expect(400, done);
+		});
 	});
 });
