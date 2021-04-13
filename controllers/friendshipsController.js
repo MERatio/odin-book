@@ -93,7 +93,7 @@ exports.update = [
 				// Accept friend request.
 				friendship.status = 'friends';
 				const updatedFriendship = await friendship.save();
-				res.status(201).json({ friendship: updatedFriendship });
+				res.status(200).json({ friendship: updatedFriendship });
 			}
 		} catch (err) {
 			next(err);

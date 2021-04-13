@@ -202,7 +202,7 @@ describe('update', () => {
 			.expect('Content-Type', /json/)
 			.expect(bodyHasFriendshipProperty)
 			.expect((res) => res.body.friendship.status === 'friends')
-			.expect(201, done);
+			.expect(200, done);
 	});
 
 	describe('body has err property', () => {
@@ -258,7 +258,7 @@ describe('update', () => {
 				.expect('Content-Type', /json/)
 				.expect(bodyHasFriendshipProperty)
 				.expect((res) => res.body.friendship.status === 'friends')
-				.expect(201);
+				.expect(200);
 
 			request(app)
 				.put(`/friendships/${user1AndUser3FriendshipId}`)
