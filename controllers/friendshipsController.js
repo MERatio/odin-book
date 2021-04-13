@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const { body, validationResult } = require('express-validator');
 const {
 	authenticated,
@@ -51,6 +52,14 @@ exports.create = [
 				const friendship = await req.currentUser.sendFriendRequest(
 					req.body.requesteeId
 				);
+				const requestor = req.currentUser;
+				const requestee = await mongoose
+					.model('User')
+					.findById(req.body.requesteeId);
+				requestor.friendships.push(friendship._id);
+				await requestor.save();
+				requestee.friendships.push(friendship._id);
+				await requestee.save();
 				// Successful
 				res.status(201).json({ friendship });
 			} catch (err) {
