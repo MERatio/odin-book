@@ -27,7 +27,7 @@ beforeAll(async () => {
 afterAll(async () => await mongoConfigTesting.close());
 
 describe('local', () => {
-	it('should return jwt and currentUser if credentials are correct', (done) => {
+	it('body has jwt and currentUser property if credentials are correct', (done) => {
 		request(app)
 			.post('/auth/local')
 			.send({
@@ -41,7 +41,7 @@ describe('local', () => {
 			.expect(200, done);
 	});
 
-	it('should return error object if credentials are incorrect', (done) => {
+	it('body has error property if credentials are incorrect', (done) => {
 		request(app)
 			.post('/auth/local')
 			.send({
@@ -54,7 +54,7 @@ describe('local', () => {
 			.expect(401, done);
 	});
 
-	it('should return error object if user already have a valid jwt', async (done) => {
+	it('body has error property if user already have a valid jwt', async (done) => {
 		let jwt;
 
 		await request(app)

@@ -154,7 +154,7 @@ describe('create', () => {
 			.expect(422, done);
 	});
 
-	describe('should return friendship object and errors array', () => {
+	describe('body has friendship and errors', () => {
 		test('if friendship between user already exists', async (done) => {
 			await request(app)
 				.post('/friendships')

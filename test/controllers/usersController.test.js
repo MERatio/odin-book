@@ -27,7 +27,7 @@ describe('create', () => {
 			.expect(201, done);
 	});
 
-	describe('should return the santinized user object and errors array', () => {
+	describe('body has santinized user and errors property', () => {
 		describe('if firstName', () => {
 			test('is empty', (done) => {
 				request(app)
