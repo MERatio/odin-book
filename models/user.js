@@ -10,6 +10,7 @@ const UserSchema = new Schema(
 		email: { type: String, required: true, index: true, unique: true },
 		password: { type: String, required: true },
 		friendships: [{ type: Schema.Types.ObjectId, ref: 'Friendship' }],
+		posts: [{ type: Schema.Types.ObjectId, ref: 'Post' }],
 	},
 	{
 		timestamps: true,

@@ -36,3 +36,9 @@ exports.bodyHasFriendshipProperty = (res) => {
 		throw new Error('missing friendship property');
 	}
 };
+
+exports.bodyHasPostProperty = (res) => {
+	if (!Object.prototype.hasOwnProperty.call(res.body, 'post')) {
+		throw new Error('missing post property');
+	}
+};
