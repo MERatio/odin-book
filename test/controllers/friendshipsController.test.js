@@ -12,17 +12,12 @@ const {
 
 let user1Id;
 let user2Id;
-let user3Id;
 let user1Jwt;
 let user2Jwt;
-let user3Jwt;
-let user1AndUser3FriendshipId;
+let user1AndUser2FriendshipId;
 
 beforeAll(async () => {
 	await mongoConfigTesting.connect();
-});
-beforeEach(async () => {
-	await mongoConfigTesting.clear();
 	await request(app)
 		.post('/users')
 		.send({
@@ -52,20 +47,6 @@ beforeEach(async () => {
 		.expect((res) => (user2Id = res.body.user._id))
 		.expect(201);
 	await request(app)
-		.post('/users')
-		.send({
-			firstName: 'user3',
-			lastName: 'user3',
-			email: 'user3@example.com',
-			password: 'password123',
-			passwordConfirmation: 'password123',
-		})
-		.set('Accept', 'application/json')
-		.expect('Content-Type', /json/)
-		.expect(bodyHasUserProperty)
-		.expect((res) => (user3Id = res.body.user._id))
-		.expect(201);
-	await request(app)
 		.post('/auth/local')
 		.send({
 			email: 'user1@example.com',
@@ -89,47 +70,10 @@ beforeEach(async () => {
 		.expect(bodyHasCurrentUserProperty)
 		.expect((res) => (user2Jwt = res.body.jwt))
 		.expect(200);
-	await request(app)
-		.post('/auth/local')
-		.send({
-			email: 'user3@example.com',
-			password: 'password123',
-		})
-		.set('Accept', 'application/json')
-		.expect('Content-Type', /json/)
-		.expect(bodyHasJwtProperty)
-		.expect(bodyHasCurrentUserProperty)
-		.expect((res) => (user3Jwt = res.body.jwt))
-		.expect(200);
-	// user1 sends a friend request to user3.
-	await request(app)
-		.post('/friendships')
-		.send({
-			requesteeId: user3Id,
-		})
-		.set('Accept', 'application/json')
-		.set('Authorization', `Bearer ${user1Jwt}`)
-		.expect('Content-Type', /json/)
-		.expect(bodyHasFriendshipProperty)
-		.expect((res) => (user1AndUser3FriendshipId = res.body.friendship._id))
-		.expect(201);
 });
 afterAll(async () => await mongoConfigTesting.close());
 
 describe('create', () => {
-	it('should send a friend request to other user', async (done) => {
-		request(app)
-			.post('/friendships')
-			.send({
-				requesteeId: user2Id,
-			})
-			.set('Accept', 'application/json')
-			.set('Authorization', `Bearer ${user1Jwt}`)
-			.expect('Content-Type', /json/)
-			.expect(bodyHasFriendshipProperty)
-			.expect(201, done);
-	});
-
 	test('should require a valid JWT', (done) => {
 		request(app)
 			.post('/friendships')
@@ -155,29 +99,6 @@ describe('create', () => {
 	});
 
 	describe('body has friendship and errors', () => {
-		test('if friendship between user already exists', async (done) => {
-			await request(app)
-				.post('/friendships')
-				.send({
-					requesteeId: user2Id,
-				})
-				.set('Accept', 'application/json')
-				.set('Authorization', `Bearer ${user1Jwt}`)
-				.expect(bodyHasFriendshipProperty)
-				.expect(201);
-
-			request(app)
-				.post('/friendships')
-				.send({
-					requesteeId: user1Id,
-				})
-				.set('Accept', 'application/json')
-				.set('Authorization', `Bearer ${user2Jwt}`)
-				.expect(bodyHasFriendshipProperty)
-				.expect(bodyHasErrorsProperty)
-				.expect(422, done);
-		});
-
 		test('if user send a friend request to themselves', (done) => {
 			request(app)
 				.post('/friendships')
@@ -191,24 +112,40 @@ describe('create', () => {
 				.expect(422, done);
 		});
 	});
+
+	it('should send a friend request to other user', async (done) => {
+		request(app)
+			.post('/friendships')
+			.send({
+				requesteeId: user2Id,
+			})
+			.set('Accept', 'application/json')
+			.set('Authorization', `Bearer ${user1Jwt}`)
+			.expect('Content-Type', /json/)
+			.expect(bodyHasFriendshipProperty)
+			.expect((res) => (user1AndUser2FriendshipId = res.body.friendship._id))
+			.expect(201, done);
+	});
+
+	test('body has friendship and errors if friendship between user already exists', async (done) => {
+		request(app)
+			.post('/friendships')
+			.send({
+				requesteeId: user1Id,
+			})
+			.set('Accept', 'application/json')
+			.set('Authorization', `Bearer ${user2Jwt}`)
+			.expect(bodyHasFriendshipProperty)
+			.expect(bodyHasErrorsProperty)
+			.expect(422, done);
+	});
 });
 
 describe('update', () => {
-	it('should accept the friend request of other user', (done) => {
-		request(app)
-			.put(`/friendships/${user1AndUser3FriendshipId}`)
-			.set('Accept', 'application/json')
-			.set('Authorization', `Bearer ${user3Jwt}`)
-			.expect('Content-Type', /json/)
-			.expect(bodyHasFriendshipProperty)
-			.expect((res) => res.body.friendship.status === 'friends')
-			.expect(200, done);
-	});
-
 	describe('body has err property', () => {
 		test('if JWT is not valid or not supplied', (done) => {
 			request(app)
-				.put(`/friendships/${user1AndUser3FriendshipId}`)
+				.put(`/friendships/${user1AndUser2FriendshipId}`)
 				.set('Accept', 'application/json')
 				.expect('Content-Type', /json/)
 				.expect(bodyHasErrProperty)
@@ -217,9 +154,9 @@ describe('update', () => {
 
 		test('if friendshipId route parameter is not valid', (done) => {
 			request(app)
-				.put(`/friendships/${user1AndUser3FriendshipId}` + '123')
+				.put(`/friendships/${user1AndUser2FriendshipId}` + '123')
 				.set('Accept', 'application/json')
-				.set('Authorization', `Bearer ${user3Jwt}`)
+				.set('Authorization', `Bearer ${user2Jwt}`)
 				.expect('Content-Type', /json/)
 				.expect(bodyHasErrProperty)
 				.expect(404, done);
@@ -228,13 +165,13 @@ describe('update', () => {
 		test('if friendship does not exists', (done) => {
 			request(app)
 				.put(
-					`/friendships/${user1AndUser3FriendshipId.substring(
+					`/friendships/${user1AndUser2FriendshipId.substring(
 						0,
-						user1AndUser3FriendshipId.length - 3
+						user1AndUser2FriendshipId.length - 3
 					)}` + '123'
 				)
 				.set('Accept', 'application/json')
-				.set('Authorization', `Bearer ${user3Jwt}`)
+				.set('Authorization', `Bearer ${user2Jwt}`)
 				.expect('Content-Type', /json/)
 				.expect(bodyHasErrProperty)
 				.expect(404, done);
@@ -242,51 +179,42 @@ describe('update', () => {
 
 		test('if requestee is not the currentUser', (done) => {
 			request(app)
-				.put(`/friendships/${user1AndUser3FriendshipId}`)
+				.put(`/friendships/${user1AndUser2FriendshipId}`)
 				.set('Accept', 'application/json')
-				.set('Authorization', `Bearer ${user2Jwt}`)
+				.set('Authorization', `Bearer ${user1Jwt}`)
 				.expect('Content-Type', /json/)
 				.expect(bodyHasErrProperty)
 				.expect(403, done);
 		});
+	});
 
-		test('if friend request is already accepted', async (done) => {
-			await request(app)
-				.put(`/friendships/${user1AndUser3FriendshipId}`)
-				.set('Accept', 'application/json')
-				.set('Authorization', `Bearer ${user3Jwt}`)
-				.expect('Content-Type', /json/)
-				.expect(bodyHasFriendshipProperty)
-				.expect((res) => res.body.friendship.status === 'friends')
-				.expect(200);
+	it('should accept the friend request of other user', (done) => {
+		request(app)
+			.put(`/friendships/${user1AndUser2FriendshipId}`)
+			.set('Accept', 'application/json')
+			.set('Authorization', `Bearer ${user2Jwt}`)
+			.expect('Content-Type', /json/)
+			.expect(bodyHasFriendshipProperty)
+			.expect((res) => res.body.friendship.status === 'friends')
+			.expect(200, done);
+	});
 
-			request(app)
-				.put(`/friendships/${user1AndUser3FriendshipId}`)
-				.set('Accept', 'application/json')
-				.set('Authorization', `Bearer ${user3Jwt}`)
-				.expect('Content-Type', /json/)
-				.expect(bodyHasErrProperty)
-				.expect(400, done);
-		});
+	test('body has err property if friend request is already accepted', async (done) => {
+		request(app)
+			.put(`/friendships/${user1AndUser2FriendshipId}`)
+			.set('Accept', 'application/json')
+			.set('Authorization', `Bearer ${user2Jwt}`)
+			.expect('Content-Type', /json/)
+			.expect(bodyHasErrProperty)
+			.expect(400, done);
 	});
 });
 
 describe('delete', () => {
-	it('should remove the friendship', (done) => {
-		request(app)
-			.del(`/friendships/${user1AndUser3FriendshipId}`)
-			.set('Accept', 'application/json')
-			.set('Authorization', `Bearer ${user3Jwt}`)
-			.expect('Content-Type', /json/)
-			.expect(bodyHasFriendshipProperty)
-			.expect((res) => res.body.friendship.status === 'pending')
-			.expect(200, done);
-	});
-
 	describe('body has err property', () => {
 		test('if JWT is not valid or not supplied', (done) => {
 			request(app)
-				.del(`/friendships/${user1AndUser3FriendshipId}`)
+				.del(`/friendships/${user1AndUser2FriendshipId}`)
 				.set('Accept', 'application/json')
 				.expect('Content-Type', /json/)
 				.expect(bodyHasErrProperty)
@@ -295,9 +223,9 @@ describe('delete', () => {
 
 		test('if friendshipId route parameter is not valid', (done) => {
 			request(app)
-				.del(`/friendships/${user1AndUser3FriendshipId}` + '123')
+				.del(`/friendships/${user1AndUser2FriendshipId}` + '123')
 				.set('Accept', 'application/json')
-				.set('Authorization', `Bearer ${user3Jwt}`)
+				.set('Authorization', `Bearer ${user2Jwt}`)
 				.expect('Content-Type', /json/)
 				.expect(bodyHasErrProperty)
 				.expect(404, done);
@@ -306,26 +234,27 @@ describe('delete', () => {
 		test('if friendship does not exists', (done) => {
 			request(app)
 				.del(
-					`/friendships/${user1AndUser3FriendshipId.substring(
+					`/friendships/${user1AndUser2FriendshipId.substring(
 						0,
-						user1AndUser3FriendshipId.length - 3
+						user1AndUser2FriendshipId.length - 3
 					)}` + '123'
 				)
-				.set('Accept', 'application/json')
-				.set('Authorization', `Bearer ${user3Jwt}`)
-				.expect('Content-Type', /json/)
-				.expect(bodyHasErrProperty)
-				.expect(404, done);
-		});
-
-		test('if requestee is not the currentUser', (done) => {
-			request(app)
-				.del(`/friendships/${user1AndUser3FriendshipId}`)
 				.set('Accept', 'application/json')
 				.set('Authorization', `Bearer ${user2Jwt}`)
 				.expect('Content-Type', /json/)
 				.expect(bodyHasErrProperty)
-				.expect(403, done);
+				.expect(404, done);
 		});
+	});
+
+	it('should remove the friendship', (done) => {
+		request(app)
+			.del(`/friendships/${user1AndUser2FriendshipId}`)
+			.set('Accept', 'application/json')
+			.set('Authorization', `Bearer ${user2Jwt}`)
+			.expect('Content-Type', /json/)
+			.expect(bodyHasFriendshipProperty)
+			.expect((res) => res.body.friendship.status === 'friends')
+			.expect(200, done);
 	});
 });
