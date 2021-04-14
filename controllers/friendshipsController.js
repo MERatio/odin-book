@@ -111,8 +111,13 @@ exports.destroy = [
 				const error = new Error('Friend request does not exists.');
 				error.status = 404;
 				throw error;
-			} else if (!friendship.requestee.equals(req.currentUser._id)) {
-				// Check if requestee is not the currentUser
+			} else if (
+				!(
+					friendship.requestor.equals(req.currentUser._id) ||
+					friendship.requestee.equals(req.currentUser._id)
+				)
+			) {
+				// Check if currentUser is not the requestor or the requestee.
 				const error = new Error('Not a valid friend request.');
 				error.status = 403;
 				throw error;

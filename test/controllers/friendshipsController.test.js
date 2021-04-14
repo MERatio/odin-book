@@ -14,6 +14,7 @@ let user1Id;
 let user2Id;
 let user1Jwt;
 let user2Jwt;
+let user3Jwt;
 let user1AndUser2FriendshipId;
 
 beforeAll(async () => {
@@ -47,6 +48,19 @@ beforeAll(async () => {
 		.expect((res) => (user2Id = res.body.user._id))
 		.expect(201);
 	await request(app)
+		.post('/users')
+		.send({
+			firstName: 'user3',
+			lastName: 'user3',
+			email: 'user3@example.com',
+			password: 'password123',
+			passwordConfirmation: 'password123',
+		})
+		.set('Accept', 'application/json')
+		.expect('Content-Type', /json/)
+		.expect(bodyHasUserProperty)
+		.expect(201);
+	await request(app)
 		.post('/auth/local')
 		.send({
 			email: 'user1@example.com',
@@ -69,6 +83,18 @@ beforeAll(async () => {
 		.expect(bodyHasJwtProperty)
 		.expect(bodyHasCurrentUserProperty)
 		.expect((res) => (user2Jwt = res.body.jwt))
+		.expect(200);
+	await request(app)
+		.post('/auth/local')
+		.send({
+			email: 'user3@example.com',
+			password: 'password123',
+		})
+		.set('Accept', 'application/json')
+		.expect('Content-Type', /json/)
+		.expect(bodyHasJwtProperty)
+		.expect(bodyHasCurrentUserProperty)
+		.expect((res) => (user3Jwt = res.body.jwt))
 		.expect(200);
 });
 afterAll(async () => await mongoConfigTesting.close());
@@ -244,6 +270,16 @@ describe('delete', () => {
 				.expect('Content-Type', /json/)
 				.expect(bodyHasErrProperty)
 				.expect(404, done);
+		});
+
+		test('if currentUser is not the requestor or the requestee', (done) => {
+			request(app)
+				.del(`/friendships/${user1AndUser2FriendshipId}`)
+				.set('Accept', 'application/json')
+				.set('Authorization', `Bearer ${user3Jwt}`)
+				.expect('Content-Type', /json/)
+				.expect(bodyHasErrProperty)
+				.expect(403, done);
 		});
 	});
 
