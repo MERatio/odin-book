@@ -103,3 +103,30 @@ exports.update = [
 		}
 	},
 ];
+
+exports.destroy = [
+	authenticated,
+	validMongoObjectIdRouteParams,
+	async (req, res, next) => {
+		try {
+			const post = await Post.findById(req.params.postId);
+			if (post === null) {
+				const err = new Error("Post doesn't exist");
+				err.status = 404;
+				throw err;
+			} else if (!post.author.equals(req.currentUser._id)) {
+				// Check if author is not the currentUser
+				const err = new Error("You don't own that post.");
+				err.status = 403;
+				throw err;
+			} else {
+				// Successful
+				// Remove post.
+				const removedPost = await post.remove();
+				res.json({ post: removedPost });
+			}
+		} catch (err) {
+			next(err);
+		}
+	},
+];
