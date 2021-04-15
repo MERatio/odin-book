@@ -82,7 +82,7 @@ exports.update = [
 			try {
 				const post = await Post.findById(req.params.postId);
 				if (post === null) {
-					const err = new Error('Post does not exists.');
+					const err = new Error('Post not found');
 					err.status = 404;
 					throw err;
 				} else if (!post.author.equals(req.currentUser._id)) {
@@ -111,7 +111,7 @@ exports.destroy = [
 		try {
 			const post = await Post.findById(req.params.postId);
 			if (post === null) {
-				const err = new Error("Post doesn't exist");
+				const err = new Error('Post not found.');
 				err.status = 404;
 				throw err;
 			} else if (!post.author.equals(req.currentUser._id)) {

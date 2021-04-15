@@ -95,7 +95,7 @@ exports.update = [
 		try {
 			const friendship = await Friendship.findById(req.params.friendshipId);
 			if (friendship === null) {
-				const err = new Error('Friend request does not exists.');
+				const err = new Error('Friend request not found');
 				err.status = 404;
 				throw err;
 			} else if (!friendship.requestee.equals(req.currentUser._id)) {
@@ -127,7 +127,7 @@ exports.destroy = [
 		try {
 			const friendship = await Friendship.findById(req.params.friendshipId);
 			if (friendship === null) {
-				const err = new Error('Friend request does not exists.');
+				const err = new Error('Friend request not found.');
 				err.status = 404;
 				throw err;
 			} else if (
