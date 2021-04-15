@@ -95,18 +95,18 @@ exports.update = [
 		try {
 			const friendship = await Friendship.findById(req.params.friendshipId);
 			if (friendship === null) {
-				const error = new Error('Friend request does not exists.');
-				error.status = 404;
-				throw error;
+				const err = new Error('Friend request does not exists.');
+				err.status = 404;
+				throw err;
 			} else if (!friendship.requestee.equals(req.currentUser._id)) {
 				// Check if requestee is not the currentUser
-				const error = new Error('Not a valid friend request.');
-				error.status = 403;
-				throw error;
+				const err = new Error('Not a valid friend request.');
+				err.status = 403;
+				throw err;
 			} else if (friendship.status !== 'pending') {
-				const error = new Error('Friend request is already accepted.');
-				error.status = 400;
-				throw error;
+				const err = new Error('Friend request is already accepted.');
+				err.status = 400;
+				throw err;
 			} else {
 				// Successful
 				// Accept friend request.
@@ -127,9 +127,9 @@ exports.destroy = [
 		try {
 			const friendship = await Friendship.findById(req.params.friendshipId);
 			if (friendship === null) {
-				const error = new Error('Friend request does not exists.');
-				error.status = 404;
-				throw error;
+				const err = new Error('Friend request does not exists.');
+				err.status = 404;
+				throw err;
 			} else if (
 				!(
 					friendship.requestor.equals(req.currentUser._id) ||
@@ -137,9 +137,9 @@ exports.destroy = [
 				)
 			) {
 				// Check if currentUser is not the requestor or the requestee.
-				const error = new Error('Not a valid friend request.');
-				error.status = 403;
-				throw error;
+				const err = new Error('Not a valid friend request.');
+				err.status = 403;
+				throw err;
 			} else {
 				// Successful
 				// Remove friendship.

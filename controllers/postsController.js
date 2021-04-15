@@ -82,14 +82,14 @@ exports.update = [
 			try {
 				const post = await Post.findById(req.params.postId);
 				if (post === null) {
-					const error = new Error('Post does not exists.');
-					error.status = 404;
-					throw error;
+					const err = new Error('Post does not exists.');
+					err.status = 404;
+					throw err;
 				} else if (!post.author.equals(req.currentUser._id)) {
 					// Check if author is not the currentUser
-					const error = new Error("You don't own that post.");
-					error.status = 403;
-					throw error;
+					const err = new Error("You don't own that post.");
+					err.status = 403;
+					throw err;
 				} else {
 					// Successful
 					// Update the record with escaped and trimmed data.
