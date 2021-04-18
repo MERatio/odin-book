@@ -1,9 +1,9 @@
-const mongoose = require('mongoose');
 const { body, validationResult } = require('express-validator');
 const {
 	authenticated,
 	validMongoObjectIdRouteParams,
 } = require('../lib/middlewares');
+const User = require('../models/user');
 const Friendship = require('../models/friendship');
 
 exports.create = [
@@ -61,25 +61,22 @@ exports.create = [
 							});
 							return next(err);
 						} else {
-							mongoose
-								.model('User')
-								.findById(req.body.requesteeId)
-								.exec((err, requestee) => {
-									requestee.friendships.push(friendship._id);
-									requestee.save((err) => {
-										if (err) {
-											friendship.remove((err) => {
-												if (err) {
-													return next(err);
-												}
-											});
-											return next(err);
-										} else {
-											// Successful
-											res.status(201).json({ friendship });
-										}
-									});
+							User.findById(req.body.requesteeId).exec((err, requestee) => {
+								requestee.friendships.push(friendship._id);
+								requestee.save((err) => {
+									if (err) {
+										friendship.remove((err) => {
+											if (err) {
+												return next(err);
+											}
+										});
+										return next(err);
+									} else {
+										// Successful
+										res.status(201).json({ friendship });
+									}
 								});
+							});
 						}
 					});
 				}
