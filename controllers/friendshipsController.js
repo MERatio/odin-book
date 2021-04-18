@@ -11,30 +11,7 @@ exports.create = [
 	// Validate field.
 	body('requesteeId')
 		.isMongoId()
-		.withMessage('requesteeId is not a valid Mongo ID')
-		// Check if requestor already sent a friend request to the requestee.
-		.custom(async (value, { req }) => {
-			const friendship = await req.currentUser.findRelationshipWith(value);
-			if (friendship) {
-				switch (friendship.status) {
-					case 'pending':
-						throw new Error('You already sent a friend request to them.');
-					case 'friends':
-						throw new Error("You're already friends with them.");
-				}
-			} else {
-				return true;
-			}
-		})
-		// Cannot send a friend request to themselves
-		.custom((value, { req }) => {
-			// ._id have a type of object
-			if (req.currentUser._id.equals(value)) {
-				throw new Error('Cannot send a friend request to yourself.');
-			} else {
-				return true;
-			}
-		}),
+		.withMessage('requesteeId is not a valid Mongo ID'),
 	// Process request after validation.
 	(req, res, next) => {
 		// Extract the validation errors from a request.
@@ -45,25 +22,35 @@ exports.create = [
 				friendship: req.body,
 				errors: errors.array(),
 			});
+		} else if (req.currentUser._id.equals(req.body.requesteeId)) {
+			const err = new Error('Cannot send a friend request to yourself.');
+			err.status = 422;
+			next(err);
 		} else {
-			// Data form is valid.
-			// Create the new friendship
-			req.currentUser.sendFriendRequest(
+			req.currentUser.findRelationshipWith(
 				req.body.requesteeId,
 				(err, friendship) => {
-					req.currentUser.friendships.push(friendship._id);
-					req.currentUser.save((err) => {
-						if (err) {
-							friendship.remove((err) => {
-								if (err) {
-									return next(err);
-								}
-							});
-							return next(err);
-						} else {
-							User.findById(req.body.requesteeId).exec((err, requestee) => {
-								requestee.friendships.push(friendship._id);
-								requestee.save((err) => {
+					if (err) {
+						next(err);
+					} else if (friendship) {
+						let err;
+						switch (friendship.status) {
+							case 'pending':
+								err = new Error('You already sent a friend request to them.');
+								break;
+							case 'friends':
+								err = new Error("You're already friends with them.");
+								break;
+						}
+						err.status = 422;
+						next(err);
+					} else {
+						// Create the new friendship
+						req.currentUser.sendFriendRequest(
+							req.body.requesteeId,
+							(err, friendship) => {
+								req.currentUser.friendships.push(friendship._id);
+								req.currentUser.save((err) => {
 									if (err) {
 										friendship.remove((err) => {
 											if (err) {
@@ -72,13 +59,29 @@ exports.create = [
 										});
 										return next(err);
 									} else {
-										// Successful
-										res.status(201).json({ friendship });
+										User.findById(req.body.requesteeId).exec(
+											(err, requestee) => {
+												requestee.friendships.push(friendship._id);
+												requestee.save((err) => {
+													if (err) {
+														friendship.remove((err) => {
+															if (err) {
+																return next(err);
+															}
+														});
+														return next(err);
+													} else {
+														// Successful
+														res.status(201).json({ friendship });
+													}
+												});
+											}
+										);
 									}
 								});
-							});
-						}
-					});
+							}
+						);
+					}
 				}
 			);
 		}

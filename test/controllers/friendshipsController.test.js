@@ -133,8 +133,7 @@ describe('create', () => {
 				})
 				.set('Accept', 'application/json')
 				.set('Authorization', `Bearer ${user1Jwt}`)
-				.expect(bodyHasFriendshipProperty)
-				.expect(bodyHasErrorsProperty)
+				.expect(bodyHasErrProperty)
 				.expect(422, done);
 		});
 	});
@@ -161,8 +160,7 @@ describe('create', () => {
 			})
 			.set('Accept', 'application/json')
 			.set('Authorization', `Bearer ${user2Jwt}`)
-			.expect(bodyHasFriendshipProperty)
-			.expect(bodyHasErrorsProperty)
+			.expect(bodyHasErrProperty)
 			.expect(422, done);
 	});
 });
