@@ -49,36 +49,49 @@ exports.create = [
 						req.currentUser.sendFriendRequest(
 							req.body.requesteeId,
 							(err, friendship) => {
-								req.currentUser.friendships.push(friendship._id);
-								req.currentUser.save((err) => {
-									if (err) {
-										friendship.remove((err) => {
-											if (err) {
-												return next(err);
-											}
-										});
-										return next(err);
-									} else {
-										User.findById(req.body.requesteeId).exec(
-											(err, requestee) => {
-												requestee.friendships.push(friendship._id);
-												requestee.save((err) => {
+								if (err) {
+									next(err);
+								} else {
+									req.currentUser.friendships.push(friendship._id);
+									req.currentUser.save((err) => {
+										if (err) {
+											friendship.remove((err) => {
+												if (err) {
+													return next(err);
+												}
+											});
+											return next(err);
+										} else {
+											User.findById(req.body.requesteeId).exec(
+												(err, requestee) => {
 													if (err) {
 														friendship.remove((err) => {
 															if (err) {
 																return next(err);
 															}
 														});
-														return next(err);
+														next(err);
 													} else {
-														// Successful
-														res.status(201).json({ friendship });
+														requestee.friendships.push(friendship._id);
+														requestee.save((err) => {
+															if (err) {
+																friendship.remove((err) => {
+																	if (err) {
+																		return next(err);
+																	}
+																});
+																return next(err);
+															} else {
+																// Successful
+																res.status(201).json({ friendship });
+															}
+														});
 													}
-												});
-											}
-										);
-									}
-								});
+												}
+											);
+										}
+									});
+								}
 							}
 						);
 					}
