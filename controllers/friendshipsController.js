@@ -23,10 +23,12 @@ exports.create = [
 				errors: errors.array(),
 			});
 		} else if (req.currentUser._id.equals(req.body.requesteeId)) {
+			// Check if currentUser sends a friend request to themselves.
 			const err = new Error('Cannot send a friend request to yourself.');
 			err.status = 422;
 			next(err);
 		} else {
+			// Finds the relationship between currentUser and the requestee.
 			req.currentUser.findRelationshipWith(
 				req.body.requesteeId,
 				(err, friendship) => {

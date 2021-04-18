@@ -34,6 +34,7 @@ exports.create = [
 					err.status = 404;
 					next(err);
 				} else {
+					// Check if there is duplicate reaction.
 					Reaction.exists(
 						{
 							user: req.currentUser._id,
