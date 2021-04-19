@@ -22,8 +22,8 @@ exports.create = [
 		if (!errors.isEmpty()) {
 			// There are errors.
 			res.status(422).json({
-				post: req.body,
 				errors: errors.array(),
+				post: req.body,
 			});
 		} else {
 			// Data is valid.
@@ -74,8 +74,8 @@ exports.update = [
 		if (!errors.isEmpty()) {
 			// There are errors.
 			res.status(422).json({
-				post: req.body,
 				errors: errors.array(),
+				post: req.body,
 			});
 		} else {
 			// Data is valid.

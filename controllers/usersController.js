@@ -50,8 +50,8 @@ exports.create = [
 		if (!errors.isEmpty()) {
 			// There are errors.
 			res.status(422).json({
-				user: req.body,
 				errors: errors.array(),
+				user: req.body,
 			});
 		} else {
 			// Data form is valid.

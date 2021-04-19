@@ -19,8 +19,8 @@ exports.create = [
 		if (!errors.isEmpty()) {
 			// There are errors.
 			res.status(422).json({
-				friendship: req.body,
 				errors: errors.array(),
+				friendship: req.body,
 			});
 		} else if (req.currentUser._id.equals(req.body.requesteeId)) {
 			// Check if currentUser sends a friend request to themselves.

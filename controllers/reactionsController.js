@@ -21,8 +21,8 @@ exports.create = [
 		if (!errors.isEmpty()) {
 			// There are errors.
 			res.status(422).json({
-				reaction: req.body,
 				errors: errors.array(),
+				reaction: req.body,
 			});
 		} else {
 			// Data form is valid.

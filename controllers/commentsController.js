@@ -24,8 +24,8 @@ exports.create = [
 		if (!errors.isEmpty()) {
 			// There are errors.
 			res.status(422).json({
-				comment: req.body,
 				errors: errors.array(),
+				comment: req.body,
 			});
 		} else {
 			// Data is valid.
