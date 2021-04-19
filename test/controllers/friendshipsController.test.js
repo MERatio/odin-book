@@ -234,7 +234,7 @@ describe('update', () => {
 	});
 });
 
-describe('delete', () => {
+describe('destroy', () => {
 	describe('body has err property', () => {
 		test('if JWT is not valid or not supplied', (done) => {
 			request(app)
