@@ -14,9 +14,9 @@ const PostSchema = new Schema(
 	}
 );
 
+// Remove the post._id from author.posts
 PostSchema.pre('remove', async function (next) {
 	try {
-		// Remove the post._id from author.posts
 		const author = await mongoose
 			.model('User')
 			.findById(this.author._id || this.author);
@@ -27,9 +27,9 @@ PostSchema.pre('remove', async function (next) {
 	}
 });
 
+// Remove all post's reactions.
 PostSchema.pre('remove', async function (next) {
 	try {
-		// Remove all post's reactions.
 		const reactions = await mongoose.model('Reaction').find({ post: this._id });
 		for (let reaction of reactions) {
 			await reaction.remove();
