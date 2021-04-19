@@ -62,7 +62,7 @@ exports.create = [
 													return next(err);
 												}
 											});
-											return next(err);
+											next(err);
 										} else {
 											User.findById(req.body.requesteeId).exec(
 												(err, requestee) => {
@@ -82,7 +82,7 @@ exports.create = [
 																		return next(err);
 																	}
 																});
-																return next(err);
+																next(err);
 															} else {
 																// Successful
 																res.status(201).json({ friendship });

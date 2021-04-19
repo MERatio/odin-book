@@ -45,7 +45,7 @@ exports.create = [
 									return next(err);
 								}
 							});
-							return next(err);
+							next(err);
 						} else {
 							res.status(201).json({ post });
 						}
