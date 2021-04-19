@@ -99,3 +99,30 @@ exports.create = [
 		}
 	},
 ];
+
+exports.destroy = [
+	authenticated,
+	validMongoObjectIdRouteParams,
+	async (req, res, next) => {
+		try {
+			const reaction = await Reaction.findById(req.params.reactionId);
+			if (reaction === null) {
+				const err = new Error('Reaction not found.');
+				err.status = 404;
+				throw err;
+			} else if (!reaction.user.equals(req.currentUser._id)) {
+				// Check if currentUser is reaction's user.
+				const err = new Error('Not a valid friend request.');
+				err.status = 403;
+				throw err;
+			} else {
+				// Successful
+				// Remove reaction.
+				const removedReaction = await reaction.remove();
+				res.status(200).json({ reaction: removedReaction });
+			}
+		} catch (err) {
+			next(err);
+		}
+	},
+];
