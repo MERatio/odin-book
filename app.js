@@ -13,6 +13,7 @@ const usersRouter = require('./routes/users');
 const friendshipsRouter = require('./routes/friendships');
 const postsRouter = require('./routes/posts');
 const reactionsRouter = require('./routes/reactions');
+const commentsRouter = require('./routes/comments');
 
 // Exlcude connecting to the real database
 if (process.env.NODE_ENV !== 'test') {
@@ -32,6 +33,7 @@ app.use('/users', usersRouter);
 app.use('/friendships', friendshipsRouter);
 app.use('/posts', postsRouter);
 app.use('/posts/:postId/reactions', reactionsRouter);
+app.use('/posts/:postId/comments', commentsRouter);
 
 // Error handler
 app.use((err, req, res, next) => {

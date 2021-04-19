@@ -48,3 +48,9 @@ exports.bodyHasReactionProperty = (res) => {
 		throw new Error('missing reaction property');
 	}
 };
+
+exports.bodyHasCommentProperty = (res) => {
+	if (!Object.prototype.hasOwnProperty.call(res.body, 'comment')) {
+		throw new Error('missing comment property');
+	}
+};

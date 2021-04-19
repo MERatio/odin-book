@@ -12,6 +12,7 @@ const UserSchema = new Schema(
 		friendships: [{ type: Schema.Types.ObjectId, ref: 'Friendship' }],
 		posts: [{ type: Schema.Types.ObjectId, ref: 'Post' }],
 		reactions: [{ type: Schema.Types.ObjectId, ref: 'Reaction' }],
+		comments: [{ type: Schema.Types.ObjectId, ref: 'Commment' }],
 	},
 	{
 		timestamps: true,
