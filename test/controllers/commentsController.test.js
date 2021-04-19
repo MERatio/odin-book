@@ -2,13 +2,13 @@ const request = require('supertest');
 const app = require('../../app');
 const mongoConfigTesting = require('../../configs/mongoConfigTesting');
 const {
-	bodyHasUserProperty,
-	bodyHasPostProperty,
-	bodyHasCommentProperty,
-	bodyHasErrorsProperty,
 	bodyHasErrProperty,
+	bodyHasErrorsProperty,
+	bodyHasUserProperty,
 	bodyHasJwtProperty,
 	bodyHasCurrentUserProperty,
+	bodyHasPostProperty,
+	bodyHasCommentProperty,
 } = require('../assertionFunctions');
 
 let user1Jwt;
@@ -109,8 +109,8 @@ describe('create', () => {
 					.set('Accept', 'application/json')
 					.set('Authorization', `Bearer ${user1Jwt}`)
 					.expect('Content-Type', /json/)
-					.expect(bodyHasCommentProperty)
 					.expect(bodyHasErrorsProperty)
+					.expect(bodyHasCommentProperty)
 					.expect(422, done);
 			});
 
@@ -123,8 +123,8 @@ describe('create', () => {
 					.set('Accept', 'application/json')
 					.set('Authorization', `Bearer ${user1Jwt}`)
 					.expect('Content-Type', /json/)
-					.expect(bodyHasCommentProperty)
 					.expect(bodyHasErrorsProperty)
+					.expect(bodyHasCommentProperty)
 					.expect(422, done);
 			});
 
@@ -137,8 +137,8 @@ describe('create', () => {
 					.set('Accept', 'application/json')
 					.set('Authorization', `Bearer ${user1Jwt}`)
 					.expect('Content-Type', /json/)
-					.expect(bodyHasCommentProperty)
 					.expect(bodyHasErrorsProperty)
+					.expect(bodyHasCommentProperty)
 					.expect(422, done);
 			});
 		});

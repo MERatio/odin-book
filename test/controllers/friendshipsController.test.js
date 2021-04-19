@@ -2,9 +2,9 @@ const request = require('supertest');
 const app = require('../../app');
 const mongoConfigTesting = require('../../configs/mongoConfigTesting');
 const {
-	bodyHasUserProperty,
-	bodyHasErrorsProperty,
 	bodyHasErrProperty,
+	bodyHasErrorsProperty,
+	bodyHasUserProperty,
 	bodyHasJwtProperty,
 	bodyHasCurrentUserProperty,
 	bodyHasFriendshipProperty,
@@ -119,8 +119,8 @@ describe('create', () => {
 			.set('Accept', 'application/json')
 			.set('Authorization', `Bearer ${user1Jwt}`)
 			.expect('Content-Type', /json/)
-			.expect(bodyHasFriendshipProperty)
 			.expect(bodyHasErrorsProperty)
+			.expect(bodyHasFriendshipProperty)
 			.expect(422, done);
 	});
 

@@ -2,11 +2,11 @@ const request = require('supertest');
 const app = require('../../app');
 const mongoConfigTesting = require('../../configs/mongoConfigTesting');
 const {
-	bodyHasUserProperty,
-	bodyHasPostProperty,
 	bodyHasErrProperty,
+	bodyHasUserProperty,
 	bodyHasJwtProperty,
 	bodyHasCurrentUserProperty,
+	bodyHasPostProperty,
 	bodyHasReactionProperty,
 } = require('../assertionFunctions');
 

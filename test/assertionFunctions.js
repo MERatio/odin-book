@@ -1,9 +1,10 @@
 /* Variables are not evaluated in console when throwing an error.
 	 That's why i create these non DRY functions.
 */
-exports.bodyHasUserProperty = (res) => {
-	if (!Object.prototype.hasOwnProperty.call(res.body, 'user')) {
-		throw new Error('missing user property');
+
+exports.bodyHasErrProperty = (res) => {
+	if (!Object.prototype.hasOwnProperty.call(res.body, 'err')) {
+		throw new Error('missing err property');
 	}
 };
 
@@ -13,9 +14,9 @@ exports.bodyHasErrorsProperty = (res) => {
 	}
 };
 
-exports.bodyHasErrProperty = (res) => {
-	if (!Object.prototype.hasOwnProperty.call(res.body, 'err')) {
-		throw new Error('missing err property');
+exports.bodyHasUserProperty = (res) => {
+	if (!Object.prototype.hasOwnProperty.call(res.body, 'user')) {
+		throw new Error('missing user property');
 	}
 };
 

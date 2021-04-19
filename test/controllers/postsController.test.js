@@ -2,12 +2,12 @@ const request = require('supertest');
 const app = require('../../app');
 const mongoConfigTesting = require('../../configs/mongoConfigTesting');
 const {
-	bodyHasUserProperty,
-	bodyHasPostProperty,
-	bodyHasErrorsProperty,
 	bodyHasErrProperty,
+	bodyHasErrorsProperty,
+	bodyHasUserProperty,
 	bodyHasJwtProperty,
 	bodyHasCurrentUserProperty,
+	bodyHasPostProperty,
 } = require('../assertionFunctions');
 
 let user1Jwt;
@@ -93,8 +93,8 @@ describe('create', () => {
 					.set('Accept', 'application/json')
 					.set('Authorization', `Bearer ${user1Jwt}`)
 					.expect('Content-Type', /json/)
-					.expect(bodyHasPostProperty)
 					.expect(bodyHasErrorsProperty)
+					.expect(bodyHasPostProperty)
 					.expect(422, done);
 			});
 
@@ -107,8 +107,8 @@ describe('create', () => {
 					.set('Accept', 'application/json')
 					.set('Authorization', `Bearer ${user1Jwt}`)
 					.expect('Content-Type', /json/)
-					.expect(bodyHasPostProperty)
 					.expect(bodyHasErrorsProperty)
+					.expect(bodyHasPostProperty)
 					.expect(422, done);
 			});
 
@@ -121,8 +121,8 @@ describe('create', () => {
 					.set('Accept', 'application/json')
 					.set('Authorization', `Bearer ${user1Jwt}`)
 					.expect('Content-Type', /json/)
-					.expect(bodyHasPostProperty)
 					.expect(bodyHasErrorsProperty)
+					.expect(bodyHasPostProperty)
 					.expect(422, done);
 			});
 		});
@@ -208,8 +208,8 @@ describe('update', () => {
 					.set('Accept', 'application/json')
 					.set('Authorization', `Bearer ${user1Jwt}`)
 					.expect('Content-Type', /json/)
-					.expect(bodyHasPostProperty)
 					.expect(bodyHasErrorsProperty)
+					.expect(bodyHasPostProperty)
 					.expect(422, done);
 			});
 
@@ -222,8 +222,8 @@ describe('update', () => {
 					.set('Accept', 'application/json')
 					.set('Authorization', `Bearer ${user1Jwt}`)
 					.expect('Content-Type', /json/)
-					.expect(bodyHasPostProperty)
 					.expect(bodyHasErrorsProperty)
+					.expect(bodyHasPostProperty)
 					.expect(422, done);
 			});
 
@@ -236,8 +236,8 @@ describe('update', () => {
 					.set('Accept', 'application/json')
 					.set('Authorization', `Bearer ${user1Jwt}`)
 					.expect('Content-Type', /json/)
-					.expect(bodyHasPostProperty)
 					.expect(bodyHasErrorsProperty)
+					.expect(bodyHasPostProperty)
 					.expect(422, done);
 			});
 		});

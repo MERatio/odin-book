@@ -2,8 +2,8 @@ const request = require('supertest');
 const app = require('../../app');
 const mongoConfigTesting = require('../../configs/mongoConfigTesting');
 const {
-	bodyHasUserProperty,
 	bodyHasErrorsProperty,
+	bodyHasUserProperty,
 } = require('../assertionFunctions');
 
 beforeAll(async () => await mongoConfigTesting.connect());
@@ -41,8 +41,8 @@ describe('create', () => {
 					})
 					.set('Accept', 'application/json')
 					.expect('Content-Type', /json/)
-					.expect(bodyHasUserProperty)
 					.expect(bodyHasErrorsProperty)
+					.expect(bodyHasUserProperty)
 					.expect(422, done);
 			});
 
@@ -58,8 +58,8 @@ describe('create', () => {
 					})
 					.set('Accept', 'application/json')
 					.expect('Content-Type', /json/)
-					.expect(bodyHasUserProperty)
 					.expect(bodyHasErrorsProperty)
+					.expect(bodyHasUserProperty)
 					.expect(422, done);
 			});
 
@@ -75,8 +75,8 @@ describe('create', () => {
 					})
 					.set('Accept', 'application/json')
 					.expect('Content-Type', /json/)
-					.expect(bodyHasUserProperty)
 					.expect(bodyHasErrorsProperty)
+					.expect(bodyHasUserProperty)
 					.expect(422, done);
 			});
 		});
@@ -94,8 +94,8 @@ describe('create', () => {
 					})
 					.set('Accept', 'application/json')
 					.expect('Content-Type', /json/)
-					.expect(bodyHasUserProperty)
 					.expect(bodyHasErrorsProperty)
+					.expect(bodyHasUserProperty)
 					.expect(422, done);
 			});
 
@@ -111,8 +111,8 @@ describe('create', () => {
 					})
 					.set('Accept', 'application/json')
 					.expect('Content-Type', /json/)
-					.expect(bodyHasUserProperty)
 					.expect(bodyHasErrorsProperty)
+					.expect(bodyHasUserProperty)
 					.expect(422, done);
 			});
 
@@ -128,8 +128,8 @@ describe('create', () => {
 					})
 					.set('Accept', 'application/json')
 					.expect('Content-Type', /json/)
-					.expect(bodyHasUserProperty)
 					.expect(bodyHasErrorsProperty)
+					.expect(bodyHasUserProperty)
 					.expect(422, done);
 			});
 		});
@@ -148,8 +148,8 @@ describe('create', () => {
 					})
 					.set('Accept', 'application/json')
 					.expect('Content-Type', /json/)
-					.expect(bodyHasUserProperty)
 					.expect(bodyHasErrorsProperty)
+					.expect(bodyHasUserProperty)
 					.expect(422, done);
 			});
 
@@ -179,8 +179,8 @@ describe('create', () => {
 					})
 					.set('Accept', 'application/json')
 					.expect('Content-Type', /json/)
-					.expect(bodyHasUserProperty)
 					.expect(bodyHasErrorsProperty)
+					.expect(bodyHasUserProperty)
 					.expect(422, done);
 			});
 		});
@@ -199,8 +199,8 @@ describe('create', () => {
 					})
 					.set('Accept', 'application/json')
 					.expect('Content-Type', /json/)
-					.expect(bodyHasUserProperty)
 					.expect(bodyHasErrorsProperty)
+					.expect(bodyHasUserProperty)
 					.expect(422, done);
 			});
 		});
@@ -218,8 +218,8 @@ describe('create', () => {
 					})
 					.set('Accept', 'application/json')
 					.expect('Content-Type', /json/)
-					.expect(bodyHasUserProperty)
 					.expect(bodyHasErrorsProperty)
+					.expect(bodyHasUserProperty)
 					.expect(422, done);
 			});
 		});
