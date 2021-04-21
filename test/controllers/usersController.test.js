@@ -15,9 +15,9 @@ describe('create', () => {
 		request(app)
 			.post('/users')
 			.send({
-				firstName: 'validUser',
-				lastName: 'validUser',
-				email: 'validUser@example.com',
+				firstName: 'user1',
+				lastName: 'user1',
+				email: 'user1@example.com',
 				password: 'password123',
 				passwordConfirmation: 'password123',
 			})
@@ -157,9 +157,9 @@ describe('create', () => {
 				await request(app)
 					.post('/users')
 					.send({
-						firstName: 'validUser',
-						lastName: 'validUser',
-						email: 'validUser@example.com',
+						firstName: 'user1',
+						lastName: 'user1',
+						email: 'user1@example.com',
 						password: 'password123',
 						passwordConfirmation: 'password123',
 					})
@@ -173,7 +173,7 @@ describe('create', () => {
 					.send({
 						firstName: 'invalidUser',
 						lastName: 'invalidUser',
-						email: 'validUser@example.com',
+						email: 'user1@example.com',
 						password: 'password123',
 						passwordConfirmation: 'password123',
 					})
