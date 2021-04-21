@@ -74,7 +74,7 @@ describe('local', () => {
 			.post('/auth/local')
 			.send({
 				email: 'user1@example.com',
-				password: 'incorrectPassword123',
+				password: 'password123',
 			})
 			.set('Accept', 'application/json')
 			.set('Authorization', `Bearer ${jwt}`)
