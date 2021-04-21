@@ -80,3 +80,58 @@ exports.create = [
 		}
 	},
 ];
+
+exports.update = [
+	authenticated,
+	validMongoObjectIdRouteParams,
+	// Validate and sanitise fields.
+	body('text')
+		.trim()
+		.isLength({ min: 1 })
+		.withMessage('Text is required')
+		.isLength({ max: 200 })
+		.withMessage('Text is too long (maximum is 200 characters)')
+		.escape(),
+	// Process request after validation and sanitization.
+	async (req, res, next) => {
+		// Extract the validation errors from a request.
+		const errors = validationResult(req);
+		if (!errors.isEmpty()) {
+			// There are errors.
+			res.status(422).json({
+				errors: errors.array(),
+				comment: req.body,
+			});
+		} else {
+			// Data is valid.
+			try {
+				const post = await Post.findById(req.params.postId);
+				if (post === null) {
+					const err = new Error('Post not found');
+					err.status = 404;
+					throw err;
+				}
+				const comment = await Comment.findById(req.params.commentId);
+				if (comment === null) {
+					const err = new Error('Comment not found');
+					err.status = 404;
+					throw err;
+				}
+				if (!comment.author.equals(req.currentUser._id)) {
+					// Check if author is not the currentUser
+					const err = new Error("You don't own that comment.");
+					err.status = 403;
+					throw err;
+				} else {
+					// Successful
+					// Update the record with escaped and trimmed data.
+					comment.text = req.body.text;
+					const updatedComment = await comment.save();
+					res.status(200).json({ comment: updatedComment });
+				}
+			} catch (err) {
+				next(err);
+			}
+		}
+	},
+];
