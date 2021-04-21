@@ -246,16 +246,17 @@ describe('update', () => {
 	});
 
 	it('should update post and body should have a post property', (done) => {
+		const updatedCommentText = 'post1Updated';
 		request(app)
 			.put(`/posts/${post1Id}`)
 			.send({
-				text: 'post1Updated',
+				text: updatedCommentText,
 			})
 			.set('Accept', 'application/json')
 			.set('Authorization', `Bearer ${user1Jwt}`)
 			.expect('Content-Type', /json/)
 			.expect(bodyHasPostProperty)
-			.expect((res) => res.body.post.text === 'post1Updated')
+			.expect((res) => res.body.post.text === updatedCommentText)
 			.expect(200, done);
 	});
 });
