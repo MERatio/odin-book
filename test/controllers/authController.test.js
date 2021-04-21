@@ -13,9 +13,9 @@ beforeAll(async () => {
 	await request(app)
 		.post('/users')
 		.send({
-			firstName: 'validUser',
-			lastName: 'validUser',
-			email: 'validUser@example.com',
+			firstName: 'user1',
+			lastName: 'user1',
+			email: 'user1@example.com',
 			password: 'password123',
 			passwordConfirmation: 'password123',
 		})
@@ -31,7 +31,7 @@ describe('local', () => {
 		request(app)
 			.post('/auth/local')
 			.send({
-				email: 'validuser@example.com',
+				email: 'user1@example.com',
 				password: 'password123',
 			})
 			.set('Accept', 'application/json')
@@ -45,7 +45,7 @@ describe('local', () => {
 		request(app)
 			.post('/auth/local')
 			.send({
-				email: 'validuser@example.com',
+				email: 'user1@example.com',
 				password: 'incorrectPassword123',
 			})
 			.set('Accept', 'application/json')
@@ -60,7 +60,7 @@ describe('local', () => {
 		await request(app)
 			.post('/auth/local')
 			.send({
-				email: 'validuser@example.com',
+				email: 'user1@example.com',
 				password: 'password123',
 			})
 			.set('Accept', 'application/json')
@@ -73,7 +73,7 @@ describe('local', () => {
 		request(app)
 			.post('/auth/local')
 			.send({
-				email: 'validuser@example.com',
+				email: 'user1@example.com',
 				password: 'incorrectPassword123',
 			})
 			.set('Accept', 'application/json')
