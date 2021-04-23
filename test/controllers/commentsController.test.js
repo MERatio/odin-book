@@ -257,7 +257,7 @@ describe('update', () => {
 			request(app)
 				.put(
 					`/posts/${post1Id}/comments/${
-						comment1Id.substring(0, post1Id.length - 3) + '123'
+						comment1Id.substring(0, comment1Id.length - 3) + '123'
 					}`
 				)
 				.send({
