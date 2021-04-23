@@ -345,3 +345,84 @@ describe('update', () => {
 			.expect(200, done);
 	});
 });
+
+describe('destroy', () => {
+	describe('body has err property', () => {
+		test('if JWT is not valid or not supplied', (done) => {
+			request(app)
+				.del(`/posts/${post1Id}/comments/${comment1Id}`)
+				.set('Accept', 'application/json')
+				.expect('Content-Type', /json/)
+				.expect(bodyHasErrProperty)
+				.expect(401, done);
+		});
+
+		test('if postId route parameter is not valid', (done) => {
+			request(app)
+				.del(`/posts/${post1Id + '123'}/comments/${comment1Id}`)
+				.set('Accept', 'application/json')
+				.set('Authorization', `Bearer ${user1Jwt}`)
+				.expect('Content-Type', /json/)
+				.expect(bodyHasErrProperty)
+				.expect(404, done);
+		});
+
+		test('if post does not exists', (done) => {
+			request(app)
+				.del(
+					`/posts/${
+						post1Id.substring(0, post1Id.length - 3) + '123'
+					}/comments/${comment1Id}`
+				)
+				.set('Accept', 'application/json')
+				.set('Authorization', `Bearer ${user1Jwt}`)
+				.expect('Content-Type', /json/)
+				.expect(bodyHasErrProperty)
+				.expect(404, done);
+		});
+
+		test('if commentId route parameter is not valid', (done) => {
+			request(app)
+				.del(`/posts/${post1Id}/comments/${comment1Id + '123'}`)
+				.set('Accept', 'application/json')
+				.set('Authorization', `Bearer ${user1Jwt}`)
+				.expect('Content-Type', /json/)
+				.expect(bodyHasErrProperty)
+				.expect(404, done);
+		});
+
+		test('if comment does not exists', (done) => {
+			request(app)
+				.del(
+					`/posts/${post1Id}/comments/${
+						comment1Id.substring(0, comment1Id.length - 3) + '123'
+					}`
+				)
+				.set('Accept', 'application/json')
+				.set('Authorization', `Bearer ${user1Jwt}`)
+				.expect('Content-Type', /json/)
+				.expect(bodyHasErrProperty)
+				.expect(404, done);
+		});
+
+		test("if currentUser is not the comment's author", (done) => {
+			request(app)
+				.del(`/posts/${post1Id}/comments/${comment1Id}`)
+				.set('Accept', 'application/json')
+				.set('Authorization', `Bearer ${user2Jwt}`)
+				.expect('Content-Type', /json/)
+				.expect(bodyHasErrProperty)
+				.expect(403, done);
+		});
+	});
+
+	it('should remove the comment. And body should have a comment property', async (done) => {
+		request(app)
+			.del(`/posts/${post1Id}/comments/${comment1Id}`)
+			.set('Accept', 'application/json')
+			.set('Authorization', `Bearer ${user1Jwt}`)
+			.expect('Content-Type', /json/)
+			.expect(bodyHasCommentProperty)
+			.expect(200, done);
+	});
+});

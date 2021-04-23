@@ -135,3 +135,36 @@ exports.update = [
 		}
 	},
 ];
+
+exports.destroy = [
+	authenticated,
+	validMongoObjectIdRouteParams,
+	async (req, res, next) => {
+		try {
+			const post = await Post.findById(req.params.postId);
+			if (post === null) {
+				const err = new Error('Post not found.');
+				err.status = 404;
+				throw err;
+			}
+			const comment = await Comment.findById(req.params.commentId);
+			if (comment === null) {
+				const err = new Error('Comment not found.');
+				err.status = 404;
+				throw err;
+			} else if (!comment.author.equals(req.currentUser._id)) {
+				// If comment's author is not the currentUser
+				const err = new Error("You don't own that post.");
+				err.status = 403;
+				throw err;
+			} else {
+				// Successful
+				// Remove comment.
+				const removedComment = await comment.remove();
+				res.json({ comment: removedComment });
+			}
+		} catch (err) {
+			next(err);
+		}
+	},
+];

@@ -7,4 +7,6 @@ router.post('/', commentsController.create);
 
 router.put('/:commentId', commentsController.update);
 
+router.delete('/:commentId', commentsController.destroy);
+
 module.exports = router;
