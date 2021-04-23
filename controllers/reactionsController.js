@@ -34,7 +34,7 @@ exports.create = [
 					err.status = 404;
 					next(err);
 				} else {
-					// Check if there is duplicate reaction.
+					// If there is duplicate reaction.
 					Reaction.exists(
 						{
 							user: req.currentUser._id,
@@ -111,7 +111,7 @@ exports.destroy = [
 				err.status = 404;
 				throw err;
 			} else if (!reaction.user.equals(req.currentUser._id)) {
-				// Check if currentUser is reaction's user.
+				// If currentUser is reaction's user.
 				const err = new Error('Not a valid friend request.');
 				err.status = 403;
 				throw err;

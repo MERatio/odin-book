@@ -23,7 +23,7 @@ exports.create = [
 				friendship: req.body,
 			});
 		} else if (req.currentUser._id.equals(req.body.requesteeId)) {
-			// Check if currentUser sends a friend request to themselves.
+			// If currentUser sends a friend request to themselves.
 			const err = new Error('Cannot send a friend request to yourself.');
 			err.status = 422;
 			next(err);
@@ -114,7 +114,7 @@ exports.update = [
 				err.status = 404;
 				throw err;
 			} else if (!friendship.requestee.equals(req.currentUser._id)) {
-				// Check if requestee is not the currentUser
+				// If requestee is not the currentUser
 				const err = new Error('Not a valid friend request.');
 				err.status = 403;
 				throw err;
@@ -151,7 +151,7 @@ exports.destroy = [
 					friendship.requestee.equals(req.currentUser._id)
 				)
 			) {
-				// Check if currentUser is not the requestor or the requestee.
+				// If currentUser is not the requestor or the requestee.
 				const err = new Error('Not a valid friend request.');
 				err.status = 403;
 				throw err;

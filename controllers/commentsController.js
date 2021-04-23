@@ -118,7 +118,7 @@ exports.update = [
 					throw err;
 				}
 				if (!comment.author.equals(req.currentUser._id)) {
-					// Check if author is not the currentUser
+					// If comment's author is not the currentUser.
 					const err = new Error("You don't own that comment.");
 					err.status = 403;
 					throw err;
