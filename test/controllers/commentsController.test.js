@@ -339,7 +339,6 @@ describe('update', () => {
 			})
 			.set('Accept', 'application/json')
 			.set('Authorization', `Bearer ${user1Jwt}`)
-			.expect((res) => console.log(res.body))
 			.expect('Content-Type', /json/)
 			.expect(bodyHasCommentProperty)
 			.expect((res) => res.body.comment.text === updatedCommentText)
