@@ -8,8 +8,9 @@ const {
 	bodyHasCurrentUserProperty,
 } = require('../assertionFunctions');
 
-beforeAll(async () => {
-	await mongoConfigTesting.connect();
+beforeAll(async () => await mongoConfigTesting.connect());
+beforeEach(async () => {
+	await mongoConfigTesting.clear();
 	await request(app)
 		.post('/users')
 		.send({

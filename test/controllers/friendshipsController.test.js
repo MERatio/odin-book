@@ -17,8 +17,9 @@ let user2Jwt;
 let user3Jwt;
 let user1AndUser2FriendshipId;
 
-beforeAll(async () => {
-	await mongoConfigTesting.connect();
+beforeAll(async () => await mongoConfigTesting.connect());
+beforeEach(async () => {
+	await mongoConfigTesting.clear();
 	await request(app)
 		.post('/users')
 		.send({
@@ -164,6 +165,17 @@ describe('create', () => {
 	});
 
 	test('body has friendship and errors if friendship between user already exists', async (done) => {
+		await request(app)
+			.post('/friendships')
+			.send({
+				requesteeId: user3Id,
+			})
+			.set('Accept', 'application/json')
+			.set('Authorization', `Bearer ${user2Jwt}`)
+			.expect('Content-Type', /json/)
+			.expect(bodyHasFriendshipProperty)
+			.expect(201);
+
 		request(app)
 			.post('/friendships')
 			.send({
@@ -235,6 +247,15 @@ describe('update', () => {
 	});
 
 	test('body has err property if friend request is already accepted', async (done) => {
+		await request(app)
+			.put(`/friendships/${user1AndUser2FriendshipId}`)
+			.set('Accept', 'application/json')
+			.set('Authorization', `Bearer ${user2Jwt}`)
+			.expect('Content-Type', /json/)
+			.expect(bodyHasFriendshipProperty)
+			.expect((res) => res.body.friendship.status === 'friends')
+			.expect(200);
+
 		request(app)
 			.put(`/friendships/${user1AndUser2FriendshipId}`)
 			.set('Accept', 'application/json')

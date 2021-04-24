@@ -15,8 +15,9 @@ let post1Id;
 let post2Id;
 let reaction1Id;
 
-beforeAll(async () => {
-	await mongoConfigTesting.connect();
+beforeAll(async () => await mongoConfigTesting.connect());
+beforeEach(async () => {
+	await mongoConfigTesting.clear();
 	await request(app)
 		.post('/users')
 		.send({
@@ -119,7 +120,15 @@ describe('create', () => {
 			.expect(201, done);
 	});
 
-	test('body has err property if currentUser have duplicate reaction type in the same post', (done) => {
+	test('body has err property if currentUser have duplicate reaction type in the same post', async (done) => {
+		await request(app)
+			.post(`/posts/${post2Id}/reactions`)
+			.set('Accept', 'application/json')
+			.set('Authorization', `Bearer ${user1Jwt}`)
+			.expect('Content-Type', /json/)
+			.expect(bodyHasReactionProperty)
+			.expect(201);
+
 		request(app)
 			.post(`/posts/${post2Id}/reactions`)
 			.set('Accept', 'application/json')

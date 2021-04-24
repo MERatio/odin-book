@@ -16,8 +16,9 @@ let user1Jwt;
 let user2Jwt;
 let post1Id;
 
-beforeAll(async () => {
-	await mongoConfigTesting.connect();
+beforeAll(async () => await mongoConfigTesting.connect());
+beforeEach(async () => {
+	await mongoConfigTesting.clear();
 	await request(app)
 		.post('/users')
 		.send({
