@@ -68,6 +68,17 @@ beforeAll(async () => {
 		.expect(bodyHasCurrentUserProperty)
 		.expect((res) => (user2Jwt = res.body.jwt))
 		.expect(200);
+	await request(app)
+		.post('/posts')
+		.send({
+			text: 'post1',
+		})
+		.set('Accept', 'application/json')
+		.set('Authorization', `Bearer ${user1Jwt}`)
+		.expect('Content-Type', /json/)
+		.expect(bodyHasPostProperty)
+		.expect((res) => (post1Id = res.body.post._id))
+		.expect(201);
 });
 afterAll(async () => await mongoConfigTesting.close());
 
@@ -134,13 +145,12 @@ describe('create', () => {
 		request(app)
 			.post('/posts')
 			.send({
-				text: 'post1',
+				text: 'valid post',
 			})
 			.set('Accept', 'application/json')
 			.set('Authorization', `Bearer ${user1Jwt}`)
 			.expect('Content-Type', /json/)
 			.expect(bodyHasPostProperty)
-			.expect((res) => (post1Id = res.body.post._id))
 			.expect(201, done);
 	});
 });
