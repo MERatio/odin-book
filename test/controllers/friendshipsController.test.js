@@ -10,8 +10,8 @@ const {
 	bodyHasFriendshipProperty,
 } = require('../assertionFunctions');
 
-let user1Id;
 let user2Id;
+let user3Id;
 let user1Jwt;
 let user2Jwt;
 let user3Jwt;
@@ -31,7 +31,6 @@ beforeAll(async () => {
 		.set('Accept', 'application/json')
 		.expect('Content-Type', /json/)
 		.expect(bodyHasUserProperty)
-		.expect((res) => (user1Id = res.body.user._id))
 		.expect(201);
 	await request(app)
 		.post('/users')
@@ -59,6 +58,7 @@ beforeAll(async () => {
 		.set('Accept', 'application/json')
 		.expect('Content-Type', /json/)
 		.expect(bodyHasUserProperty)
+		.expect((res) => (user3Id = res.body.user._id))
 		.expect(201);
 	await request(app)
 		.post('/auth/local')
@@ -96,6 +96,18 @@ beforeAll(async () => {
 		.expect(bodyHasCurrentUserProperty)
 		.expect((res) => (user3Jwt = res.body.jwt))
 		.expect(200);
+	// user1 sends a friend request to user2.
+	await request(app)
+		.post('/friendships')
+		.send({
+			requesteeId: user2Id,
+		})
+		.set('Accept', 'application/json')
+		.set('Authorization', `Bearer ${user1Jwt}`)
+		.expect('Content-Type', /json/)
+		.expect(bodyHasFriendshipProperty)
+		.expect((res) => (user1AndUser2FriendshipId = res.body.friendship._id))
+		.expect(201);
 });
 afterAll(async () => await mongoConfigTesting.close());
 
@@ -104,7 +116,7 @@ describe('create', () => {
 		request(app)
 			.post('/friendships')
 			.send({
-				requesteeId: user2Id,
+				requesteeId: user3Id,
 			})
 			.set('Accept', 'application/json')
 			.expect('Content-Type', /json/)
@@ -117,7 +129,7 @@ describe('create', () => {
 			.post('/friendships')
 			.send({ requesteeId: 'notAMongoId123' })
 			.set('Accept', 'application/json')
-			.set('Authorization', `Bearer ${user1Jwt}`)
+			.set('Authorization', `Bearer ${user2Jwt}`)
 			.expect('Content-Type', /json/)
 			.expect(bodyHasErrorsProperty)
 			.expect(bodyHasFriendshipProperty)
@@ -129,10 +141,10 @@ describe('create', () => {
 			request(app)
 				.post('/friendships')
 				.send({
-					requesteeId: user1Id,
+					requesteeId: user2Id,
 				})
 				.set('Accept', 'application/json')
-				.set('Authorization', `Bearer ${user1Jwt}`)
+				.set('Authorization', `Bearer ${user2Jwt}`)
 				.expect(bodyHasErrProperty)
 				.expect(422, done);
 		});
@@ -142,13 +154,12 @@ describe('create', () => {
 		request(app)
 			.post('/friendships')
 			.send({
-				requesteeId: user2Id,
+				requesteeId: user3Id,
 			})
 			.set('Accept', 'application/json')
-			.set('Authorization', `Bearer ${user1Jwt}`)
+			.set('Authorization', `Bearer ${user2Jwt}`)
 			.expect('Content-Type', /json/)
 			.expect(bodyHasFriendshipProperty)
-			.expect((res) => (user1AndUser2FriendshipId = res.body.friendship._id))
 			.expect(201, done);
 	});
 
@@ -156,7 +167,7 @@ describe('create', () => {
 		request(app)
 			.post('/friendships')
 			.send({
-				requesteeId: user1Id,
+				requesteeId: user3Id,
 			})
 			.set('Accept', 'application/json')
 			.set('Authorization', `Bearer ${user2Jwt}`)
