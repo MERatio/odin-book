@@ -11,9 +11,6 @@ const {
 } = require('../assertionFunctions');
 
 let user1Jwt;
-let post1Id;
-let post2Id;
-let reaction1Id;
 
 beforeAll(async () => await mongoConfigTesting.connect());
 beforeEach(async () => {
@@ -42,45 +39,31 @@ beforeEach(async () => {
 		.expect(bodyHasCurrentUserProperty)
 		.expect((res) => (user1Jwt = res.body.jwt))
 		.expect(200);
-	await request(app)
-		.post('/posts')
-		.send({
-			text: 'post1',
-		})
-		.set('Accept', 'application/json')
-		.set('Authorization', `Bearer ${user1Jwt}`)
-		.expect('Content-Type', /json/)
-		.expect(bodyHasPostProperty)
-		.expect((res) => (post1Id = res.body.post._id))
-		.expect(201);
-	await request(app)
-		.post('/posts')
-		.send({
-			text: 'post2',
-		})
-		.set('Accept', 'application/json')
-		.set('Authorization', `Bearer ${user1Jwt}`)
-		.expect('Content-Type', /json/)
-		.expect(bodyHasPostProperty)
-		.expect((res) => (post2Id = res.body.post._id))
-		.expect(201);
-	await request(app)
-		.post(`/posts/${post1Id}/reactions`)
-		.set('Accept', 'application/json')
-		.set('Authorization', `Bearer ${user1Jwt}`)
-		.expect('Content-Type', /json/)
-		.expect(bodyHasReactionProperty)
-		.expect((res) => (reaction1Id = res.body.reaction._id))
-		.expect(201);
 });
 afterEach(async () => await mongoConfigTesting.clear());
 afterAll(async () => await mongoConfigTesting.close());
 
 describe('create', () => {
+	let post1Id;
+
+	beforeEach(async () => {
+		await request(app)
+			.post('/posts')
+			.send({
+				text: 'post1',
+			})
+			.set('Accept', 'application/json')
+			.set('Authorization', `Bearer ${user1Jwt}`)
+			.expect('Content-Type', /json/)
+			.expect(bodyHasPostProperty)
+			.expect((res) => (post1Id = res.body.post._id))
+			.expect(201);
+	});
+
 	describe('body has err property', () => {
 		test('if JWT is not valid or not supplied', (done) => {
 			request(app)
-				.post(`/posts/${post2Id}/reactions`)
+				.post(`/posts/${post1Id}/reactions`)
 				.set('Accept', 'application/json')
 				.expect('Content-Type', /json/)
 				.expect(bodyHasErrProperty)
@@ -89,7 +72,7 @@ describe('create', () => {
 
 		test('if postId route parameter is not valid', (done) => {
 			request(app)
-				.post(`/posts/${post2Id + '123'}/reactions`)
+				.post(`/posts/${post1Id + '123'}/reactions`)
 				.set('Accept', 'application/json')
 				.set('Authorization', `Bearer ${user1Jwt}`)
 				.expect('Content-Type', /json/)
@@ -100,7 +83,7 @@ describe('create', () => {
 		test('if post does not exists', (done) => {
 			request(app)
 				.post(
-					`/posts/${post2Id.substring(0, post2Id.length - 3) + '123'}/reactions`
+					`/posts/${post1Id.substring(0, post1Id.length - 3) + '123'}/reactions`
 				)
 				.set('Accept', 'application/json')
 				.set('Authorization', `Bearer ${user1Jwt}`)
@@ -112,7 +95,7 @@ describe('create', () => {
 
 	it('should like the post', (done) => {
 		request(app)
-			.post(`/posts/${post2Id}/reactions`)
+			.post(`/posts/${post1Id}/reactions`)
 			.set('Accept', 'application/json')
 			.set('Authorization', `Bearer ${user1Jwt}`)
 			.expect('Content-Type', /json/)
@@ -122,7 +105,7 @@ describe('create', () => {
 
 	test('body has err property if currentUser have duplicate reaction type in the same post', async (done) => {
 		await request(app)
-			.post(`/posts/${post2Id}/reactions`)
+			.post(`/posts/${post1Id}/reactions`)
 			.set('Accept', 'application/json')
 			.set('Authorization', `Bearer ${user1Jwt}`)
 			.expect('Content-Type', /json/)
@@ -130,7 +113,7 @@ describe('create', () => {
 			.expect(201);
 
 		request(app)
-			.post(`/posts/${post2Id}/reactions`)
+			.post(`/posts/${post1Id}/reactions`)
 			.set('Accept', 'application/json')
 			.set('Authorization', `Bearer ${user1Jwt}`)
 			.expect('Content-Type', /json/)
@@ -140,10 +123,35 @@ describe('create', () => {
 });
 
 describe('destroy', () => {
+	let post2Id;
+	let post2Reaction1;
+
+	beforeEach(async () => {
+		await request(app)
+			.post('/posts')
+			.send({
+				text: 'post1',
+			})
+			.set('Accept', 'application/json')
+			.set('Authorization', `Bearer ${user1Jwt}`)
+			.expect('Content-Type', /json/)
+			.expect(bodyHasPostProperty)
+			.expect((res) => (post2Id = res.body.post._id))
+			.expect(201);
+		await request(app)
+			.post(`/posts/${post2Id}/reactions`)
+			.set('Accept', 'application/json')
+			.set('Authorization', `Bearer ${user1Jwt}`)
+			.expect('Content-Type', /json/)
+			.expect(bodyHasReactionProperty)
+			.expect((res) => (post2Reaction1 = res.body.reaction._id))
+			.expect(201);
+	});
+
 	describe('body has err property', () => {
 		test('if JWT is not valid or not supplied', (done) => {
 			request(app)
-				.del(`/posts/${post1Id}/reactions/${reaction1Id}`)
+				.del(`/posts/${post2Id}/reactions/${post2Reaction1}`)
 				.set('Accept', 'application/json')
 				.expect('Content-Type', /json/)
 				.expect(bodyHasErrProperty)
@@ -152,7 +160,7 @@ describe('destroy', () => {
 
 		test('if reactionId route parameter is not valid', (done) => {
 			request(app)
-				.del(`/posts/${post1Id}/reactions/${reaction1Id + '123'}`)
+				.del(`/posts/${post2Id}/reactions/${post2Reaction1 + '123'}`)
 				.set('Accept', 'application/json')
 				.set('Authorization', `Bearer ${user1Jwt}`)
 				.expect('Content-Type', /json/)
@@ -162,7 +170,7 @@ describe('destroy', () => {
 
 		test('if reaction does not exists', (done) => {
 			request(app)
-				.del(`/posts/${post1Id.substring(0, post1Id.length - 3) + '123'}`)
+				.del(`/posts/${post2Id.substring(0, post2Id.length - 3) + '123'}`)
 				.set('Accept', 'application/json')
 				.set('Authorization', `Bearer ${user1Jwt}`)
 				.expect('Content-Type', /json/)
@@ -200,7 +208,7 @@ describe('destroy', () => {
 				.expect(200);
 
 			request(app)
-				.del(`/posts/${post1Id}/reactions/${reaction1Id}`)
+				.del(`/posts/${post2Id}/reactions/${post2Reaction1}`)
 				.set('Accept', 'application/json')
 				.set('Authorization', `Bearer ${user2Jwt}`)
 				.expect('Content-Type', /json/)
@@ -211,7 +219,7 @@ describe('destroy', () => {
 
 	it('should remove the reaction', (done) => {
 		request(app)
-			.del(`/posts/${post1Id}/reactions/${reaction1Id}`)
+			.del(`/posts/${post2Id}/reactions/${post2Reaction1}`)
 			.set('Accept', 'application/json')
 			.set('Authorization', `Bearer ${user1Jwt}`)
 			.expect('Content-Type', /json/)
