@@ -267,7 +267,11 @@ describe('update', () => {
 			.set('Authorization', `Bearer ${user1Jwt}`)
 			.expect('Content-Type', /json/)
 			.expect(bodyHasPostProperty)
-			.expect((res) => res.body.post.text === updatedCommentText)
+			.expect((res) => {
+				if (res.body.post.text !== updatedCommentText) {
+					throw new Error('Post is not updated.');
+				}
+			})
 			.expect(200, done);
 	});
 });

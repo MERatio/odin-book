@@ -242,7 +242,11 @@ describe('update', () => {
 			.set('Authorization', `Bearer ${user2Jwt}`)
 			.expect('Content-Type', /json/)
 			.expect(bodyHasFriendshipProperty)
-			.expect((res) => res.body.friendship.status === 'friends')
+			.expect((res) => {
+				if (res.body.friendship.status !== 'friends') {
+					throw new Error('Friend request is not accepted.');
+				}
+			})
 			.expect(200, done);
 	});
 
@@ -253,7 +257,11 @@ describe('update', () => {
 			.set('Authorization', `Bearer ${user2Jwt}`)
 			.expect('Content-Type', /json/)
 			.expect(bodyHasFriendshipProperty)
-			.expect((res) => res.body.friendship.status === 'friends')
+			.expect((res) => {
+				if (res.body.friendship.status !== 'friends') {
+					throw new Error('Friendship status should not change.');
+				}
+			})
 			.expect(200);
 
 		request(app)
@@ -320,7 +328,11 @@ describe('destroy', () => {
 			.set('Authorization', `Bearer ${user2Jwt}`)
 			.expect('Content-Type', /json/)
 			.expect(bodyHasFriendshipProperty)
-			.expect((res) => res.body.friendship.status === 'friends')
+			.expect((res) => {
+				if (res.body.friendship.status !== 'pending') {
+					throw new Error('Friendship status should not change.');
+				}
+			})
 			.expect(200, done);
 	});
 });

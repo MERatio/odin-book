@@ -216,7 +216,11 @@ describe('destroy', () => {
 			.set('Authorization', `Bearer ${user1Jwt}`)
 			.expect('Content-Type', /json/)
 			.expect(bodyHasReactionProperty)
-			.expect((res) => res.body.reaction.type === 'like')
+			.expect((res) => {
+				if (res.body.reaction.type !== 'like') {
+					throw new Error('Reaction type should not change.');
+				}
+			})
 			.expect(200, done);
 	});
 });
