@@ -22,7 +22,7 @@ exports.create = [
 				errors: errors.array(),
 				friendship: req.body,
 			});
-		} else if (req.currentUser._id.equals(req.body.requesteeId)) {
+		} else if (req.currentUser._id.toString() === req.body.requesteeId) {
 			// If currentUser sends a friend request to themselves.
 			const err = new Error('Cannot send a friend request to yourself.');
 			err.status = 422;
