@@ -7,7 +7,7 @@ const {
 } = require('../assertionFunctions');
 
 beforeAll(async () => await mongoConfigTesting.connect());
-beforeEach(async () => await mongoConfigTesting.clear());
+afterEach(async () => await mongoConfigTesting.clear());
 afterAll(async () => await mongoConfigTesting.close());
 
 describe('create', () => {

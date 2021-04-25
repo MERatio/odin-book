@@ -18,7 +18,6 @@ let comment1Id;
 
 beforeAll(async () => await mongoConfigTesting.connect());
 beforeEach(async () => {
-	await mongoConfigTesting.clear();
 	await request(app)
 		.post('/users')
 		.send({
@@ -92,6 +91,7 @@ beforeEach(async () => {
 		.expect((res) => (comment1Id = res.body.comment._id))
 		.expect(201);
 });
+afterEach(async () => await mongoConfigTesting.clear());
 afterAll(async () => await mongoConfigTesting.close());
 
 describe('create', () => {

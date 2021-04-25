@@ -10,7 +10,6 @@ const {
 
 beforeAll(async () => await mongoConfigTesting.connect());
 beforeEach(async () => {
-	await mongoConfigTesting.clear();
 	await request(app)
 		.post('/users')
 		.send({
@@ -25,6 +24,7 @@ beforeEach(async () => {
 		.expect(bodyHasUserProperty)
 		.expect(201);
 });
+afterEach(async () => await mongoConfigTesting.clear());
 afterAll(async () => await mongoConfigTesting.close());
 
 describe('local', () => {

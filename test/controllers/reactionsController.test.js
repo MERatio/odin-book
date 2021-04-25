@@ -17,7 +17,6 @@ let reaction1Id;
 
 beforeAll(async () => await mongoConfigTesting.connect());
 beforeEach(async () => {
-	await mongoConfigTesting.clear();
 	await request(app)
 		.post('/users')
 		.send({
@@ -74,6 +73,7 @@ beforeEach(async () => {
 		.expect((res) => (reaction1Id = res.body.reaction._id))
 		.expect(201);
 });
+afterEach(async () => await mongoConfigTesting.clear());
 afterAll(async () => await mongoConfigTesting.close());
 
 describe('create', () => {
