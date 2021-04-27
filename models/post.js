@@ -7,7 +7,7 @@ const PostSchema = new Schema(
 		author: { type: Schema.Types.ObjectId, ref: 'User', required: true },
 		text: { type: String, required: true, maxlength: 1000 },
 		reactions: [{ type: Schema.Types.ObjectId, ref: 'Reaction' }],
-		comments: [{ type: Schema.Types.ObjectId, ref: 'Commment' }],
+		comments: [{ type: Schema.Types.ObjectId, ref: 'Comment' }],
 	},
 	{
 		timestamps: true,
