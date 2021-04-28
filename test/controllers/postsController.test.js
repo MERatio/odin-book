@@ -18,6 +18,9 @@ let user2Id;
 let user1Jwt;
 let user2Jwt;
 let user1Post1Id;
+let user1AndUser2FriendshipId;
+let user2Post1Id;
+let user2Post1Comment4Id;
 
 beforeAll(async () => await mongoConfigTesting.connect());
 beforeEach(async () => {
@@ -83,6 +86,88 @@ beforeEach(async () => {
 		.expect(bodyHasPostProperty)
 		.expect((res) => (user1Post1Id = res.body.post._id))
 		.expect(201);
+	await request(app)
+		.post('/friendships')
+		.send({
+			requesteeId: user2Id,
+		})
+		.set('Accept', 'application/json')
+		.set('Authorization', `Bearer ${user1Jwt}`)
+		.expect('Content-Type', /json/)
+		.expect(bodyHasFriendshipProperty)
+		.expect((res) => (user1AndUser2FriendshipId = res.body.friendship._id))
+		.expect(201);
+	await request(app)
+		.put(`/friendships/${user1AndUser2FriendshipId}`)
+		.set('Accept', 'application/json')
+		.set('Authorization', `Bearer ${user2Jwt}`)
+		.expect('Content-Type', /json/)
+		.expect(bodyHasFriendshipProperty)
+		.expect((res) => {
+			if (res.body.friendship.status !== 'friends') {
+				throw new Error('Friend request is not accepted.');
+			}
+		})
+		.expect(200);
+	await request(app)
+		.post('/posts')
+		.send({
+			text: "friend's post",
+		})
+		.set('Accept', 'application/json')
+		.set('Authorization', `Bearer ${user2Jwt}`)
+		.expect('Content-Type', /json/)
+		.expect(bodyHasPostProperty)
+		.expect((res) => (user2Post1Id = res.body.post._id))
+		.expect(201);
+	await request(app)
+		.post(`/posts/${user2Post1Id}/reactions`)
+		.set('Accept', 'application/json')
+		.set('Authorization', `Bearer ${user1Jwt}`)
+		.expect('Content-Type', /json/)
+		.expect(bodyHasReactionProperty)
+		.expect(201);
+	await request(app)
+		.post(`/posts/${user2Post1Id}/comments`)
+		.send({
+			text: 'user2Post1Comment1Id',
+		})
+		.set('Accept', 'application/json')
+		.set('Authorization', `Bearer ${user1Jwt}`)
+		.expect('Content-Type', /json/)
+		.expect(bodyHasCommentProperty)
+		.expect(201);
+	await request(app)
+		.post(`/posts/${user2Post1Id}/comments`)
+		.send({
+			text: 'user2Post1IdComment2',
+		})
+		.set('Accept', 'application/json')
+		.set('Authorization', `Bearer ${user1Jwt}`)
+		.expect('Content-Type', /json/)
+		.expect(bodyHasCommentProperty)
+		.expect(201);
+	await request(app)
+		.post(`/posts/${user2Post1Id}/comments`)
+		.send({
+			text: 'user2Post1IdComment3',
+		})
+		.set('Accept', 'application/json')
+		.set('Authorization', `Bearer ${user1Jwt}`)
+		.expect('Content-Type', /json/)
+		.expect(bodyHasCommentProperty)
+		.expect(201);
+	await request(app)
+		.post(`/posts/${user2Post1Id}/comments`)
+		.send({
+			text: 'user2Post1IdComment4',
+		})
+		.set('Accept', 'application/json')
+		.set('Authorization', `Bearer ${user1Jwt}`)
+		.expect('Content-Type', /json/)
+		.expect(bodyHasCommentProperty)
+		.expect((res) => (user2Post1Comment4Id = res.body.comment._id))
+		.expect(201);
 });
 afterEach(async () => await mongoConfigTesting.clear());
 afterAll(async () => await mongoConfigTesting.close());
@@ -97,49 +182,10 @@ describe('index', () => {
 	});
 
 	describe('posts', () => {
-		let user1AndUser2FriendshipId;
-		let user2Post1Id;
 		let stranger1Jwt;
 		let stranger1Post1Id;
 
 		beforeEach(async () => {
-			await request(app)
-				.post('/friendships')
-				.send({
-					requesteeId: user2Id,
-				})
-				.set('Accept', 'application/json')
-				.set('Authorization', `Bearer ${user1Jwt}`)
-				.expect('Content-Type', /json/)
-				.expect(bodyHasFriendshipProperty)
-				.expect((res) => (user1AndUser2FriendshipId = res.body.friendship._id))
-				.expect(201);
-
-			await request(app)
-				.put(`/friendships/${user1AndUser2FriendshipId}`)
-				.set('Accept', 'application/json')
-				.set('Authorization', `Bearer ${user2Jwt}`)
-				.expect('Content-Type', /json/)
-				.expect(bodyHasFriendshipProperty)
-				.expect((res) => {
-					if (res.body.friendship.status !== 'friends') {
-						throw new Error('Friend request is not accepted.');
-					}
-				})
-				.expect(200);
-
-			await request(app)
-				.post('/posts')
-				.send({
-					text: "friend's post",
-				})
-				.set('Accept', 'application/json')
-				.set('Authorization', `Bearer ${user2Jwt}`)
-				.expect('Content-Type', /json/)
-				.expect(bodyHasPostProperty)
-				.expect((res) => (user2Post1Id = res.body.post._id))
-				.expect(201);
-
 			await request(app)
 				.post('/users')
 				.send({
@@ -248,16 +294,6 @@ describe('index', () => {
 		});
 
 		describe('individual post reactions', () => {
-			beforeEach(async () => {
-				await request(app)
-					.post(`/posts/${user2Post1Id}/reactions`)
-					.set('Accept', 'application/json')
-					.set('Authorization', `Bearer ${user1Jwt}`)
-					.expect('Content-Type', /json/)
-					.expect(bodyHasReactionProperty)
-					.expect(201);
-			});
-
 			test('should be populated', (done) => {
 				request(app)
 					.get('/posts')
@@ -274,55 +310,6 @@ describe('index', () => {
 		});
 
 		describe('individual post comments', () => {
-			let user2Post1Comment4Id;
-
-			beforeEach(async () => {
-				await request(app)
-					.post(`/posts/${user2Post1Id}/comments`)
-					.send({
-						text: 'user2Post1Comment1Id',
-					})
-					.set('Accept', 'application/json')
-					.set('Authorization', `Bearer ${user1Jwt}`)
-					.expect('Content-Type', /json/)
-					.expect(bodyHasCommentProperty)
-					.expect(201);
-
-				await request(app)
-					.post(`/posts/${user2Post1Id}/comments`)
-					.send({
-						text: 'user2Post1IdComment2',
-					})
-					.set('Accept', 'application/json')
-					.set('Authorization', `Bearer ${user1Jwt}`)
-					.expect('Content-Type', /json/)
-					.expect(bodyHasCommentProperty)
-					.expect(201);
-
-				await request(app)
-					.post(`/posts/${user2Post1Id}/comments`)
-					.send({
-						text: 'user2Post1IdComment3',
-					})
-					.set('Accept', 'application/json')
-					.set('Authorization', `Bearer ${user1Jwt}`)
-					.expect('Content-Type', /json/)
-					.expect(bodyHasCommentProperty)
-					.expect(201);
-
-				await request(app)
-					.post(`/posts/${user2Post1Id}/comments`)
-					.send({
-						text: 'user2Post1IdComment4',
-					})
-					.set('Accept', 'application/json')
-					.set('Authorization', `Bearer ${user1Jwt}`)
-					.expect('Content-Type', /json/)
-					.expect(bodyHasCommentProperty)
-					.expect((res) => (user2Post1Comment4Id = res.body.comment._id))
-					.expect(201);
-			});
-
 			test('should be populated', (done) => {
 				request(app)
 					.get('/posts')
@@ -440,6 +427,100 @@ describe('create', () => {
 			.expect('Content-Type', /json/)
 			.expect(bodyHasPostProperty)
 			.expect(201, done);
+	});
+});
+
+describe('show', () => {
+	describe('body has err property', () => {
+		test('if postId route parameter is not valid', (done) => {
+			request(app)
+				.get(`/posts/${user2Post1Id}` + '123')
+				.expect('Content-Type', /json/)
+				.expect(bodyHasErrProperty)
+				.expect(404, done);
+		});
+
+		test('if post does not exists', (done) => {
+			request(app)
+				.get(
+					`/posts/${user2Post1Id.substring(0, user2Post1Id.length - 3)}` + '123'
+				)
+				.expect('Content-Type', /json/)
+				.expect(bodyHasErrProperty)
+				.expect(404, done);
+		});
+	});
+
+	test('body should have a post property', (done) => {
+		request(app)
+			.get(`/posts/${user2Post1Id}`)
+			.expect('Content-Type', /json/)
+			.expect(bodyHasPostProperty)
+			.expect(200, done);
+	});
+
+	describe("post's", () => {
+		describe('author ', () => {
+			test('should be populated', (done) => {
+				request(app)
+					.get(`/posts/${user2Post1Id}`)
+					.set('Authorization', `Bearer ${user1Jwt}`)
+					.expect('Content-Type', /json/)
+					.expect(bodyHasPostProperty)
+					.expect((res) => {
+						if (!res.body.post.author._id) {
+							throw new Error("post's author is not populated");
+						}
+					})
+					.expect(200, done);
+			});
+		});
+
+		describe('reactions', () => {
+			test('should be populated', (done) => {
+				request(app)
+					.get(`/posts/${user2Post1Id}`)
+					.set('Authorization', `Bearer ${user1Jwt}`)
+					.expect('Content-Type', /json/)
+					.expect(bodyHasPostProperty)
+					.expect((res) => {
+						if (!res.body.post.reactions[0]._id) {
+							throw new Error("post's reactions is not populated");
+						}
+					})
+					.expect(200, done);
+			});
+		});
+
+		describe('comments', () => {
+			test('should be populated', (done) => {
+				request(app)
+					.get(`/posts/${user2Post1Id}`)
+					.set('Authorization', `Bearer ${user1Jwt}`)
+					.expect('Content-Type', /json/)
+					.expect(bodyHasPostProperty)
+					.expect((res) => {
+						if (!res.body.post.comments[0]._id) {
+							throw new Error("post's comments is not populated");
+						}
+					})
+					.expect(200, done);
+			});
+
+			test('should be recent', (done) => {
+				request(app)
+					.get(`/posts/${user2Post1Id}`)
+					.set('Authorization', `Bearer ${user1Jwt}`)
+					.expect('Content-Type', /json/)
+					.expect(bodyHasPostProperty)
+					.expect((res) => {
+						if (res.body.post.comments[0]._id !== user2Post1Comment4Id) {
+							throw new Error("post's comments are not recent");
+						}
+					})
+					.expect(200, done);
+			});
+		});
 	});
 });
 

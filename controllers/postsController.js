@@ -84,6 +84,32 @@ exports.create = [
 	},
 ];
 
+exports.show = [
+	validMongoObjectIdRouteParams,
+	async (req, res, next) => {
+		try {
+			const post = await Post.findById(req.params.postId)
+				.populate('author reactions')
+				.populate({
+					path: 'comments',
+					populate: { path: 'author' },
+					options: {
+						sort: { createdAt: -1 },
+					},
+				});
+			if (post === null) {
+				const err = new Error('Page not found');
+				err.status = 404;
+				next(err);
+			} else {
+				res.json({ post });
+			}
+		} catch (err) {
+			next(err);
+		}
+	},
+];
+
 exports.update = [
 	authenticated,
 	validMongoObjectIdRouteParams,

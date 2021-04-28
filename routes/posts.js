@@ -7,6 +7,8 @@ router.get('/', postsController.index);
 
 router.post('/', postsController.create);
 
+router.get('/:postId', postsController.show);
+
 router.put('/:postId', postsController.update);
 
 router.delete('/:postId', postsController.destroy);
