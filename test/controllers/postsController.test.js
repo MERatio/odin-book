@@ -17,7 +17,7 @@ const {
 let user2Id;
 let user1Jwt;
 let user2Jwt;
-let post1Id;
+let user1Post1Id;
 
 beforeAll(async () => await mongoConfigTesting.connect());
 beforeEach(async () => {
@@ -81,7 +81,7 @@ beforeEach(async () => {
 		.set('Authorization', `Bearer ${user1Jwt}`)
 		.expect('Content-Type', /json/)
 		.expect(bodyHasPostProperty)
-		.expect((res) => (post1Id = res.body.post._id))
+		.expect((res) => (user1Post1Id = res.body.post._id))
 		.expect(201);
 });
 afterEach(async () => await mongoConfigTesting.clear());
@@ -191,7 +191,7 @@ describe('index', () => {
 					let isFriendPostIncluded = false;
 					const postsIds = res.body.posts.map((post) => post._id);
 					postsIds.forEach((postId) => {
-						if (postId.toString() === post1Id) {
+						if (postId.toString() === user1Post1Id) {
 							isCurrentUserPostIncluded = true;
 						} else if (postId.toString() === user2Post1Id) {
 							isFriendPostIncluded = true;
@@ -224,7 +224,7 @@ describe('index', () => {
 					if (
 						!(
 							res.body.posts[0]._id === user2Post1Id &&
-							res.body.posts[res.body.posts.length - 1]._id === post1Id
+							res.body.posts[res.body.posts.length - 1]._id === user1Post1Id
 						)
 					) {
 						throw new Error('posts are not recent');
@@ -447,7 +447,7 @@ describe('update', () => {
 	describe('body has err property', () => {
 		test('if JWT is not valid or not supplied', (done) => {
 			request(app)
-				.put(`/posts/${post1Id}`)
+				.put(`/posts/${user1Post1Id}`)
 				.send({
 					text: 'post1UpdateErr',
 				})
@@ -459,7 +459,7 @@ describe('update', () => {
 
 		test('if postId route parameter is not valid', (done) => {
 			request(app)
-				.put(`/posts/${post1Id}` + '123')
+				.put(`/posts/${user1Post1Id}` + '123')
 				.send({
 					text: 'post1UpdateErr',
 				})
@@ -472,7 +472,9 @@ describe('update', () => {
 
 		test('if post does not exists', (done) => {
 			request(app)
-				.put(`/posts/${post1Id.substring(0, post1Id.length - 3)}` + '123')
+				.put(
+					`/posts/${user1Post1Id.substring(0, user1Post1Id.length - 3)}` + '123'
+				)
 				.send({
 					text: 'post1UpdateErr',
 				})
@@ -485,7 +487,7 @@ describe('update', () => {
 
 		test("if currentUser is not the post's author", (done) => {
 			request(app)
-				.put(`/posts/${post1Id}`)
+				.put(`/posts/${user1Post1Id}`)
 				.send({
 					text: 'post1UpdateErr',
 				})
@@ -501,7 +503,7 @@ describe('update', () => {
 		describe('if text', () => {
 			test('is empty', (done) => {
 				request(app)
-					.put(`/posts/${post1Id}`)
+					.put(`/posts/${user1Post1Id}`)
 					.send({
 						text: '',
 					})
@@ -515,7 +517,7 @@ describe('update', () => {
 
 			test('only contains a whitespace/s', (done) => {
 				request(app)
-					.put(`/posts/${post1Id}`)
+					.put(`/posts/${user1Post1Id}`)
 					.send({
 						text: ' ',
 					})
@@ -529,7 +531,7 @@ describe('update', () => {
 
 			test('length is greater than 1000', (done) => {
 				request(app)
-					.put(`/posts/${post1Id}`)
+					.put(`/posts/${user1Post1Id}`)
 					.send({
 						text: 'a'.repeat(10001),
 					})
@@ -546,7 +548,7 @@ describe('update', () => {
 	it('should update post and body should have a post property', (done) => {
 		const updatedCommentText = 'post1Updated';
 		request(app)
-			.put(`/posts/${post1Id}`)
+			.put(`/posts/${user1Post1Id}`)
 			.send({
 				text: updatedCommentText,
 			})
@@ -567,7 +569,7 @@ describe('destroy', () => {
 	describe('body has err property', () => {
 		test('if JWT is not valid or not supplied', (done) => {
 			request(app)
-				.del(`/posts/${post1Id}`)
+				.del(`/posts/${user1Post1Id}`)
 				.set('Accept', 'application/json')
 				.expect('Content-Type', /json/)
 				.expect(bodyHasErrProperty)
@@ -576,7 +578,7 @@ describe('destroy', () => {
 
 		test('if postId route parameter is not valid', (done) => {
 			request(app)
-				.del(`/posts/${post1Id}` + '123')
+				.del(`/posts/${user1Post1Id}` + '123')
 				.set('Accept', 'application/json')
 				.set('Authorization', `Bearer ${user1Jwt}`)
 				.expect('Content-Type', /json/)
@@ -586,7 +588,9 @@ describe('destroy', () => {
 
 		test('if post does not exists', (done) => {
 			request(app)
-				.del(`/posts/${post1Id.substring(0, post1Id.length - 3)}` + '123')
+				.del(
+					`/posts/${user1Post1Id.substring(0, user1Post1Id.length - 3)}` + '123'
+				)
 				.set('Accept', 'application/json')
 				.set('Authorization', `Bearer ${user1Jwt}`)
 				.expect('Content-Type', /json/)
@@ -596,7 +600,7 @@ describe('destroy', () => {
 
 		test("if currentUser is not the post's author", (done) => {
 			request(app)
-				.del(`/posts/${post1Id}`)
+				.del(`/posts/${user1Post1Id}`)
 				.set('Accept', 'application/json')
 				.set('Authorization', `Bearer ${user2Jwt}`)
 				.expect('Content-Type', /json/)
@@ -607,7 +611,7 @@ describe('destroy', () => {
 
 	it('should remove the post, and its reactions and comments. And body should have a post property', async (done) => {
 		await request(app)
-			.post(`/posts/${post1Id}/reactions`)
+			.post(`/posts/${user1Post1Id}/reactions`)
 			.set('Accept', 'application/json')
 			.set('Authorization', `Bearer ${user1Jwt}`)
 			.expect('Content-Type', /json/)
@@ -615,7 +619,7 @@ describe('destroy', () => {
 			.expect(201);
 
 		await request(app)
-			.post(`/posts/${post1Id}/comments`)
+			.post(`/posts/${user1Post1Id}/comments`)
 			.send({
 				text: 'comment1',
 			})
@@ -626,7 +630,7 @@ describe('destroy', () => {
 			.expect(201);
 
 		request(app)
-			.del(`/posts/${post1Id}`)
+			.del(`/posts/${user1Post1Id}`)
 			.set('Accept', 'application/json')
 			.set('Authorization', `Bearer ${user1Jwt}`)
 			.expect('Content-Type', /json/)
