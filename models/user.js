@@ -19,7 +19,7 @@ const UserSchema = new Schema(
 	}
 );
 
-// UserSchema.methods methods still works even if cb parameter is supplied or not.
+// UserSchema.methods methods still works even if cb parameter is supplied or not (except getFriends()).
 UserSchema.methods.sendFriendRequest = function (requesteeId, cb) {
 	return mongoose.model('Friendship').create(
 		{
@@ -41,6 +41,28 @@ UserSchema.methods.findRelationshipWith = function (otherUserId, cb) {
 		},
 		cb
 	);
+};
+
+UserSchema.methods.getFriends = async function () {
+	let friendsIds = [];
+	const requesteesIds = await mongoose
+		.model('Friendship')
+		.find({
+			requestor: this._id,
+			status: 'friends',
+		})
+		.distinct('requestee')
+		.exec();
+	const requestorsIds = await mongoose
+		.model('Friendship')
+		.find({
+			requestee: this._id,
+			status: 'friends',
+		})
+		.distinct('requestor')
+		.exec();
+	friendsIds = [...requesteesIds, ...requestorsIds];
+	return mongoose.model('User').find({}).where('_id').in(friendsIds);
 };
 
 UserSchema.set('toJSON', {

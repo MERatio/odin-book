@@ -3,7 +3,35 @@ const {
 	authenticated,
 	validMongoObjectIdRouteParams,
 } = require('../lib/middlewares');
+// const Friendship = require('../models/friendship');
 const Post = require('../models/post');
+
+exports.index = [
+	authenticated,
+	async (req, res, next) => {
+		try {
+			const friends = await req.currentUser.getFriends();
+			const friendsIds = friends.map((friend) => friend._id);
+			const posts = await Post.find({})
+				.where('author')
+				.in([req.currentUser._id, ...friendsIds])
+				.sort({ createdAt: -1 })
+				.populate('author reactions')
+				.populate({
+					path: 'comments',
+					populate: { path: 'author' },
+					options: {
+						limit: 3,
+						sort: { createdAt: -1 },
+					},
+				})
+				.exec();
+			res.json({ posts });
+		} catch (err) {
+			next(err);
+		}
+	},
+];
 
 exports.create = [
 	authenticated,

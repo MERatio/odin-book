@@ -3,6 +3,8 @@ const router = express.Router();
 
 const postsController = require('../controllers/postsController');
 
+router.get('/', postsController.index);
+
 router.post('/', postsController.create);
 
 router.put('/:postId', postsController.update);
