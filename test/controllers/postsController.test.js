@@ -694,26 +694,7 @@ describe('destroy', () => {
 		});
 	});
 
-	it('should remove the post, and its reactions and comments. And body should have a post property', async (done) => {
-		await request(app)
-			.post(`/posts/${user1Post1Id}/reactions`)
-			.set('Accept', 'application/json')
-			.set('Authorization', `Bearer ${user1Jwt}`)
-			.expect('Content-Type', /json/)
-			.expect(bodyHasReactionProperty)
-			.expect(201);
-
-		await request(app)
-			.post(`/posts/${user1Post1Id}/comments`)
-			.send({
-				text: 'comment1',
-			})
-			.set('Accept', 'application/json')
-			.set('Authorization', `Bearer ${user1Jwt}`)
-			.expect('Content-Type', /json/)
-			.expect(bodyHasCommentProperty)
-			.expect(201);
-
+	it('should remove the post and body should have a post property', async (done) => {
 		request(app)
 			.del(`/posts/${user1Post1Id}`)
 			.set('Accept', 'application/json')
