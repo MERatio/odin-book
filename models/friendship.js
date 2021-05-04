@@ -16,7 +16,12 @@ const FriendshipSchema = new Schema(
 			required: true,
 			index: true,
 		},
-		status: { type: String, enum: ['pending', 'friends'], default: 'pending' },
+		status: {
+			type: String,
+			enum: ['pending', 'friends'],
+			default: 'pending',
+			required: true,
+		},
 	},
 	{
 		timestamps: true,

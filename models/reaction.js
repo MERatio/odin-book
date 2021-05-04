@@ -16,7 +16,7 @@ const ReactionSchema = new Schema(
 			required: true,
 			index: true,
 		},
-		type: { type: String, enum: ['like'], default: 'like' },
+		type: { type: String, enum: ['like'], default: 'like', required: true },
 	},
 	{
 		timestamps: true,
