@@ -9,25 +9,26 @@ const {
 } = require('../assertionFunctions');
 
 beforeAll(async () => await mongoConfigTesting.connect());
-beforeEach(async () => {
-	await request(app)
-		.post('/users')
-		.send({
-			firstName: 'user1',
-			lastName: 'user1',
-			email: 'user1@example.com',
-			password: 'password123',
-			passwordConfirmation: 'password123',
-		})
-		.set('Accept', 'application/json')
-		.expect('Content-Type', /json/)
-		.expect(bodyHasUserProperty)
-		.expect(201);
-});
 afterEach(async () => await mongoConfigTesting.clear());
 afterAll(async () => await mongoConfigTesting.close());
 
 describe('local', () => {
+	beforeEach(async () => {
+		await request(app)
+			.post('/users')
+			.send({
+				firstName: 'user1',
+				lastName: 'user1',
+				email: 'user1@example.com',
+				password: 'password123',
+				passwordConfirmation: 'password123',
+			})
+			.set('Accept', 'application/json')
+			.expect('Content-Type', /json/)
+			.expect(bodyHasUserProperty)
+			.expect(201);
+	});
+
 	it('body has jwt and currentUser property if credentials are correct', (done) => {
 		request(app)
 			.post('/auth/local')
