@@ -1,9 +1,17 @@
 require('dotenv').config();
 
+const path = require('path');
+const { mkdir } = require('fs');
 const express = require('express');
 const logger = require('morgan');
 const passportConfig = require('./configs/passportConfig');
 const { setCurrentUser } = require('./lib/middlewares');
+
+mkdir('public/images', { recursive: true }, (err) => {
+	if (err) {
+		throw err;
+	}
+});
 
 const app = express();
 
@@ -24,6 +32,7 @@ if (process.env.NODE_ENV !== 'test') {
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+app.use(express.static(path.join(__dirname, 'public')));
 app.use(passportConfig.initialize({ userProperty: 'currentUser' }));
 app.use(setCurrentUser);
 

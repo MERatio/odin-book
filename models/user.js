@@ -8,6 +8,7 @@ const UserSchema = new Schema(
 		firstName: { type: String, required: true, maxlength: 255 },
 		lastName: { type: String, required: true, maxlength: 255 },
 		email: { type: String, required: true, index: true, unique: true },
+		profilePicture: { type: String, default: '' },
 		password: { type: String, required: true },
 		friendships: [{ type: Schema.Types.ObjectId, ref: 'Friendship' }],
 		posts: [{ type: Schema.Types.ObjectId, ref: 'Post' }],

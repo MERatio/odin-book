@@ -1,10 +1,21 @@
+const fs = require('fs/promises');
 const { body, validationResult } = require('express-validator');
 const bcrypt = require('bcryptjs');
+const { upload } = require('../configs/multerConfig');
 const { unauthenticated } = require('../lib/middlewares');
 const User = require('../models/user');
 
 exports.create = [
 	unauthenticated,
+	(req, res, next) => {
+		upload.single('profilePicture')(req, res, (err) => {
+			if (err) {
+				req.multerErr = err;
+			}
+			next();
+		});
+	},
+
 	// Validate and sanitise fields.
 	body('firstName')
 		.trim()
@@ -47,29 +58,43 @@ exports.create = [
 	async (req, res, next) => {
 		// Extract the validation errors from a request.
 		const errors = validationResult(req);
-		if (!errors.isEmpty()) {
-			// There are errors.
-			res.status(422).json({
-				errors: errors.array(),
-				user: req.body,
-			});
-		} else {
-			// Data form is valid.
-			// Create the new user with hashed password
-			try {
+		try {
+			// There is multerErr or express-validator errors.
+			if (req.multerErr || !errors.isEmpty()) {
+				// If there's an uploaded image delete it.
+				if (req.file) {
+					await fs.unlink(`public/images/${req.file.filename}`);
+				}
+				const multerErrInArray = req.multerErr
+					? [{ msg: req.multerErr.message }]
+					: [];
+				res.status(422).json({
+					errors: multerErrInArray.concat(errors.array()),
+					user: req.body,
+				});
+			} else {
+				// Data form is valid.
+				// Create the new user with hashed password
 				const hashedPassword = await bcrypt.hash(req.body.password, 10);
 				const user = new User({
 					firstName: req.body.firstName,
 					lastName: req.body.lastName,
 					email: req.body.email,
 					password: hashedPassword,
+					profilePicture: req.file ? req.file.filename : '',
 				});
 				const savedUser = await user.save();
 				// Successful
 				res.status(201).json({ user: savedUser });
-			} catch (err) {
-				next(err);
 			}
+		} catch (err) {
+			// If there's an uploaded image delete it.
+			if (req.file) {
+				(async () => {
+					await fs.unlink(`public/images/${req.file.filename}`);
+				})();
+			}
+			next(err);
 		}
 	},
 ];
