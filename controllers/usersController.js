@@ -15,7 +15,6 @@ exports.create = [
 			next();
 		});
 	},
-
 	// Validate and sanitise fields.
 	body('firstName')
 		.trim()
