@@ -232,7 +232,7 @@ describe('create', () => {
 			});
 		});
 
-		// Validation if email is email is handled by express-validator
+		// Validation of email is handled by express-validator.
 		describe('if email', () => {
 			test('is valid', (done) => {
 				request(app)
