@@ -2,20 +2,14 @@ const fs = require('fs/promises');
 const { body, validationResult } = require('express-validator');
 const bcrypt = require('bcryptjs');
 const { upload } = require('../configs/multerConfig');
-const { unauthenticated } = require('../lib/middlewares');
+const {
+	authenticated,
+	unauthenticated,
+	validMongoObjectIdRouteParams,
+} = require('../lib/middlewares');
 const User = require('../models/user');
 
-exports.create = [
-	unauthenticated,
-	(req, res, next) => {
-		upload.single('profilePicture')(req, res, (err) => {
-			if (err) {
-				req.multerErr = err;
-			}
-			next();
-		});
-	},
-	// Validate and sanitise fields.
+const userValidationAndSanitation = [
 	body('firstName')
 		.trim()
 		.isLength({ min: 1 })
@@ -53,6 +47,20 @@ exports.create = [
 			return true;
 		}
 	}),
+];
+
+exports.create = [
+	unauthenticated,
+	(req, res, next) => {
+		upload.single('profilePicture')(req, res, (err) => {
+			if (err) {
+				req.multerErr = err;
+			}
+			next();
+		});
+	},
+	// Validate and sanitise fields.
+	...userValidationAndSanitation,
 	// Process request after validation and sanitization.
 	async (req, res, next) => {
 		// Extract the validation errors from a request.
@@ -93,6 +101,84 @@ exports.create = [
 					await fs.unlink(`public/images/${req.file.filename}`);
 				})();
 			}
+			next(err);
+		}
+	},
+];
+
+// Update all user fields except profilePicture and _id.
+exports.updateInfo = [
+	authenticated,
+	validMongoObjectIdRouteParams,
+	async (req, res, next) => {
+		try {
+			const userIdUser = await User.findById(req.params.userId);
+			if (userIdUser === null) {
+				const err = new Error('User not found');
+				err.status = 404;
+				next(err);
+			} else if (!req.currentUser._id.equals(userIdUser._id)) {
+				const err = new Error('Unauthorized');
+				err.status = 401;
+				next(err);
+			} else {
+				next();
+			}
+		} catch (err) {
+			next(err);
+		}
+	},
+	// Validate and sanitise fields.
+	[
+		...userValidationAndSanitation,
+		body('password').custom(async (value, { req }) => {
+			const res = await bcrypt.compare(value, req.currentUser.password);
+			if (res) {
+				throw new Error(
+					'Password should not be the same as the current password'
+				);
+			} else {
+				return true;
+			}
+		}),
+		body('oldPassword').custom(async (value, { req }) => {
+			const res = await bcrypt.compare(value, req.currentUser.password);
+			if (res) {
+				return true;
+			} else {
+				throw new Error('Old password is incorrect.');
+			}
+		}),
+	],
+	// Process request after validation and sanitization.
+	async (req, res, next) => {
+		// Extract the validation errors from a request.
+		const errors = validationResult(req);
+		try {
+			// There are errors.
+			if (!errors.isEmpty()) {
+				res.status(422).json({
+					errors: errors.array(),
+					user: req.body,
+				});
+			} else {
+				// Data form is valid.
+				// Update the user info with hashed password
+				const hashedPassword = await bcrypt.hash(req.body.password, 10);
+				const updatedUser = await User.findByIdAndUpdate(
+					req.currentUser._id,
+					{
+						firstName: req.body.firstName,
+						lastName: req.body.lastName,
+						email: req.body.email,
+						password: hashedPassword,
+					},
+					{ new: true, runValidators: true }
+				);
+				// Successful
+				res.status(200).json({ user: updatedUser });
+			}
+		} catch (err) {
 			next(err);
 		}
 	},
