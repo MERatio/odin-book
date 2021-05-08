@@ -694,7 +694,7 @@ describe('destroy', () => {
 		});
 	});
 
-	it('should remove the post and body should have a post property', async (done) => {
+	it('should remove the post and body should have a post property', (done) => {
 		request(app)
 			.del(`/posts/${user1Post1Id}`)
 			.set('Accept', 'application/json')
