@@ -2,6 +2,8 @@ const { body, validationResult } = require('express-validator');
 const {
 	authenticated,
 	validMongoObjectIdRouteParams,
+	resourceFound,
+	resourceFoundAndCurrentUserIsTheAuthor,
 } = require('../lib/middlewares');
 const Post = require('../models/post');
 const Comment = require('../models/comment');
@@ -19,6 +21,7 @@ const commentSanitationAndValidation = [
 exports.create = [
 	authenticated,
 	validMongoObjectIdRouteParams,
+	resourceFound('Post'),
 	...commentSanitationAndValidation,
 	// Validate and sanitise fields.
 	// Process request after validation and sanitization.
@@ -35,10 +38,6 @@ exports.create = [
 			// Data is valid.
 			Post.findById(req.params.postId).exec((err, post) => {
 				if (err) {
-					next(err);
-				} else if (post === null) {
-					const err = new Error('Post not found.');
-					err.status = 404;
 					next(err);
 				} else {
 					// Create a Comment object with escaped and trimmed data.
@@ -88,6 +87,8 @@ exports.create = [
 exports.update = [
 	authenticated,
 	validMongoObjectIdRouteParams,
+	resourceFound('Post'),
+	resourceFoundAndCurrentUserIsTheAuthor('Comment'),
 	// Validate and sanitise fields.
 	...commentSanitationAndValidation,
 	// Process request after validation and sanitization.
@@ -103,30 +104,12 @@ exports.update = [
 		} else {
 			// Data is valid.
 			try {
-				const post = await Post.findById(req.params.postId);
-				if (post === null) {
-					const err = new Error('Post not found');
-					err.status = 404;
-					throw err;
-				}
 				const comment = await Comment.findById(req.params.commentId);
-				if (comment === null) {
-					const err = new Error('Comment not found');
-					err.status = 404;
-					throw err;
-				}
-				if (!comment.author.equals(req.currentUser._id)) {
-					// If comment's author is not the currentUser.
-					const err = new Error("You don't own that comment.");
-					err.status = 403;
-					throw err;
-				} else {
-					// Successful
-					// Update the record with escaped and trimmed data.
-					comment.text = req.body.text;
-					const updatedComment = await comment.save();
-					res.status(200).json({ comment: updatedComment });
-				}
+				// Successful
+				// Update the record with escaped and trimmed data.
+				comment.text = req.body.text;
+				const updatedComment = await comment.save();
+				res.status(200).json({ comment: updatedComment });
 			} catch (err) {
 				next(err);
 			}

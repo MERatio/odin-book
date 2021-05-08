@@ -2,6 +2,7 @@ const { body, validationResult } = require('express-validator');
 const {
 	authenticated,
 	validMongoObjectIdRouteParams,
+	resourceFoundAndCurrentUserIsTheAuthor,
 } = require('../lib/middlewares');
 // const Friendship = require('../models/friendship');
 const Post = require('../models/post');
@@ -117,6 +118,7 @@ exports.show = [
 exports.update = [
 	authenticated,
 	validMongoObjectIdRouteParams,
+	resourceFoundAndCurrentUserIsTheAuthor('Post'),
 	// Validate and sanitise fields.
 	...postValidationAndSanitation,
 	// Process request after validation and sanitization.
@@ -133,22 +135,11 @@ exports.update = [
 			// Data is valid.
 			try {
 				const post = await Post.findById(req.params.postId);
-				if (post === null) {
-					const err = new Error('Post not found');
-					err.status = 404;
-					throw err;
-				} else if (!post.author.equals(req.currentUser._id)) {
-					// If author is not the currentUser.
-					const err = new Error("You don't own that post.");
-					err.status = 403;
-					throw err;
-				} else {
-					// Successful
-					// Update the record with escaped and trimmed data.
-					post.text = req.body.text;
-					const updatedPost = await post.save();
-					res.status(200).json({ post: updatedPost });
-				}
+				// Successful
+				// Update the record with escaped and trimmed data.
+				post.text = req.body.text;
+				const updatedPost = await post.save();
+				res.status(200).json({ post: updatedPost });
 			} catch (err) {
 				next(err);
 			}

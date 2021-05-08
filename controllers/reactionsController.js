@@ -2,6 +2,7 @@ const { body, validationResult } = require('express-validator');
 const {
 	authenticated,
 	validMongoObjectIdRouteParams,
+	resourceFound,
 } = require('../lib/middlewares');
 const Post = require('../models/post');
 const Reaction = require('../models/reaction');
@@ -9,6 +10,7 @@ const Reaction = require('../models/reaction');
 exports.create = [
 	authenticated,
 	validMongoObjectIdRouteParams,
+	resourceFound('Post'),
 	// Validate field.
 	body('type')
 		.default('like')
@@ -28,10 +30,6 @@ exports.create = [
 			// Data form is valid.
 			Post.findById(req.params.postId).exec((err, post) => {
 				if (err) {
-					next(err);
-				} else if (post === null) {
-					const err = new Error('Post not found.');
-					err.status = 404;
 					next(err);
 				} else {
 					// If there is duplicate reaction.
