@@ -16,6 +16,9 @@ exports.connect = async () => {
     useUnifiedTopology: true,
   };
 
+  // https://mongoosejs.com/docs/deprecations.html#findandmodify
+  mongoose.set('useFindAndModify', false);
+
   mongoose.connect(mongoUri, mongooseOpts);
 
   mongoose.connection.on('error', (e) => {
