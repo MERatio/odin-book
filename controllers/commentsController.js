@@ -6,10 +6,7 @@ const {
 const Post = require('../models/post');
 const Comment = require('../models/comment');
 
-exports.create = [
-	authenticated,
-	validMongoObjectIdRouteParams,
-	// Validate and sanitise fields.
+const commentSanitationAndValidation = [
 	body('text')
 		.trim()
 		.isLength({ min: 1 })
@@ -17,6 +14,13 @@ exports.create = [
 		.isLength({ max: 200 })
 		.withMessage('Text is too long (maximum is 200 characters)')
 		.escape(),
+];
+
+exports.create = [
+	authenticated,
+	validMongoObjectIdRouteParams,
+	...commentSanitationAndValidation,
+	// Validate and sanitise fields.
 	// Process request after validation and sanitization.
 	(req, res, next) => {
 		// Extract the validation errors from a request.
@@ -85,13 +89,7 @@ exports.update = [
 	authenticated,
 	validMongoObjectIdRouteParams,
 	// Validate and sanitise fields.
-	body('text')
-		.trim()
-		.isLength({ min: 1 })
-		.withMessage('Text is required')
-		.isLength({ max: 200 })
-		.withMessage('Text is too long (maximum is 200 characters)')
-		.escape(),
+	...commentSanitationAndValidation,
 	// Process request after validation and sanitization.
 	async (req, res, next) => {
 		// Extract the validation errors from a request.

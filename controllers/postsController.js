@@ -6,6 +6,16 @@ const {
 // const Friendship = require('../models/friendship');
 const Post = require('../models/post');
 
+const postValidationAndSanitation = [
+	body('text')
+		.trim()
+		.isLength({ min: 1 })
+		.withMessage('Text is required')
+		.isLength({ max: 1000 })
+		.withMessage('Text is too long (maximum is 1000 characters)')
+		.escape(),
+];
+
 exports.index = [
 	authenticated,
 	async (req, res, next) => {
@@ -35,14 +45,8 @@ exports.index = [
 
 exports.create = [
 	authenticated,
+	...postValidationAndSanitation,
 	// Validate and sanitise fields.
-	body('text')
-		.trim()
-		.isLength({ min: 1 })
-		.withMessage('Text is required')
-		.isLength({ max: 1000 })
-		.withMessage('Text is too long (maximum is 1000 characters)')
-		.escape(),
 	// Process request after validation and sanitization.
 	(req, res, next) => {
 		// Extract the validation errors from a request.
@@ -114,13 +118,7 @@ exports.update = [
 	authenticated,
 	validMongoObjectIdRouteParams,
 	// Validate and sanitise fields.
-	body('text')
-		.trim()
-		.isLength({ min: 1 })
-		.withMessage('Text is required')
-		.isLength({ max: 1000 })
-		.withMessage('Text is too long (maximum is 1000 characters)')
-		.escape(),
+	...postValidationAndSanitation,
 	// Process request after validation and sanitization.
 	async (req, res, next) => {
 		// Extract the validation errors from a request.
