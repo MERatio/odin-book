@@ -110,7 +110,7 @@ exports.destroy = [
 				throw err;
 			} else if (!reaction.user.equals(req.currentUser._id)) {
 				// If currentUser is reaction's user.
-				const err = new Error('Not a valid friend request.');
+				const err = new Error('Not a valid reaction.');
 				err.status = 403;
 				throw err;
 			} else {
