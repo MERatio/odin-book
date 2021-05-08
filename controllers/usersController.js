@@ -6,6 +6,7 @@ const {
 	authenticated,
 	unauthenticated,
 	validMongoObjectIdRouteParams,
+	getResourceFromParams,
 } = require('../lib/middlewares');
 const User = require('../models/user');
 
@@ -110,14 +111,11 @@ exports.create = [
 exports.updateInfo = [
 	authenticated,
 	validMongoObjectIdRouteParams,
+	getResourceFromParams('User'),
 	async (req, res, next) => {
 		try {
-			const userIdUser = await User.findById(req.params.userId);
-			if (userIdUser === null) {
-				const err = new Error('User not found');
-				err.status = 404;
-				next(err);
-			} else if (!req.currentUser._id.equals(userIdUser._id)) {
+			const user = req.user;
+			if (!req.currentUser._id.equals(user._id)) {
 				const err = new Error('Unauthorized');
 				err.status = 401;
 				next(err);

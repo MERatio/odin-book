@@ -2,8 +2,10 @@ const { body, validationResult } = require('express-validator');
 const {
 	authenticated,
 	validMongoObjectIdRouteParams,
+	getResourceFromParams,
 } = require('../lib/middlewares');
 const User = require('../models/user');
+// eslint-disable-next-line no-unused-vars
 const Friendship = require('../models/friendship');
 
 exports.create = [
@@ -106,14 +108,11 @@ exports.create = [
 exports.update = [
 	authenticated,
 	validMongoObjectIdRouteParams,
+	getResourceFromParams('Friendship'),
 	async (req, res, next) => {
 		try {
-			const friendship = await Friendship.findById(req.params.friendshipId);
-			if (friendship === null) {
-				const err = new Error('Friend request not found');
-				err.status = 404;
-				throw err;
-			} else if (!friendship.requestee.equals(req.currentUser._id)) {
+			const friendship = req.friendship;
+			if (!friendship.requestee.equals(req.currentUser._id)) {
 				// If requestee is not the currentUser
 				const err = new Error('Not a valid friend request.');
 				err.status = 401;
@@ -138,14 +137,11 @@ exports.update = [
 exports.destroy = [
 	authenticated,
 	validMongoObjectIdRouteParams,
+	getResourceFromParams('Friendship'),
 	async (req, res, next) => {
 		try {
-			const friendship = await Friendship.findById(req.params.friendshipId);
-			if (friendship === null) {
-				const err = new Error('Friend request not found.');
-				err.status = 404;
-				throw err;
-			} else if (
+			const friendship = req.friendship;
+			if (
 				!(
 					friendship.requestor.equals(req.currentUser._id) ||
 					friendship.requestee.equals(req.currentUser._id)

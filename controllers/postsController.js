@@ -2,7 +2,7 @@ const { body, validationResult } = require('express-validator');
 const {
 	authenticated,
 	validMongoObjectIdRouteParams,
-	resourceFoundAndCurrentUserIsTheAuthor,
+	getResourceFromParamsAndCurrentUserIsTheAuthor,
 } = require('../lib/middlewares');
 // const Friendship = require('../models/friendship');
 const Post = require('../models/post');
@@ -118,7 +118,7 @@ exports.show = [
 exports.update = [
 	authenticated,
 	validMongoObjectIdRouteParams,
-	resourceFoundAndCurrentUserIsTheAuthor('Post'),
+	getResourceFromParamsAndCurrentUserIsTheAuthor('Post'),
 	// Validate and sanitise fields.
 	...postValidationAndSanitation,
 	// Process request after validation and sanitization.
@@ -134,7 +134,7 @@ exports.update = [
 		} else {
 			// Data is valid.
 			try {
-				const post = await Post.findById(req.params.postId);
+				const post = req.post;
 				// Successful
 				// Update the record with escaped and trimmed data.
 				post.text = req.body.text;
@@ -150,24 +150,14 @@ exports.update = [
 exports.destroy = [
 	authenticated,
 	validMongoObjectIdRouteParams,
+	getResourceFromParamsAndCurrentUserIsTheAuthor('Post'),
 	async (req, res, next) => {
 		try {
-			const post = await Post.findById(req.params.postId);
-			if (post === null) {
-				const err = new Error('Post not found.');
-				err.status = 404;
-				throw err;
-			} else if (!post.author.equals(req.currentUser._id)) {
-				// If author is not the currentUser.
-				const err = new Error("You don't own that post.");
-				err.status = 401;
-				throw err;
-			} else {
-				// Successful
-				// Remove post.
-				const removedPost = await post.remove();
-				res.json({ post: removedPost });
-			}
+			const post = req.post;
+			// Successful
+			// Remove post.
+			const removedPost = await post.remove();
+			res.json({ post: removedPost });
 		} catch (err) {
 			next(err);
 		}

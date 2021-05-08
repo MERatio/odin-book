@@ -2,10 +2,9 @@ const { body, validationResult } = require('express-validator');
 const {
 	authenticated,
 	validMongoObjectIdRouteParams,
-	resourceFound,
-	resourceFoundAndCurrentUserIsTheAuthor,
+	getResourceFromParams,
+	getResourceFromParamsAndCurrentUserIsTheAuthor,
 } = require('../lib/middlewares');
-const Post = require('../models/post');
 const Comment = require('../models/comment');
 
 const commentSanitationAndValidation = [
@@ -21,7 +20,7 @@ const commentSanitationAndValidation = [
 exports.create = [
 	authenticated,
 	validMongoObjectIdRouteParams,
-	resourceFound('Post'),
+	getResourceFromParams('Post'),
 	...commentSanitationAndValidation,
 	// Validate and sanitise fields.
 	// Process request after validation and sanitization.
@@ -36,22 +35,29 @@ exports.create = [
 			});
 		} else {
 			// Data is valid.
-			Post.findById(req.params.postId).exec((err, post) => {
+			const post = req.post;
+			// Create a Comment object with escaped and trimmed data.
+			const comment = new Comment({
+				author: req.currentUser._id,
+				post: post._id,
+				text: req.body.text,
+			});
+			comment.save((err, comment) => {
 				if (err) {
 					next(err);
 				} else {
-					// Create a Comment object with escaped and trimmed data.
-					const comment = new Comment({
-						author: req.currentUser._id,
-						post: post._id,
-						text: req.body.text,
-					});
-					comment.save((err, comment) => {
+					req.currentUser.comments.push(comment._id);
+					req.currentUser.save((err) => {
 						if (err) {
+							comment.remove((err) => {
+								if (err) {
+									return next(err);
+								}
+							});
 							next(err);
 						} else {
-							req.currentUser.comments.push(comment._id);
-							req.currentUser.save((err) => {
+							post.comments.push(comment._id);
+							post.save((err) => {
 								if (err) {
 									comment.remove((err) => {
 										if (err) {
@@ -60,20 +66,8 @@ exports.create = [
 									});
 									next(err);
 								} else {
-									post.comments.push(comment._id);
-									post.save((err) => {
-										if (err) {
-											comment.remove((err) => {
-												if (err) {
-													return next(err);
-												}
-											});
-											next(err);
-										} else {
-											// Successful
-											res.status(201).json({ comment });
-										}
-									});
+									// Successful
+									res.status(201).json({ comment });
 								}
 							});
 						}
@@ -87,8 +81,8 @@ exports.create = [
 exports.update = [
 	authenticated,
 	validMongoObjectIdRouteParams,
-	resourceFound('Post'),
-	resourceFoundAndCurrentUserIsTheAuthor('Comment'),
+	getResourceFromParams('Post'),
+	getResourceFromParamsAndCurrentUserIsTheAuthor('Comment'),
 	// Validate and sanitise fields.
 	...commentSanitationAndValidation,
 	// Process request after validation and sanitization.
@@ -104,7 +98,7 @@ exports.update = [
 		} else {
 			// Data is valid.
 			try {
-				const comment = await Comment.findById(req.params.commentId);
+				const comment = req.comment;
 				// Successful
 				// Update the record with escaped and trimmed data.
 				comment.text = req.body.text;
@@ -120,30 +114,15 @@ exports.update = [
 exports.destroy = [
 	authenticated,
 	validMongoObjectIdRouteParams,
+	getResourceFromParams('Post'),
+	getResourceFromParamsAndCurrentUserIsTheAuthor('Comment'),
 	async (req, res, next) => {
 		try {
-			const post = await Post.findById(req.params.postId);
-			if (post === null) {
-				const err = new Error('Post not found.');
-				err.status = 404;
-				throw err;
-			}
-			const comment = await Comment.findById(req.params.commentId);
-			if (comment === null) {
-				const err = new Error('Comment not found.');
-				err.status = 404;
-				throw err;
-			} else if (!comment.author.equals(req.currentUser._id)) {
-				// If comment's author is not the currentUser
-				const err = new Error("You don't own that post.");
-				err.status = 401;
-				throw err;
-			} else {
-				// Successful
-				// Remove comment.
-				const removedComment = await comment.remove();
-				res.json({ comment: removedComment });
-			}
+			const comment = req.comment;
+			// Successful
+			// Remove comment.
+			const removedComment = await comment.remove();
+			res.json({ comment: removedComment });
 		} catch (err) {
 			next(err);
 		}
