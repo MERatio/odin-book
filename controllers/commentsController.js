@@ -136,7 +136,7 @@ exports.destroy = [
 			} else if (!comment.author.equals(req.currentUser._id)) {
 				// If comment's author is not the currentUser
 				const err = new Error("You don't own that post.");
-				err.status = 403;
+				err.status = 401;
 				throw err;
 			} else {
 				// Successful

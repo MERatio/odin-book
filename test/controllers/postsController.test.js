@@ -580,7 +580,7 @@ describe('update', () => {
 				.set('Authorization', `Bearer ${user2Jwt}`)
 				.expect('Content-Type', /json/)
 				.expect(bodyHasErrProperty)
-				.expect(403, done);
+				.expect(401, done);
 		});
 	});
 
@@ -690,7 +690,7 @@ describe('destroy', () => {
 				.set('Authorization', `Bearer ${user2Jwt}`)
 				.expect('Content-Type', /json/)
 				.expect(bodyHasErrProperty)
-				.expect(403, done);
+				.expect(401, done);
 		});
 	});
 

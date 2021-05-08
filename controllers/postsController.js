@@ -160,7 +160,7 @@ exports.destroy = [
 			} else if (!post.author.equals(req.currentUser._id)) {
 				// If author is not the currentUser.
 				const err = new Error("You don't own that post.");
-				err.status = 403;
+				err.status = 401;
 				throw err;
 			} else {
 				// Successful

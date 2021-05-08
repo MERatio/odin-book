@@ -111,7 +111,7 @@ exports.destroy = [
 			} else if (!reaction.user.equals(req.currentUser._id)) {
 				// If currentUser is reaction's user.
 				const err = new Error('Not a valid reaction.');
-				err.status = 403;
+				err.status = 401;
 				throw err;
 			} else {
 				// Successful

@@ -116,7 +116,7 @@ exports.update = [
 			} else if (!friendship.requestee.equals(req.currentUser._id)) {
 				// If requestee is not the currentUser
 				const err = new Error('Not a valid friend request.');
-				err.status = 403;
+				err.status = 401;
 				throw err;
 			} else if (friendship.status !== 'pending') {
 				const err = new Error('Friend request is already accepted.');
@@ -153,7 +153,7 @@ exports.destroy = [
 			) {
 				// If currentUser is not the requestor or the requestee.
 				const err = new Error('Not a valid friend request.');
-				err.status = 403;
+				err.status = 401;
 				throw err;
 			} else {
 				// Successful
