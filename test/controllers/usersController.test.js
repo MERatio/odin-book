@@ -393,7 +393,6 @@ describe('editInfo', () => {
 			.expect('Content-Type', /json/)
 			.expect(bodyHasUserProperty)
 			.expect((res) => {
-				console.log(res.body);
 				if (res.body.user._id !== user1Id) {
 					throw new Error('Did not get user information for updating.');
 				}
