@@ -107,6 +107,31 @@ exports.create = [
 	},
 ];
 
+// Get all user fields except password.
+exports.editInfo = [
+	authenticated,
+	validMongoObjectIdRouteParams,
+	getResourceFromParams('User'),
+	async (req, res, next) => {
+		try {
+			const user = req.user;
+			if (!req.currentUser._id.equals(user._id)) {
+				const err = new Error('Unauthorized');
+				err.status = 401;
+				next(err);
+			} else {
+				next();
+			}
+		} catch (err) {
+			next(err);
+		}
+	},
+	async (req, res, next) => {
+		// Successful
+		res.json({ user: req.user });
+	},
+];
+
 // Update all user fields except profilePicture and _id.
 exports.updateInfo = [
 	authenticated,

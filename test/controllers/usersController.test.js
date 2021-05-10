@@ -11,10 +11,41 @@ const {
 	bodyHasCurrentUserProperty,
 } = require('../assertionFunctions');
 
+let user1Id;
+let user1Jwt;
 const imagesPath = 'public/images';
 const profilePicture = 'profile-picture.jpg';
 
 beforeAll(async () => await mongoConfigTesting.connect());
+beforeEach(async () => {
+	await request(app)
+		.post('/users')
+		.send({
+			firstName: 'user1',
+			lastName: 'user1',
+			email: 'user1@example.com',
+			password: 'password123',
+			passwordConfirmation: 'password123',
+		})
+		.set('Accept', 'application/json')
+		.expect('Content-Type', /json/)
+		.expect(bodyHasUserProperty)
+		.expect((res) => (user1Id = res.body.user._id))
+		.expect(201);
+
+	await request(app)
+		.post('/auth/local')
+		.send({
+			email: 'user1@example.com',
+			password: 'password123',
+		})
+		.set('Accept', 'application/json')
+		.expect('Content-Type', /json/)
+		.expect(bodyHasJwtProperty)
+		.expect(bodyHasCurrentUserProperty)
+		.expect((res) => (user1Jwt = res.body.jwt))
+		.expect(200);
+});
 afterEach(async () => {
 	// Delete all files in public/images directory.
 	const files = await fs.readdir(imagesPath);
@@ -31,9 +62,9 @@ describe('create', () => {
 			// Create a valid user.
 			await request(app)
 				.post('/users')
-				.field('firstName', 'user1')
-				.field('lastName', 'user1')
-				.field('email', 'user1@example.com')
+				.field('firstName', 'user2')
+				.field('lastName', 'user2')
+				.field('email', 'user2@example.com')
 				.field('password', 'password123')
 				.field('passwordConfirmation', 'password123')
 				.attach('profilePicture', `test/images/${profilePicture}`)
@@ -60,9 +91,9 @@ describe('create', () => {
 		it('if profilePicture is not supplied but all other fields are valid', (done) => {
 			request(app)
 				.post('/users')
-				.field('firstName', 'user1')
-				.field('lastName', 'user1')
-				.field('email', 'user1@example.com')
+				.field('firstName', 'user2')
+				.field('lastName', 'user2')
+				.field('email', 'user2@example.com')
 				.field('password', 'password123')
 				.field('passwordConfirmation', 'password123')
 				.set('Accept', 'application/json')
@@ -78,8 +109,8 @@ describe('create', () => {
 			await request(app)
 				.post('/users')
 				.field('firstName', '')
-				.field('lastName', 'user1')
-				.field('email', 'user1@example.com')
+				.field('lastName', 'user2')
+				.field('email', 'user2@example.com')
 				.field('password', 'password123')
 				.field('passwordConfirmation', 'password123')
 				.attach('profilePicture', `test/images/${profilePicture}`)
@@ -102,8 +133,8 @@ describe('create', () => {
 			await request(app)
 				.post('/users')
 				.field('firstName', '')
-				.field('lastName', 'user1')
-				.field('email', 'user1@example.com')
+				.field('lastName', 'user2')
+				.field('email', 'user2@example.com')
 				.field('password', 'password123')
 				.field('passwordConfirmation', 'password123')
 				.attach('profilePicture', `test/files/dummyJson.json`)
@@ -258,9 +289,9 @@ describe('create', () => {
 				await request(app)
 					.post('/users')
 					.send({
-						firstName: 'user1',
-						lastName: 'user1',
-						email: 'user1@example.com',
+						firstName: 'user2',
+						lastName: 'user2',
+						email: 'user2@example.com',
 						password: 'password123',
 						passwordConfirmation: 'password123',
 					})
@@ -274,7 +305,7 @@ describe('create', () => {
 					.send({
 						firstName: 'invalidUser',
 						lastName: 'invalidUser',
-						email: 'user1@example.com',
+						email: 'user2@example.com',
 						password: 'password123',
 						passwordConfirmation: 'password123',
 					})
@@ -353,40 +384,83 @@ describe('create', () => {
 	});
 });
 
-describe('updateInfo', () => {
-	let user1Id;
-	let user1Jwt;
-
-	beforeEach(async () => {
-		await request(app)
-			.post('/users')
-			.send({
-				firstName: 'user1',
-				lastName: 'user1',
-				email: 'user1@example.com',
-				password: 'password123',
-				passwordConfirmation: 'password123',
-			})
+describe('editInfo', () => {
+	it("should get the user's information as the user property", (done) => {
+		request(app)
+			.get(`/users/${user1Id}`)
 			.set('Accept', 'application/json')
+			.set('Authorization', `Bearer ${user1Jwt}`)
 			.expect('Content-Type', /json/)
 			.expect(bodyHasUserProperty)
-			.expect((res) => (user1Id = res.body.user._id))
-			.expect(201);
-
-		await request(app)
-			.post('/auth/local')
-			.send({
-				email: 'user1@example.com',
-				password: 'password123',
+			.expect((res) => {
+				console.log(res.body);
+				if (res.body.user._id !== user1Id) {
+					throw new Error('Did not get user information for updating.');
+				}
 			})
-			.set('Accept', 'application/json')
-			.expect('Content-Type', /json/)
-			.expect(bodyHasJwtProperty)
-			.expect(bodyHasCurrentUserProperty)
-			.expect((res) => (user1Jwt = res.body.jwt))
-			.expect(200);
+			.expect(200, done);
 	});
 
+	describe('body has err property', () => {
+		test('if JWT is not valid or not supplied', (done) => {
+			request(app)
+				.get(`/users/${user1Id}`)
+				.set('Accept', 'application/json')
+				.expect('Content-Type', /json/)
+				.expect(bodyHasErrProperty)
+				.expect(401, done);
+		});
+
+		test('if userId route parameter is not valid', (done) => {
+			request(app)
+				.get(`/users/${user1Id}` + '123')
+				.set('Accept', 'application/json')
+				.set('Authorization', `Bearer ${user1Jwt}`)
+				.expect('Content-Type', /json/)
+				.expect(bodyHasErrProperty)
+				.expect(404, done);
+		});
+
+		test('if user does not exists', (done) => {
+			request(app)
+				.get(`/users/${user1Id.substring(0, user1Id.length - 3)}` + '123')
+				.set('Accept', 'application/json')
+				.set('Authorization', `Bearer ${user1Jwt}`)
+				.expect('Content-Type', /json/)
+				.expect(bodyHasErrProperty)
+				.expect(404, done);
+		});
+
+		test("if userId is not the currentUser's id", async (done) => {
+			let user2Id;
+
+			await request(app)
+				.post('/users')
+				.send({
+					firstName: 'user2',
+					lastName: 'user2',
+					email: 'user2@example.com',
+					password: 'password123',
+					passwordConfirmation: 'password123',
+				})
+				.set('Accept', 'application/json')
+				.expect('Content-Type', /json/)
+				.expect(bodyHasUserProperty)
+				.expect((res) => (user2Id = res.body.user._id))
+				.expect(201);
+
+			request(app)
+				.get(`/users/${user2Id}`)
+				.set('Accept', 'application/json')
+				.set('Authorization', `Bearer ${user1Jwt}`)
+				.expect('Content-Type', /json/)
+				.expect(bodyHasErrProperty)
+				.expect(401, done);
+		});
+	});
+});
+
+describe('updateInfo', () => {
 	it("should update the user's information, and body has user property", (done) => {
 		const updatedFirstName = 'updatedUser1';
 
