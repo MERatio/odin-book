@@ -199,7 +199,7 @@ exports.updateInfo = [
 					{ new: true, runValidators: true }
 				);
 				// Successful
-				res.status(200).json({ user: updatedUser });
+				res.json({ user: updatedUser });
 			}
 		} catch (err) {
 			next(err);

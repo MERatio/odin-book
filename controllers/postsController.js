@@ -139,7 +139,7 @@ exports.update = [
 				// Update the record with escaped and trimmed data.
 				post.text = req.body.text;
 				const updatedPost = await post.save();
-				res.status(200).json({ post: updatedPost });
+				res.json({ post: updatedPost });
 			} catch (err) {
 				next(err);
 			}

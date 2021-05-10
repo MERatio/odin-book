@@ -103,7 +103,7 @@ exports.update = [
 				// Update the record with escaped and trimmed data.
 				comment.text = req.body.text;
 				const updatedComment = await comment.save();
-				res.status(200).json({ comment: updatedComment });
+				res.json({ comment: updatedComment });
 			} catch (err) {
 				next(err);
 			}

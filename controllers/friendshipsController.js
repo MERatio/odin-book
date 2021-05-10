@@ -126,7 +126,7 @@ exports.update = [
 				// Accept friend request.
 				friendship.status = 'friends';
 				const updatedFriendship = await friendship.save();
-				res.status(200).json({ friendship: updatedFriendship });
+				res.json({ friendship: updatedFriendship });
 			}
 		} catch (err) {
 			next(err);
@@ -155,7 +155,7 @@ exports.destroy = [
 				// Successful
 				// Remove friendship.
 				const removedFriendship = await friendship.remove();
-				res.status(200).json({ friendship: removedFriendship });
+				res.json({ friendship: removedFriendship });
 			}
 		} catch (err) {
 			next(err);

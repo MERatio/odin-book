@@ -108,7 +108,7 @@ exports.destroy = [
 				// Successful
 				// Remove reaction.
 				const removedReaction = await reaction.remove();
-				res.status(200).json({ reaction: removedReaction });
+				res.json({ reaction: removedReaction });
 			}
 		} catch (err) {
 			next(err);
