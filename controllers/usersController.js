@@ -132,7 +132,7 @@ exports.editInfo = [
 	},
 ];
 
-// Update all user fields except profilePicture and _id.
+// Update user's firstName, lastName, email and password.
 exports.updateInfo = [
 	authenticated,
 	validMongoObjectIdRouteParams,
