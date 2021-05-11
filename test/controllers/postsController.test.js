@@ -78,7 +78,7 @@ beforeEach(async () => {
 	await request(app)
 		.post('/posts')
 		.send({
-			text: 'post1',
+			text: 'userPost1',
 		})
 		.set('Accept', 'application/json')
 		.set('Authorization', `Bearer ${user1Jwt}`)
@@ -112,7 +112,7 @@ beforeEach(async () => {
 	await request(app)
 		.post('/posts')
 		.send({
-			text: "friend's post",
+			text: 'user2Post1',
 		})
 		.set('Accept', 'application/json')
 		.set('Authorization', `Bearer ${user2Jwt}`)
@@ -216,7 +216,7 @@ describe('index', () => {
 			await request(app)
 				.post('/posts')
 				.send({
-					text: "stranger's post",
+					text: 'stranger1Post1',
 				})
 				.set('Accept', 'application/json')
 				.set('Authorization', `Bearer ${stranger1Jwt}`)
@@ -631,7 +631,7 @@ describe('update', () => {
 	});
 
 	it('should update post and body should have a post property', (done) => {
-		const updatedCommentText = 'post1Updated';
+		const updatedCommentText = 'updatedUser1Post1';
 		request(app)
 			.put(`/posts/${user1Post1Id}`)
 			.send({
