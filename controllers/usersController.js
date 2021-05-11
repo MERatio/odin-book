@@ -188,16 +188,11 @@ exports.updateInfo = [
 				// Data form is valid.
 				// Update the user info with hashed password
 				const hashedPassword = await bcrypt.hash(req.body.password, 10);
-				const updatedUser = await User.findByIdAndUpdate(
-					req.currentUser._id,
-					{
-						firstName: req.body.firstName,
-						lastName: req.body.lastName,
-						email: req.body.email,
-						password: hashedPassword,
-					},
-					{ new: true, runValidators: true }
-				);
+				const user = req.currentUser;
+				user.firstName = req.body.firstName;
+				user.lastName = req.body.email;
+				user.password = hashedPassword;
+				const updatedUser = await user.save();
 				// Successful
 				res.json({ user: updatedUser });
 			}
