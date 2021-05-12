@@ -61,3 +61,9 @@ exports.bodyHasCommentProperty = (res) => {
 		throw new Error('missing comment property');
 	}
 };
+
+exports.bodyHasProfilePictureProperty = (res) => {
+	if (!Object.prototype.hasOwnProperty.call(res.body, 'profilePicture')) {
+		throw new Error('missing profilePicture property');
+	}
+};

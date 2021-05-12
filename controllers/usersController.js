@@ -201,3 +201,76 @@ exports.updateInfo = [
 		}
 	},
 ];
+
+exports.updateProfilePicture = [
+	authenticated,
+	validMongoObjectIdRouteParams,
+	getResourceFromParams('User'),
+	async (req, res, next) => {
+		try {
+			const user = req.user;
+			if (!req.currentUser._id.equals(user._id)) {
+				const err = new Error('Unauthorized');
+				err.status = 401;
+				next(err);
+			} else {
+				next();
+			}
+		} catch (err) {
+			next(err);
+		}
+	},
+	(req, res, next) => {
+		upload.single('profilePicture')(req, res, (err) => {
+			if (err) {
+				req.multerErr = err;
+			}
+			next();
+		});
+	},
+	async (req, res, next) => {
+		try {
+			// If there's a multer error or the user didn't upload an image.
+			if (req.multerErr || !req.file) {
+				let errors = [];
+				if (req.file) {
+					await fs.unlink(`public/images/${req.file.filename}`);
+				}
+				if (req.multerErr) {
+					errors = errors.concat({
+						msg: req.multerErr.message,
+					});
+				}
+				if (!req.file) {
+					errors = errors.concat({
+						msg: 'Upload a profile picture.',
+					});
+				}
+				res.status(422).json({
+					errors,
+					profilePicture: req.file ? req.file.filename : '',
+				});
+			} else {
+				// Data form is valid.
+				// Update user's profile picture
+				const user = req.user;
+				// Delete the old profilePicture if there's any.
+				if (user.profilePicture !== '') {
+					await fs.unlink(`public/images/${user.profilePicture}`);
+				}
+				user.profilePicture = req.file.filename;
+				const updatedUser = await user.save();
+				// Successful
+				res.status(200).json({ profilePicture: updatedUser.profilePicture });
+			}
+		} catch (err) {
+			// If there's an uploaded image delete it.
+			if (req.file) {
+				(async () => {
+					await fs.unlink(`public/images/${req.file.filename}`);
+				})();
+			}
+			next(err);
+		}
+	},
+];
