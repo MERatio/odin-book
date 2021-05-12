@@ -385,7 +385,7 @@ describe('create', () => {
 	});
 });
 
-describe('editInfo', () => {
+describe('edit', () => {
 	it("should get the user's information as the user property", (done) => {
 		request(app)
 			.get(`/users/${user1Id}`)

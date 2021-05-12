@@ -108,7 +108,7 @@ exports.create = [
 ];
 
 // Get all user fields except password.
-exports.editInfo = [
+exports.edit = [
 	authenticated,
 	validMongoObjectIdRouteParams,
 	getResourceFromParams('User'),
