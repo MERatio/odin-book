@@ -316,6 +316,9 @@ describe('create', () => {
 		});
 
 		describe('if profilePicture', () => {
+			/* If the image exceeds the file size limit, the error will be the same.
+				 albeit has different error message.
+			*/
 			test('has invalid extention. File with invalid file type should not be saved', async (done) => {
 				await request(app)
 					.post('/users')
@@ -949,6 +952,9 @@ describe('updateProfilePicture', () => {
 	});
 
 	describe('body has profilePicture and errors property', () => {
+		/* If the image exceeds the file size limit, the error will be the same.
+			 albeit has different error message.
+		*/
 		describe('if profilePicture', () => {
 			test('has invalid extention. File with invalid file type should not be saved', async (done) => {
 				await request(app)
