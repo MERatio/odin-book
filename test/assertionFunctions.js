@@ -14,6 +14,12 @@ exports.bodyHasErrorsProperty = (res) => {
 	}
 };
 
+exports.bodyHasUsersProperty = (res) => {
+	if (!Object.prototype.hasOwnProperty.call(res.body, 'users')) {
+		throw new Error('missing users property');
+	}
+};
+
 exports.bodyHasUserProperty = (res) => {
 	if (!Object.prototype.hasOwnProperty.call(res.body, 'user')) {
 		throw new Error('missing user property');

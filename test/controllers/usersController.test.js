@@ -6,9 +6,11 @@ const mongoConfigTesting = require('../../configs/mongoConfigTesting');
 const {
 	bodyHasErrProperty,
 	bodyHasErrorsProperty,
+	bodyHasUsersProperty,
 	bodyHasUserProperty,
 	bodyHasJwtProperty,
 	bodyHasCurrentUserProperty,
+	bodyHasFriendshipProperty,
 	bodyHasProfilePictureProperty,
 } = require('../assertionFunctions');
 
@@ -56,6 +58,190 @@ afterEach(async () => {
 	await mongoConfigTesting.clear();
 });
 afterAll(async () => await mongoConfigTesting.close());
+
+describe('index', () => {
+	it("should get all users who don't have a friendship with currentUser", async (done) => {
+		let userWithNoFriendshipWithCurrentUserId;
+		let requesteeId;
+		let requestorId;
+		let requestorJwt;
+		let friendId;
+		let friendJwt;
+		let user1AndFriendFriendshipId;
+
+		await request(app)
+			.post('/users')
+			.send({
+				firstName: 'userWithNoFriendshipWithCurrentUser',
+				lastName: 'userWithNoFriendshipWithCurrentUser',
+				email: 'userWithNoFriendshipWithCurrentUser@example.com',
+				password: 'password123',
+				passwordConfirmation: 'password123',
+			})
+			.set('Accept', 'application/json')
+			.expect('Content-Type', /json/)
+			.expect(bodyHasUserProperty)
+			.expect(
+				(res) => (userWithNoFriendshipWithCurrentUserId = res.body.user._id)
+			)
+			.expect(201);
+
+		await request(app)
+			.post('/users')
+			.send({
+				firstName: 'requestee',
+				lastName: 'requestee',
+				email: 'requestee@example.com',
+				password: 'password123',
+				passwordConfirmation: 'password123',
+			})
+			.set('Accept', 'application/json')
+			.expect('Content-Type', /json/)
+			.expect(bodyHasUserProperty)
+			.expect((res) => (requesteeId = res.body.user._id))
+			.expect(201);
+
+		await request(app)
+			.post('/users')
+			.send({
+				firstName: 'requestor',
+				lastName: 'requestor',
+				email: 'requestor@example.com',
+				password: 'password123',
+				passwordConfirmation: 'password123',
+			})
+			.set('Accept', 'application/json')
+			.expect('Content-Type', /json/)
+			.expect(bodyHasUserProperty)
+			.expect((res) => (requestorId = res.body.user._id))
+			.expect(201);
+
+		await request(app)
+			.post('/auth/local')
+			.send({
+				email: 'requestor@example.com',
+				password: 'password123',
+			})
+			.set('Accept', 'application/json')
+			.expect('Content-Type', /json/)
+			.expect(bodyHasJwtProperty)
+			.expect(bodyHasCurrentUserProperty)
+			.expect((res) => (requestorJwt = res.body.jwt))
+			.expect(200);
+
+		await request(app)
+			.post('/users')
+			.send({
+				firstName: 'friend',
+				lastName: 'friend',
+				email: 'friend@example.com',
+				password: 'password123',
+				passwordConfirmation: 'password123',
+			})
+			.set('Accept', 'application/json')
+			.expect('Content-Type', /json/)
+			.expect(bodyHasUserProperty)
+			.expect((res) => (friendId = res.body.user._id))
+			.expect(201);
+
+		await request(app)
+			.post('/auth/local')
+			.send({
+				email: 'friend@example.com',
+				password: 'password123',
+			})
+			.set('Accept', 'application/json')
+			.expect('Content-Type', /json/)
+			.expect(bodyHasJwtProperty)
+			.expect(bodyHasCurrentUserProperty)
+			.expect((res) => (friendJwt = res.body.jwt))
+			.expect(200);
+
+		// user1 sends a friend request to requestee.
+		await request(app)
+			.post('/friendships')
+			.send({ requesteeId })
+			.set('Accept', 'application/json')
+			.set('Authorization', `Bearer ${user1Jwt}`)
+			.expect('Content-Type', /json/)
+			.expect(bodyHasFriendshipProperty)
+			.expect(201);
+
+		// requestor sends a friend request to user1.
+		await request(app)
+			.post('/friendships')
+			.send({ requesteeId: user1Id })
+			.set('Accept', 'application/json')
+			.set('Authorization', `Bearer ${requestorJwt}`)
+			.expect('Content-Type', /json/)
+			.expect(bodyHasFriendshipProperty)
+			.expect(201);
+
+		// user1 sends a friend request to friend.
+		await request(app)
+			.post('/friendships')
+			.send({ requesteeId: friendId })
+			.set('Accept', 'application/json')
+			.set('Authorization', `Bearer ${user1Jwt}`)
+			.expect('Content-Type', /json/)
+			.expect(bodyHasFriendshipProperty)
+			.expect((res) => (user1AndFriendFriendshipId = res.body.friendship._id))
+			.expect(201);
+
+		// friend accepts user1's friend request.
+		await request(app)
+			.put(`/friendships/${user1AndFriendFriendshipId}`)
+			.set('Accept', 'application/json')
+			.set('Authorization', `Bearer ${friendJwt}`)
+			.expect('Content-Type', /json/)
+			.expect(bodyHasFriendshipProperty)
+			.expect((res) => {
+				if (res.body.friendship.status !== 'friends') {
+					throw new Error('Friend request is not accepted.');
+				}
+			})
+			.expect(200);
+
+		request(app)
+			.get('/users')
+			.set('Accept', 'application/json')
+			.set('Authorization', `Bearer ${user1Jwt}`)
+			.expect('Content-Type', /json/)
+			.expect(bodyHasUsersProperty)
+			.expect((res) => {
+				const usersIds = res.body.users.map((user) => user._id);
+				if (usersIds.includes(user1Id)) {
+					throw new Error('currentUser should not be included in users index');
+				}
+				if (!usersIds.includes(userWithNoFriendshipWithCurrentUserId)) {
+					throw new Error(
+						'users with no friendship currentUser should be included users index.'
+					);
+				}
+				if (usersIds.includes(requesteeId)) {
+					throw new Error('requestees should not be included in users index.');
+				}
+				if (usersIds.includes(requestorId)) {
+					throw new Error('requestors should not be included in users index.');
+				}
+				if (usersIds.includes(friendId)) {
+					throw new Error('friends should not be included in users index.');
+				}
+			})
+			.expect(200, done);
+	});
+
+	describe('body has err property', () => {
+		test('if JWT is not valid or not supplied', (done) => {
+			request(app)
+				.get('/users')
+				.set('Accept', 'application/json')
+				.expect('Content-Type', /json/)
+				.expect(bodyHasErrProperty)
+				.expect(401, done);
+		});
+	});
+});
 
 describe('create', () => {
 	describe('create and return the new user object', () => {

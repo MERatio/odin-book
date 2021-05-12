@@ -50,6 +50,18 @@ const userValidationAndSanitation = [
 	}),
 ];
 
+exports.index = [
+	authenticated,
+	async (req, res, next) => {
+		try {
+			const usersWithNoFriendshipCurrentUser = await req.currentUser.getUsersWithNoFriendshipWithCurrentUser();
+			res.json({ users: usersWithNoFriendshipCurrentUser });
+		} catch (err) {
+			next(err);
+		}
+	},
+];
+
 exports.create = [
 	unauthenticated,
 	(req, res, next) => {
