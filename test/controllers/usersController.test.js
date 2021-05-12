@@ -80,9 +80,6 @@ describe('create', () => {
 				const files = await fs.readdir(imagesPath);
 				expect(files.length).toBe(1);
 				expect(files[0].split('.')[1] === 'jpg');
-				for (const file of files) {
-					await fs.unlink(path.join(imagesPath, file));
-				}
 				done();
 			} catch (err) {
 				done(err);
