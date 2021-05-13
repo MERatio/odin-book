@@ -574,7 +574,7 @@ describe('create', () => {
 describe('edit', () => {
 	it("should get the user's information as the user property", (done) => {
 		request(app)
-			.get(`/users/${user1Id}`)
+			.get(`/users/${user1Id}/edit`)
 			.set('Accept', 'application/json')
 			.set('Authorization', `Bearer ${user1Jwt}`)
 			.expect('Content-Type', /json/)
@@ -590,7 +590,7 @@ describe('edit', () => {
 	describe('body has err property', () => {
 		test('if JWT is not valid or not supplied', (done) => {
 			request(app)
-				.get(`/users/${user1Id}`)
+				.get(`/users/${user1Id}/edit`)
 				.set('Accept', 'application/json')
 				.expect('Content-Type', /json/)
 				.expect(bodyHasErrProperty)
@@ -599,7 +599,7 @@ describe('edit', () => {
 
 		test('if userId route parameter is not valid', (done) => {
 			request(app)
-				.get(`/users/${user1Id}` + '123')
+				.get(`/users/${user1Id + '123'}/edit`)
 				.set('Accept', 'application/json')
 				.set('Authorization', `Bearer ${user1Jwt}`)
 				.expect('Content-Type', /json/)
@@ -609,7 +609,7 @@ describe('edit', () => {
 
 		test('if user does not exists', (done) => {
 			request(app)
-				.get(`/users/${user1Id.substring(0, user1Id.length - 3)}` + '123')
+				.get(`/users/${user1Id.substring(0, user1Id.length - 3) + '123'}/edit`)
 				.set('Accept', 'application/json')
 				.set('Authorization', `Bearer ${user1Jwt}`)
 				.expect('Content-Type', /json/)
@@ -636,7 +636,7 @@ describe('edit', () => {
 				.expect(201);
 
 			request(app)
-				.get(`/users/${user2Id}`)
+				.get(`/users/${user2Id}/edit`)
 				.set('Accept', 'application/json')
 				.set('Authorization', `Bearer ${user1Jwt}`)
 				.expect('Content-Type', /json/)
