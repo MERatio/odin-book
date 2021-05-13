@@ -1,6 +1,7 @@
 const fs = require('fs/promises');
 const { body, validationResult } = require('express-validator');
 const bcrypt = require('bcryptjs');
+const omit = require('just-omit');
 const { upload } = require('../configs/multerConfig');
 const {
 	authenticated,
@@ -114,6 +115,25 @@ exports.create = [
 					await fs.unlink(`public/images/${req.file.filename}`);
 				})();
 			}
+			next(err);
+		}
+	},
+];
+
+// Get user's profile information except password, reaction and comments.
+exports.show = [
+	authenticated,
+	validMongoObjectIdRouteParams,
+	getResourceFromParams('User'),
+	async (req, res, next) => {
+		try {
+			const user = omit(req.user.toObject(), [
+				'password',
+				'reactions',
+				'comments',
+			]);
+			res.json({ user });
+		} catch (err) {
 			next(err);
 		}
 	},

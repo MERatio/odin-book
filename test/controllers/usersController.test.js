@@ -571,6 +571,118 @@ describe('create', () => {
 	});
 });
 
+describe('show', () => {
+	it('should get own user information (except password, reactions, and comments) as user property', (done) => {
+		request(app)
+			.get(`/users/${user1Id}`)
+			.set('Accept', 'application/json')
+			.set('Authorization', `Bearer ${user1Jwt}`)
+			.expect('Content-Type', /json/)
+			.expect(bodyHasUserProperty)
+			.expect((res) => {
+				if (res.body.user._id !== user1Id) {
+					throw new Error('Did not get own user information.');
+				}
+				const ownUserPropertyNames = Object.keys(res.body.user);
+				if (ownUserPropertyNames.includes('password')) {
+					throw new Error(
+						'(users#show) Password should not included in own user info.'
+					);
+				}
+				if (ownUserPropertyNames.includes('reactions')) {
+					throw new Error(
+						'(users#show) Reactions should not included in own user info.'
+					);
+				}
+				if (ownUserPropertyNames.includes('comments')) {
+					throw new Error(
+						'(users#show) Comments should not included in own user info.'
+					);
+				}
+			})
+			.expect(200, done);
+	});
+
+	it('should get other user information (except password, reactions, and comments) as user property', async (done) => {
+		let user2Id;
+
+		await request(app)
+			.post('/users')
+			.send({
+				firstName: 'user2',
+				lastName: 'user2',
+				email: 'user2@example.com',
+				password: 'password123',
+				passwordConfirmation: 'password123',
+			})
+			.set('Accept', 'application/json')
+			.expect('Content-Type', /json/)
+			.expect(bodyHasUserProperty)
+			.expect((res) => (user2Id = res.body.user._id))
+			.expect(201);
+
+		request(app)
+			.get(`/users/${user2Id}`)
+			.set('Accept', 'application/json')
+			.set('Authorization', `Bearer ${user1Jwt}`)
+			.expect('Content-Type', /json/)
+			.expect(bodyHasUserProperty)
+			.expect((res) => {
+				if (res.body.user._id !== user2Id) {
+					throw new Error("Did not get other user's information.");
+				}
+				const otherUserPropertyNames = Object.keys(res.body.user);
+				if (otherUserPropertyNames.includes('password')) {
+					throw new Error(
+						"(users#show) Password should not included in other user's info."
+					);
+				}
+				if (otherUserPropertyNames.includes('reactions')) {
+					throw new Error(
+						"(users#show) Reactions should not included in other user's info."
+					);
+				}
+				if (otherUserPropertyNames.includes('comments')) {
+					throw new Error(
+						"(users#show) Comments should not included in other user's info."
+					);
+				}
+			})
+			.expect(200, done);
+	});
+
+	describe('body has err property', () => {
+		test('if JWT is not valid or not supplied', (done) => {
+			request(app)
+				.get(`/users/${user1Id}`)
+				.set('Accept', 'application/json')
+				.expect('Content-Type', /json/)
+				.expect(bodyHasErrProperty)
+				.expect(401, done);
+		});
+
+		test('if userId route parameter is not valid', (done) => {
+			request(app)
+				.get(`/users/${user1Id + '123'}`)
+				.set('Accept', 'application/json')
+				.set('Authorization', `Bearer ${user1Jwt}`)
+				.expect('Content-Type', /json/)
+				.expect(bodyHasErrProperty)
+				.expect(404, done);
+		});
+
+		test('if user does not exists', (done) => {
+			request(app)
+				.get(`/users/${user1Id.substring(0, user1Id.length - 3) + '123'}`)
+				.set('Accept', 'application/json')
+				.set('Authorization', `Bearer ${user1Jwt}`)
+				.expect('Content-Type', /json/)
+				.expect(bodyHasErrProperty)
+				.expect(404, done);
+		});
+	});
+});
+
 describe('edit', () => {
 	it("should get the user's information as the user property", (done) => {
 		request(app)
