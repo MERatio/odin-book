@@ -119,7 +119,7 @@ exports.create = [
 	},
 ];
 
-// Get all user fields except password.
+// Get all currentUser's properties except password.
 exports.edit = [
 	authenticated,
 	validMongoObjectIdRouteParams,
