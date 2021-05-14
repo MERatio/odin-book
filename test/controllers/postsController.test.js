@@ -14,6 +14,7 @@ const {
 	bodyHasCommentProperty,
 } = require('../assertionFunctions');
 
+let user1Id;
 let user2Id;
 let user1Jwt;
 let user2Jwt;
@@ -36,6 +37,7 @@ beforeEach(async () => {
 		.set('Accept', 'application/json')
 		.expect('Content-Type', /json/)
 		.expect(bodyHasUserProperty)
+		.expect((res) => (user1Id = res.body.user._id))
 		.expect(201);
 	await request(app)
 		.post('/users')
@@ -431,6 +433,22 @@ describe('create', () => {
 			.expect('Content-Type', /json/)
 			.expect(bodyHasPostProperty)
 			.expect(201, done);
+	});
+
+	test("post's _id should be included in user's posts when post is created", (done) => {
+		request(app)
+			.get(`/users/${user1Id}`)
+			.set('Accept', 'application/json')
+			.set('Authorization', `Bearer ${user1Jwt}`)
+			.expect('Content-Type', /json/)
+			.expect(bodyHasUserProperty)
+			.expect((res) => {
+				const userPostsIds = res.body.user.posts;
+				if (!userPostsIds.includes(user1Post1Id)) {
+					throw new Error("Post's _id is not included in user's posts");
+				}
+			})
+			.expect(200, done);
 	});
 });
 

@@ -10,6 +10,7 @@ const {
 	bodyHasFriendshipProperty,
 } = require('../assertionFunctions');
 
+let user1Id;
 let user2Id;
 let user3Id;
 let user1Jwt;
@@ -31,6 +32,7 @@ beforeEach(async () => {
 		.set('Accept', 'application/json')
 		.expect('Content-Type', /json/)
 		.expect(bodyHasUserProperty)
+		.expect((res) => (user1Id = res.body.user._id))
 		.expect(201);
 	await request(app)
 		.post('/users')
@@ -162,6 +164,40 @@ describe('create', () => {
 			.expect('Content-Type', /json/)
 			.expect(bodyHasFriendshipProperty)
 			.expect(201, done);
+	});
+
+	test("friendship's _id should be included in requestor's and requestee's friendships when friendship is created", async (done) => {
+		await request(app)
+			.get(`/users/${user1Id}`)
+			.set('Accept', 'application/json')
+			.set('Authorization', `Bearer ${user1Jwt}`)
+			.expect('Content-Type', /json/)
+			.expect(bodyHasUserProperty)
+			.expect((res) => {
+				const requestorFriendshipsIds = res.body.user.friendships;
+				if (!requestorFriendshipsIds.includes(user1AndUser2FriendshipId)) {
+					throw new Error(
+						"Friendship's _id is not included in requestor's friendships"
+					);
+				}
+			})
+			.expect(200);
+
+		request(app)
+			.get(`/users/${user2Id}`)
+			.set('Accept', 'application/json')
+			.set('Authorization', `Bearer ${user1Jwt}`)
+			.expect('Content-Type', /json/)
+			.expect(bodyHasUserProperty)
+			.expect((res) => {
+				const requesteeFriendshipsIds = res.body.user.friendships;
+				if (!requesteeFriendshipsIds.includes(user1AndUser2FriendshipId)) {
+					throw new Error(
+						"Friendship's _id is not included in requestee's friendships"
+					);
+				}
+			})
+			.expect(200, done);
 	});
 
 	test('body has friendship and errors if friendship between user already exists', async (done) => {

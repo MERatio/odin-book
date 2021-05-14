@@ -11,6 +11,7 @@ const {
 	bodyHasCommentProperty,
 } = require('../assertionFunctions');
 
+let user1Id;
 let user1Jwt;
 let user2Jwt;
 let post1Id;
@@ -30,6 +31,7 @@ beforeEach(async () => {
 		.set('Accept', 'application/json')
 		.expect('Content-Type', /json/)
 		.expect(bodyHasUserProperty)
+		.expect((res) => (user1Id = res.body.user._id))
 		.expect(201);
 	await request(app)
 		.post('/users')
@@ -194,6 +196,37 @@ describe('create', () => {
 			.expect('Content-Type', /json/)
 			.expect(bodyHasCommentProperty)
 			.expect(201, done);
+	});
+
+	test("comment's _id should be included in user's comments when comment is created", (done) => {
+		request(app)
+			.get(`/users/${user1Id}`)
+			.set('Accept', 'application/json')
+			.set('Authorization', `Bearer ${user1Jwt}`)
+			.expect('Content-Type', /json/)
+			.expect(bodyHasUserProperty)
+			.expect((res) => {
+				if (!res.body.user.comments.includes(comment1Id)) {
+					throw new Error("Comment's _id is not included in user's comments");
+				}
+			})
+			.expect(200, done);
+	});
+
+	test("comment's _id should be included in post's comments when comment is created", (done) => {
+		request(app)
+			.get(`/posts/${post1Id}`)
+			.set('Accept', 'application/json')
+			.expect('Content-Type', /json/)
+			.expect((res) => {
+				const postCommentsIds = res.body.post.comments.map((comment) => {
+					return comment._id;
+				});
+				if (!postCommentsIds.includes(comment1Id)) {
+					throw new Error("Comment's _id is not included in post's comments");
+				}
+			})
+			.expect(200, done);
 	});
 });
 
