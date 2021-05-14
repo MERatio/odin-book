@@ -32,7 +32,7 @@ exports.index = [
 					path: 'comments',
 					populate: { path: 'author' },
 					options: {
-						limit: 3,
+						perDocumentLimit: 3,
 						sort: { createdAt: -1 },
 					},
 				})
