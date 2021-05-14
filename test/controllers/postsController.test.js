@@ -334,7 +334,7 @@ describe('index', () => {
 						.expect('Content-Type', /json/)
 						.expect(bodyHasPostsProperty)
 						.expect((res) => {
-							if (!res.body.posts[0].comments.length === 3) {
+							if (res.body.posts[0].comments.length !== 3) {
 								throw new Error(
 									'individual post comments length should be limited to 3'
 								);
