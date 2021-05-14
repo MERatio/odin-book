@@ -572,7 +572,7 @@ describe('create', () => {
 });
 
 describe('show', () => {
-	it('should get own user information (except password, reactions, and comments) as user property', (done) => {
+	it('should get own user information (except password) as user property', (done) => {
 		request(app)
 			.get(`/users/${user1Id}`)
 			.set('Accept', 'application/json')
@@ -589,21 +589,11 @@ describe('show', () => {
 						'(users#show) Password should not included in own user info.'
 					);
 				}
-				if (ownUserPropertyNames.includes('reactions')) {
-					throw new Error(
-						'(users#show) Reactions should not included in own user info.'
-					);
-				}
-				if (ownUserPropertyNames.includes('comments')) {
-					throw new Error(
-						'(users#show) Comments should not included in own user info.'
-					);
-				}
 			})
 			.expect(200, done);
 	});
 
-	it('should get other user information (except password, reactions, and comments) as user property', async (done) => {
+	it('should get other user information (except password) as user property', async (done) => {
 		let user2Id;
 
 		await request(app)
@@ -635,16 +625,6 @@ describe('show', () => {
 				if (otherUserPropertyNames.includes('password')) {
 					throw new Error(
 						"(users#show) Password should not included in other user's info."
-					);
-				}
-				if (otherUserPropertyNames.includes('reactions')) {
-					throw new Error(
-						"(users#show) Reactions should not included in other user's info."
-					);
-				}
-				if (otherUserPropertyNames.includes('comments')) {
-					throw new Error(
-						"(users#show) Comments should not included in other user's info."
 					);
 				}
 			})
