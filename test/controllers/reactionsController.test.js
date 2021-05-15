@@ -122,7 +122,7 @@ describe('create', () => {
 			.expect(201, done);
 	});
 
-	test("reaction's _id should be included in user's reactions when reaction is created", async (done) => {
+	test("reaction should be included in user's reactions when reaction is created", async (done) => {
 		request(app)
 			.get(`/users/${user1Id}`)
 			.set('Accept', 'application/json')
@@ -130,15 +130,17 @@ describe('create', () => {
 			.expect('Content-Type', /json/)
 			.expect(bodyHasUserProperty)
 			.expect((res) => {
-				const userReactionsIds = res.body.user.reactions;
+				const userReactionsIds = res.body.user.reactions.map((reaction) => {
+					return reaction._id;
+				});
 				if (!userReactionsIds.includes(post1Reaction1)) {
-					throw new Error("Reaction's _id is not included in user's reaction");
+					throw new Error("Reaction is not included in user's reaction");
 				}
 			})
 			.expect(200, done);
 	});
 
-	test("reaction's _id should be included in post's reactions when reaction is created", async (done) => {
+	test("reaction should be included in post's reactions when reaction is created", async (done) => {
 		request(app)
 			.get(`/posts/${post1Id}`)
 			.set('Accept', 'application/json')
@@ -148,7 +150,7 @@ describe('create', () => {
 					return reaction._id;
 				});
 				if (!postReactionsIds.includes(post1Reaction1)) {
-					throw new Error("Reaction's _id is not included in post's reactions");
+					throw new Error("Reaction is not included in post's reactions");
 				}
 			})
 			.expect(200, done);

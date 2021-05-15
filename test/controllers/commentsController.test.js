@@ -198,7 +198,7 @@ describe('create', () => {
 			.expect(201, done);
 	});
 
-	test("comment's _id should be included in user's comments when comment is created", (done) => {
+	test("comment should be included in user's comments when comment is created", (done) => {
 		request(app)
 			.get(`/users/${user1Id}`)
 			.set('Accept', 'application/json')
@@ -206,14 +206,17 @@ describe('create', () => {
 			.expect('Content-Type', /json/)
 			.expect(bodyHasUserProperty)
 			.expect((res) => {
-				if (!res.body.user.comments.includes(comment1Id)) {
-					throw new Error("Comment's _id is not included in user's comments");
+				const userCommentsIds = res.body.user.comments.map((comment) => {
+					return comment._id;
+				});
+				if (!userCommentsIds.includes(comment1Id)) {
+					throw new Error("Comment is not included in user's comments");
 				}
 			})
 			.expect(200, done);
 	});
 
-	test("comment's _id should be included in post's comments when comment is created", (done) => {
+	test("comment should be included in post's comments when comment is created", (done) => {
 		request(app)
 			.get(`/posts/${post1Id}`)
 			.set('Accept', 'application/json')
@@ -223,7 +226,7 @@ describe('create', () => {
 					return comment._id;
 				});
 				if (!postCommentsIds.includes(comment1Id)) {
-					throw new Error("Comment's _id is not included in post's comments");
+					throw new Error("Comment is not included in post's comments");
 				}
 			})
 			.expect(200, done);

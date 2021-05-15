@@ -123,10 +123,43 @@ exports.create = [
 exports.show = [
 	authenticated,
 	validMongoObjectIdRouteParams,
-	getResourceFromParams('User'),
 	async (req, res, next) => {
 		try {
-			res.json({ user: req.user });
+			const user = await User.findById(req.params.userId)
+				.populate({
+					path: 'friendships',
+					populate: { path: 'requestor requestee' },
+					options: {
+						sort: { createdAt: -1 },
+					},
+				})
+				.populate({
+					path: 'posts',
+					options: {
+						sort: { createdAt: -1 },
+					},
+				})
+				.populate({
+					path: 'reactions',
+					populate: { path: 'post' },
+					options: {
+						sort: { createdAt: -1 },
+					},
+				})
+				.populate({
+					path: 'comments',
+					populate: { path: 'post' },
+					options: {
+						sort: { createdAt: -1 },
+					},
+				});
+			if (user === null) {
+				const err = new Error('User not found.');
+				err.status = 404;
+				next(err);
+			} else {
+				res.json({ user });
+			}
 		} catch (err) {
 			next(err);
 		}

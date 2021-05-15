@@ -166,7 +166,7 @@ describe('create', () => {
 			.expect(201, done);
 	});
 
-	test("friendship's _id should be included in requestor's and requestee's friendships when friendship is created", async (done) => {
+	test("friendship should be included in requestor's and requestee's friendships when friendship is created", async (done) => {
 		await request(app)
 			.get(`/users/${user1Id}`)
 			.set('Accept', 'application/json')
@@ -174,10 +174,14 @@ describe('create', () => {
 			.expect('Content-Type', /json/)
 			.expect(bodyHasUserProperty)
 			.expect((res) => {
-				const requestorFriendshipsIds = res.body.user.friendships;
+				const requestorFriendshipsIds = res.body.user.friendships.map(
+					(friendship) => {
+						return friendship._id;
+					}
+				);
 				if (!requestorFriendshipsIds.includes(user1AndUser2FriendshipId)) {
 					throw new Error(
-						"Friendship's _id is not included in requestor's friendships"
+						"Friendship is not included in requestor's friendships"
 					);
 				}
 			})
@@ -190,10 +194,14 @@ describe('create', () => {
 			.expect('Content-Type', /json/)
 			.expect(bodyHasUserProperty)
 			.expect((res) => {
-				const requesteeFriendshipsIds = res.body.user.friendships;
+				const requesteeFriendshipsIds = res.body.user.friendships.map(
+					(friendship) => {
+						return friendship._id;
+					}
+				);
 				if (!requesteeFriendshipsIds.includes(user1AndUser2FriendshipId)) {
 					throw new Error(
-						"Friendship's _id is not included in requestee's friendships"
+						"Friendship is not included in requestee's friendships"
 					);
 				}
 			})
