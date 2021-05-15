@@ -458,12 +458,44 @@ describe('destroy', () => {
 	});
 
 	it('should remove the comment. And body should have a comment property', async (done) => {
-		request(app)
+		await request(app)
 			.del(`/posts/${post1Id}/comments/${comment1Id}`)
 			.set('Accept', 'application/json')
 			.set('Authorization', `Bearer ${user1Jwt}`)
 			.expect('Content-Type', /json/)
 			.expect(bodyHasCommentProperty)
+			.expect(200);
+
+		// Test that comment is deleted in user's comments when comment is deleted.
+		await request(app)
+			.get(`/users/${user1Id}`)
+			.set('Accept', 'application/json')
+			.set('Authorization', `Bearer ${user1Jwt}`)
+			.expect('Content-Type', /json/)
+			.expect(bodyHasUserProperty)
+			.expect((res) => {
+				const userCommentsIds = res.body.user.comments.map((comment) => {
+					return comment._id;
+				});
+				if (userCommentsIds.includes(comment1Id)) {
+					throw new Error("Comment is still included in user's comments.");
+				}
+			})
+			.expect(200);
+
+		// Test that comment is deleted in post's comments when comment is deleted.
+		request(app)
+			.get(`/posts/${post1Id}`)
+			.expect('Content-Type', /json/)
+			.expect(bodyHasPostProperty)
+			.expect((res) => {
+				const postCommentsIds = res.body.post.comments.map((comment) => {
+					return comment._id;
+				});
+				if (postCommentsIds.includes(comment1Id)) {
+					throw new Error("Comment is still included in post's comments.");
+				}
+			})
 			.expect(200, done);
 	});
 });

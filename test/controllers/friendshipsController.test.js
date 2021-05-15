@@ -365,8 +365,8 @@ describe('destroy', () => {
 		});
 	});
 
-	it('should remove the friendship', (done) => {
-		request(app)
+	it('should remove the friendship', async (done) => {
+		await request(app)
 			.del(`/friendships/${user1AndUser2FriendshipId}`)
 			.set('Accept', 'application/json')
 			.set('Authorization', `Bearer ${user2Jwt}`)
@@ -375,6 +375,48 @@ describe('destroy', () => {
 			.expect((res) => {
 				if (res.body.friendship.status !== 'pending') {
 					throw new Error('Friendship status should not change.');
+				}
+			})
+			.expect(200);
+
+		// Test that friendship is deleted in requestor's friendships when friendship is deleted.
+		await request(app)
+			.get(`/users/${user1Id}`)
+			.set('Accept', 'application/json')
+			.set('Authorization', `Bearer ${user1Jwt}`)
+			.expect('Content-Type', /json/)
+			.expect(bodyHasUserProperty)
+			.expect((res) => {
+				const requestorFriendshipsIds = res.body.user.friendships.map(
+					(friendship) => {
+						return friendship._id;
+					}
+				);
+				if (requestorFriendshipsIds.includes(user1AndUser2FriendshipId)) {
+					throw new Error(
+						"Friendship is still included in requestor's friendships."
+					);
+				}
+			})
+			.expect(200);
+
+		// Test that friendship is deleted in requestee's friendships when friendship is deleted.
+		request(app)
+			.get(`/users/${user2Id}`)
+			.set('Accept', 'application/json')
+			.set('Authorization', `Bearer ${user1Jwt}`)
+			.expect('Content-Type', /json/)
+			.expect(bodyHasUserProperty)
+			.expect((res) => {
+				const requesteeFriendshipsIds = res.body.user.friendships.map(
+					(friendship) => {
+						return friendship._id;
+					}
+				);
+				if (requesteeFriendshipsIds.includes(user1AndUser2FriendshipId)) {
+					throw new Error(
+						"Friendship is still included in requestee's friendships."
+					);
 				}
 			})
 			.expect(200, done);

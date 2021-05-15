@@ -237,8 +237,8 @@ describe('destroy', () => {
 		});
 	});
 
-	it('should remove the reaction', (done) => {
-		request(app)
+	it('should remove the reaction', async (done) => {
+		await request(app)
 			.del(`/posts/${post2Id}/reactions/${post1Reaction1}`)
 			.set('Accept', 'application/json')
 			.set('Authorization', `Bearer ${user1Jwt}`)
@@ -247,6 +247,38 @@ describe('destroy', () => {
 			.expect((res) => {
 				if (res.body.reaction.type !== 'like') {
 					throw new Error('Reaction type should not change.');
+				}
+			})
+			.expect(200);
+
+		// Test that reaction is deleted in user's reactions when reaction is deleted.
+		await request(app)
+			.get(`/users/${user1Id}`)
+			.set('Accept', 'application/json')
+			.set('Authorization', `Bearer ${user1Jwt}`)
+			.expect('Content-Type', /json/)
+			.expect(bodyHasUserProperty)
+			.expect((res) => {
+				const userReactionsIds = res.body.user.reactions.map((reaction) => {
+					return reaction._id;
+				});
+				if (userReactionsIds.includes(post1Reaction1)) {
+					throw new Error("Reaction is still included in user's reaction.");
+				}
+			})
+			.expect(200);
+
+		// Test that reaction is deleted in post's reactions when reaction is deleted.
+		request(app)
+			.get(`/posts/${post2Id}`)
+			.expect('Content-Type', /json/)
+			.expect(bodyHasPostProperty)
+			.expect((res) => {
+				const postReactionsIds = res.body.post.reactions.map((reaction) => {
+					return reaction._id;
+				});
+				if (postReactionsIds.includes(post1Reaction1)) {
+					throw new Error("Reaction is still included in post's reaction.");
 				}
 			})
 			.expect(200, done);

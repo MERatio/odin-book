@@ -712,13 +712,30 @@ describe('destroy', () => {
 		});
 	});
 
-	it('should remove the post and body should have a post property', (done) => {
-		request(app)
+	it('should remove the post and body should have a post property', async (done) => {
+		await request(app)
 			.del(`/posts/${user1Post1Id}`)
 			.set('Accept', 'application/json')
 			.set('Authorization', `Bearer ${user1Jwt}`)
 			.expect('Content-Type', /json/)
 			.expect(bodyHasPostProperty)
+			.expect(200);
+
+		// Test that post is deleted in user's posts when post is deleted.
+		request(app)
+			.get(`/users/${user1Id}`)
+			.set('Accept', 'application/json')
+			.set('Authorization', `Bearer ${user1Jwt}`)
+			.expect('Content-Type', /json/)
+			.expect(bodyHasUserProperty)
+			.expect((res) => {
+				const userPostsIds = res.body.user.posts.map((post) => {
+					return post._id;
+				});
+				if (userPostsIds.includes(user1Post1Id)) {
+					throw new Error("Post is still included in user's posts.");
+				}
+			})
 			.expect(200, done);
 	});
 });
