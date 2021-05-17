@@ -27,14 +27,6 @@ exports.index = [
 				.in([req.currentUser._id, ...friendsIds])
 				.sort({ createdAt: -1 })
 				.populate('author reactions')
-				.populate({
-					path: 'comments',
-					populate: { path: 'author' },
-					options: {
-						perDocumentLimit: 3,
-						sort: { createdAt: -1 },
-					},
-				})
 				.exec();
 			res.json({ posts });
 		} catch (err) {

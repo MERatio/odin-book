@@ -318,55 +318,6 @@ describe('index', () => {
 						.expect(200, done);
 				});
 			});
-
-			describe('comments', () => {
-				test('should be populated', (done) => {
-					request(app)
-						.get('/posts')
-						.set('Accept', 'application/json')
-						.set('Authorization', `Bearer ${user1Jwt}`)
-						.expect('Content-Type', /json/)
-						.expect(bodyHasPostsProperty)
-						.expect((res) => {
-							if (!res.body.posts[0].comments[0]._id) {
-								throw new Error('individual post comments is not populated');
-							}
-						})
-						.expect(200, done);
-				});
-
-				test('should be limited to 3', (done) => {
-					request(app)
-						.get('/posts')
-						.set('Accept', 'application/json')
-						.set('Authorization', `Bearer ${user1Jwt}`)
-						.expect('Content-Type', /json/)
-						.expect(bodyHasPostsProperty)
-						.expect((res) => {
-							if (res.body.posts[0].comments.length !== 3) {
-								throw new Error(
-									'individual post comments length should be limited to 3'
-								);
-							}
-						})
-						.expect(200, done);
-				});
-
-				test('should be recent', (done) => {
-					request(app)
-						.get('/posts')
-						.set('Accept', 'application/json')
-						.set('Authorization', `Bearer ${user1Jwt}`)
-						.expect('Content-Type', /json/)
-						.expect(bodyHasPostsProperty)
-						.expect((res) => {
-							if (res.body.posts[0].comments[0]._id !== user2Post1Comment4Id) {
-								throw new Error('individual post comments are not recent');
-							}
-						})
-						.expect(200, done);
-				});
-			});
 		});
 	});
 });
