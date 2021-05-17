@@ -178,6 +178,7 @@ describe('index', () => {
 	test('should require a valid JWT', (done) => {
 		request(app)
 			.get('/posts')
+			.set('Accept', 'application/json')
 			.expect('Content-Type', /json/)
 			.expect(bodyHasErrProperty)
 			.expect(401, done);
@@ -231,6 +232,7 @@ describe('index', () => {
 		test('should be from currentUser and friends only', (done) => {
 			request(app)
 				.get('/posts')
+				.set('Accept', 'application/json')
 				.set('Authorization', `Bearer ${user1Jwt}`)
 				.expect('Content-Type', /json/)
 				.expect(bodyHasPostsProperty)
@@ -265,6 +267,7 @@ describe('index', () => {
 		test('should be recent', (done) => {
 			request(app)
 				.get('/posts')
+				.set('Accept', 'application/json')
 				.set('Authorization', `Bearer ${user1Jwt}`)
 				.expect('Content-Type', /json/)
 				.expect(bodyHasPostsProperty)
@@ -286,6 +289,7 @@ describe('index', () => {
 				test('should be populated', (done) => {
 					request(app)
 						.get('/posts')
+						.set('Accept', 'application/json')
 						.set('Authorization', `Bearer ${user1Jwt}`)
 						.expect('Content-Type', /json/)
 						.expect(bodyHasPostsProperty)
@@ -302,6 +306,7 @@ describe('index', () => {
 				test('should be populated', (done) => {
 					request(app)
 						.get('/posts')
+						.set('Accept', 'application/json')
 						.set('Authorization', `Bearer ${user1Jwt}`)
 						.expect('Content-Type', /json/)
 						.expect(bodyHasPostsProperty)
@@ -318,6 +323,7 @@ describe('index', () => {
 				test('should be populated', (done) => {
 					request(app)
 						.get('/posts')
+						.set('Accept', 'application/json')
 						.set('Authorization', `Bearer ${user1Jwt}`)
 						.expect('Content-Type', /json/)
 						.expect(bodyHasPostsProperty)
@@ -332,6 +338,7 @@ describe('index', () => {
 				test('should be limited to 3', (done) => {
 					request(app)
 						.get('/posts')
+						.set('Accept', 'application/json')
 						.set('Authorization', `Bearer ${user1Jwt}`)
 						.expect('Content-Type', /json/)
 						.expect(bodyHasPostsProperty)
@@ -348,6 +355,7 @@ describe('index', () => {
 				test('should be recent', (done) => {
 					request(app)
 						.get('/posts')
+						.set('Accept', 'application/json')
 						.set('Authorization', `Bearer ${user1Jwt}`)
 						.expect('Content-Type', /json/)
 						.expect(bodyHasPostsProperty)
@@ -457,6 +465,7 @@ describe('show', () => {
 		test('if postId route parameter is not valid', (done) => {
 			request(app)
 				.get(`/posts/${user2Post1Id}` + '123')
+				.set('Accept', 'application/json')
 				.expect('Content-Type', /json/)
 				.expect(bodyHasErrProperty)
 				.expect(404, done);
@@ -467,6 +476,7 @@ describe('show', () => {
 				.get(
 					`/posts/${user2Post1Id.substring(0, user2Post1Id.length - 3)}` + '123'
 				)
+				.set('Accept', 'application/json')
 				.expect('Content-Type', /json/)
 				.expect(bodyHasErrProperty)
 				.expect(404, done);
@@ -476,6 +486,7 @@ describe('show', () => {
 	test('body should have a post property', (done) => {
 		request(app)
 			.get(`/posts/${user2Post1Id}`)
+			.set('Accept', 'application/json')
 			.expect('Content-Type', /json/)
 			.expect(bodyHasPostProperty)
 			.expect(200, done);
@@ -486,6 +497,7 @@ describe('show', () => {
 			test('should be populated', (done) => {
 				request(app)
 					.get(`/posts/${user2Post1Id}`)
+					.set('Accept', 'application/json')
 					.set('Authorization', `Bearer ${user1Jwt}`)
 					.expect('Content-Type', /json/)
 					.expect(bodyHasPostProperty)
@@ -502,6 +514,7 @@ describe('show', () => {
 			test('should be populated', (done) => {
 				request(app)
 					.get(`/posts/${user2Post1Id}`)
+					.set('Accept', 'application/json')
 					.set('Authorization', `Bearer ${user1Jwt}`)
 					.expect('Content-Type', /json/)
 					.expect(bodyHasPostProperty)
@@ -518,6 +531,7 @@ describe('show', () => {
 			test('should be populated', (done) => {
 				request(app)
 					.get(`/posts/${user2Post1Id}`)
+					.set('Accept', 'application/json')
 					.set('Authorization', `Bearer ${user1Jwt}`)
 					.expect('Content-Type', /json/)
 					.expect(bodyHasPostProperty)
@@ -532,6 +546,7 @@ describe('show', () => {
 			test('should be recent', (done) => {
 				request(app)
 					.get(`/posts/${user2Post1Id}`)
+					.set('Accept', 'application/json')
 					.set('Authorization', `Bearer ${user1Jwt}`)
 					.expect('Content-Type', /json/)
 					.expect(bodyHasPostProperty)

@@ -486,6 +486,7 @@ describe('destroy', () => {
 		// Test that comment is deleted in post's comments when comment is deleted.
 		request(app)
 			.get(`/posts/${post1Id}`)
+			.set('Accept', 'application/json')
 			.expect('Content-Type', /json/)
 			.expect(bodyHasPostProperty)
 			.expect((res) => {

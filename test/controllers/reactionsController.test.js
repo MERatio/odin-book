@@ -271,6 +271,7 @@ describe('destroy', () => {
 		// Test that reaction is deleted in post's reactions when reaction is deleted.
 		request(app)
 			.get(`/posts/${post2Id}`)
+			.set('Accept', 'application/json')
 			.expect('Content-Type', /json/)
 			.expect(bodyHasPostProperty)
 			.expect((res) => {
