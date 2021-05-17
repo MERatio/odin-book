@@ -21,7 +21,8 @@ CommentSchema.pre('remove', async function (next) {
 			.findById(this.author._id || this.author);
 		const post = await mongoose
 			.model('Post')
-			.findById(this.post._id || this.post);
+			.findById(this.post._id || this.post)
+			.exec();
 		author.comments.pull({ _id: this._id });
 		await author.save();
 		post.comments.pull({ _id: this._id });

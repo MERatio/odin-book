@@ -28,10 +28,12 @@ ReactionSchema.pre('remove', async function (next) {
 	try {
 		const user = await mongoose
 			.model('User')
-			.findById(this.user._id || this.user);
+			.findById(this.user._id || this.user)
+			.exec();
 		const post = await mongoose
 			.model('Post')
-			.findById(this.post._id || this.post);
+			.findById(this.post._id || this.post)
+			.exec();
 		user.reactions.pull({ _id: this._id });
 		await user.save();
 		post.reactions.pull({ _id: this._id });

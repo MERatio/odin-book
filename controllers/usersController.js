@@ -152,7 +152,8 @@ exports.show = [
 					options: {
 						sort: { createdAt: -1 },
 					},
-				});
+				})
+				.exec();
 			if (user === null) {
 				const err = new Error('User not found.');
 				err.status = 404;

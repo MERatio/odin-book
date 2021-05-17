@@ -19,7 +19,8 @@ PostSchema.pre('remove', async function (next) {
 	try {
 		const author = await mongoose
 			.model('User')
-			.findById(this.author._id || this.author);
+			.findById(this.author._id || this.author)
+			.exec();
 		author.posts.pull({ _id: this._id });
 		await author.save();
 	} catch (err) {
@@ -30,7 +31,10 @@ PostSchema.pre('remove', async function (next) {
 // Remove all post's reactions.
 PostSchema.pre('remove', async function (next) {
 	try {
-		const reactions = await mongoose.model('Reaction').find({ post: this._id });
+		const reactions = await mongoose
+			.model('Reaction')
+			.find({ post: this._id })
+			.exec();
 		for (let reaction of reactions) {
 			await reaction.remove();
 		}
@@ -42,7 +46,10 @@ PostSchema.pre('remove', async function (next) {
 // Remove all post's comments.
 PostSchema.pre('remove', async function (next) {
 	try {
-		const comments = await mongoose.model('Comment').find({ post: this._id });
+		const comments = await mongoose
+			.model('Comment')
+			.find({ post: this._id })
+			.exec();
 		for (let comment of comments) {
 			await comment.remove();
 		}

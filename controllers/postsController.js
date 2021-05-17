@@ -92,7 +92,8 @@ exports.show = [
 					options: {
 						sort: { createdAt: -1 },
 					},
-				});
+				})
+				.exec();
 			if (post === null) {
 				const err = new Error('Page not found');
 				err.status = 404;

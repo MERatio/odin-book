@@ -33,10 +33,12 @@ FriendshipSchema.pre('remove', async function (next) {
 	try {
 		const requestor = await mongoose
 			.model('User')
-			.findById(this.requestor._id || this.requestor);
+			.findById(this.requestor._id || this.requestor)
+			.exec();
 		const requestee = await mongoose
 			.model('User')
-			.findById(this.requestee._id || this.requestee);
+			.findById(this.requestee._id || this.requestee)
+			.exec();
 		requestor.friendships.pull({ _id: this._id });
 		await requestor.save();
 		requestee.friendships.pull({ _id: this._id });
