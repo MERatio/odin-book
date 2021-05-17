@@ -4,7 +4,6 @@ const {
 	validMongoObjectIdRouteParams,
 	getResourceFromParamsAndCurrentUserIsTheAuthor,
 } = require('../lib/middlewares');
-// const Friendship = require('../models/friendship');
 const Post = require('../models/post');
 
 const postValidationAndSanitation = [
