@@ -4,6 +4,7 @@ const path = require('path');
 const { mkdir } = require('fs');
 const express = require('express');
 const logger = require('morgan');
+const paginate = require('express-paginate');
 const passportConfig = require('./configs/passportConfig');
 const { setCurrentUser } = require('./lib/middlewares');
 
@@ -35,6 +36,20 @@ app.use(express.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(passportConfig.initialize({ userProperty: 'currentUser' }));
 app.use(setCurrentUser);
+/* First parameter is used if req.query.limit is not supplied. 
+	   Not a minimum value.
+	 Second parameter is max value of req.query.limit.
+*/
+app.use(paginate.middleware(10, 50));
+/* Set pagination default or minimum limit per page.
+	 This override paginate.middleware() first parameter.
+*/
+app.get('/users', (req, res, next) => {
+	if (req.query.limit < 9) {
+		req.query.limit = 10;
+	}
+	next();
+});
 
 // Use routers
 app.use('/auth', authRouter);

@@ -9,6 +9,7 @@ const {
 	getResourceFromParams,
 } = require('../lib/middlewares');
 const User = require('../models/user');
+const Friendship = require('../models/friendship');
 
 const userValidationAndSanitation = [
 	body('firstName')
@@ -54,8 +55,32 @@ exports.index = [
 	authenticated,
 	async (req, res, next) => {
 		try {
-			const usersWithNoFriendshipCurrentUser = await req.currentUser.getUsersWithNoFriendshipWithCurrentUser();
-			res.json({ users: usersWithNoFriendshipCurrentUser });
+			const requesteesIds = await Friendship.find({
+				requestor: req.currentUser._id,
+			})
+				.distinct('requestee')
+				.exec();
+			const requestorsIds = await Friendship.find({
+				requestee: req.currentUser._id,
+			})
+				.distinct('requestor')
+				.exec();
+			const userIds = [req.currentUser._id, ...requesteesIds, ...requestorsIds];
+			// Subset of users with no friendship with currentUser (users per page).
+			const users = await User.find()
+				.where('_id')
+				.nin(userIds)
+				.skip(req.skip)
+				.limit(req.query.limit)
+				.exec();
+			// Total count of users with no friendship with currentUser.
+			const usersCount = await User.countDocuments({
+				_id: { $nin: userIds },
+			}).exec();
+			res.json({
+				users,
+				usersCount,
+			});
 		} catch (err) {
 			next(err);
 		}

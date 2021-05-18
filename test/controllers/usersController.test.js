@@ -231,6 +231,82 @@ describe('index', () => {
 			.expect(200, done);
 	});
 
+	describe('pagination', () => {
+		beforeEach(async () => {
+			for (let i = 1; i < 31; i++) {
+				await request(app)
+					.post('/users')
+					.send({
+						firstName: `userPagination${i}`,
+						lastName: `userPagination${i}`,
+						email: `userPagination${i}@example.com`,
+						password: 'password123',
+						passwordConfirmation: 'password123',
+					})
+					.set('Accept', 'application/json')
+					.expect('Content-Type', /json/)
+					.expect(bodyHasUserProperty)
+					.expect(201);
+			}
+		});
+
+		test('works with or without query parameters', async (done) => {
+			await request(app)
+				.get('/users')
+				.set('Accept', 'application/json')
+				.set('Authorization', `Bearer ${user1Jwt}`)
+				.expect('Content-Type', /json/)
+				.expect(bodyHasUsersProperty)
+				.expect((res) => {
+					const { users, usersCount } = res.body;
+					if (users.length !== 10) {
+						throw new Error(
+							"User's pagination users body property length error."
+						);
+					}
+					if (usersCount !== 30) {
+						throw new Error(
+							"User's pagination usersCount body property error."
+						);
+					}
+					if (users[0].firstName !== 'userPagination1') {
+						throw new Error('User pagination incorrect first user.');
+					}
+					if (users[users.length - 1].firstName !== 'userPagination10') {
+						throw new Error('User pagination incorrect last user.');
+					}
+				})
+				.expect(200);
+
+			request(app)
+				.get('/users?page=2&limit=15')
+				.set('Accept', 'application/json')
+				.set('Authorization', `Bearer ${user1Jwt}`)
+				.expect('Content-Type', /json/)
+				.expect(bodyHasUsersProperty)
+				.expect((res) => {
+					const { users, usersCount } = res.body;
+					if (users.length !== 15) {
+						throw new Error(
+							"User's pagination users body property length error."
+						);
+					}
+					if (usersCount !== 30) {
+						throw new Error(
+							"User's pagination usersCount body property error."
+						);
+					}
+					if (users[0].firstName !== 'userPagination16') {
+						throw new Error('User pagination incorrect first user.');
+					}
+					if (users[users.length - 1].firstName !== 'userPagination30') {
+						throw new Error('User pagination incorrect last user.');
+					}
+				})
+				.expect(200, done);
+		});
+	});
+
 	describe('body has err property', () => {
 		test('if JWT is not valid or not supplied', (done) => {
 			request(app)

@@ -44,26 +44,6 @@ UserSchema.methods.findRelationshipWith = function (otherUserId, cb) {
 	);
 };
 
-UserSchema.methods.getUsersWithNoFriendshipWithCurrentUser = async function () {
-	let userIds = [];
-	const requesteesIds = await mongoose
-		.model('Friendship')
-		.find({
-			requestor: this._id,
-		})
-		.distinct('requestee')
-		.exec();
-	const requestorsIds = await mongoose
-		.model('Friendship')
-		.find({
-			requestee: this._id,
-		})
-		.distinct('requestor')
-		.exec();
-	userIds = [this._id, ...requesteesIds, ...requestorsIds];
-	return mongoose.model('User').find({}).where('_id').nin(userIds);
-};
-
 UserSchema.methods.getFriends = async function () {
 	let friendsIds = [];
 	const requesteesIds = await mongoose
