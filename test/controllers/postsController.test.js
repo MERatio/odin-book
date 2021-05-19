@@ -1,5 +1,7 @@
 const request = require('supertest');
 const app = require('../../app');
+const Reaction = require('../../models/reaction');
+const Comment = require('../../models/comment');
 const mongoConfigTesting = require('../../configs/mongoConfigTesting');
 const {
 	bodyHasErrProperty,
@@ -22,6 +24,7 @@ let user2Jwt;
 let user1Post1Id;
 let user1AndUser2FriendshipId;
 let user2Post1Id;
+let user2Post1Reaction1Id;
 let user2Post1Comment4Id;
 let indexPostsCount = 0;
 
@@ -136,6 +139,7 @@ beforeEach(async () => {
 		.set('Authorization', `Bearer ${user1Jwt}`)
 		.expect('Content-Type', /json/)
 		.expect(bodyHasReactionProperty)
+		.expect((res) => (user2Post1Reaction1Id = res.body.reaction._id))
 		.expect(201);
 	await request(app)
 		.post(`/posts/${user2Post1Id}/comments`)
@@ -766,26 +770,35 @@ describe('destroy', () => {
 	});
 
 	it('should remove the post and body should have a post property', async (done) => {
+		// Test to see if post's reactions and comments exists.
+		expect(await Reaction.exists({ _id: user2Post1Reaction1Id })).toBe(true);
+		expect(await Comment.exists({ _id: user2Post1Comment4Id })).toBe(true);
+
+		// Delete the post.
 		await request(app)
-			.del(`/posts/${user1Post1Id}`)
+			.del(`/posts/${user2Post1Id}`)
 			.set('Accept', 'application/json')
-			.set('Authorization', `Bearer ${user1Jwt}`)
+			.set('Authorization', `Bearer ${user2Jwt}`)
 			.expect('Content-Type', /json/)
 			.expect(bodyHasPostProperty)
 			.expect(200);
 
+		// Test to see if post's reactions and comments are deleted.
+		expect(await Reaction.exists({ _id: user2Post1Reaction1Id })).toBe(false);
+		expect(await Comment.exists({ _id: user2Post1Comment4Id })).toBe(false);
+
 		// Test that post is deleted in user's posts when post is deleted.
 		request(app)
-			.get(`/users/${user1Id}`)
+			.get(`/users/${user2Id}`)
 			.set('Accept', 'application/json')
-			.set('Authorization', `Bearer ${user1Jwt}`)
+			.set('Authorization', `Bearer ${user2Jwt}`)
 			.expect('Content-Type', /json/)
 			.expect(bodyHasUserProperty)
 			.expect((res) => {
 				const userPostsIds = res.body.user.posts.map((post) => {
 					return post._id;
 				});
-				if (userPostsIds.includes(user1Post1Id)) {
+				if (userPostsIds.includes(user2Post1Id)) {
 					throw new Error("Post is still included in user's posts.");
 				}
 			})
