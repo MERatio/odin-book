@@ -233,6 +233,8 @@ describe('index', () => {
 	});
 
 	describe('pagination', () => {
+		let indexUsersCount = 0;
+
 		beforeEach(async () => {
 			for (let i = 1; i < 31; i++) {
 				await request(app)
@@ -247,6 +249,7 @@ describe('index', () => {
 					.set('Accept', 'application/json')
 					.expect('Content-Type', /json/)
 					.expect(bodyHasUserProperty)
+					.expect(() => (indexUsersCount += 1))
 					.expect(201);
 			}
 		});
@@ -266,7 +269,7 @@ describe('index', () => {
 							'users#index pagination - users body property length error.'
 						);
 					}
-					if (usersCount !== 30) {
+					if (usersCount !== indexUsersCount) {
 						throw new Error(
 							'users#index pagination - usersCount body property error.'
 						);
@@ -294,7 +297,7 @@ describe('index', () => {
 							'users#index pagination - users body property length error.'
 						);
 					}
-					if (usersCount !== 30) {
+					if (usersCount !== indexUsersCount) {
 						throw new Error(
 							'users#index pagination - usersCount body property error.'
 						);
