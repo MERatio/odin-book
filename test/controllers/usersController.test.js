@@ -263,19 +263,19 @@ describe('index', () => {
 					const { users, usersCount } = res.body;
 					if (users.length !== 10) {
 						throw new Error(
-							"User's pagination users body property length error."
+							'users#index pagination - users body property length error.'
 						);
 					}
 					if (usersCount !== 30) {
 						throw new Error(
-							"User's pagination usersCount body property error."
+							'users#index pagination - usersCount body property error.'
 						);
 					}
 					if (users[0].firstName !== 'userPagination1') {
-						throw new Error('User pagination incorrect first user.');
+						throw new Error('users#index pagination - incorrect first user.');
 					}
 					if (users[users.length - 1].firstName !== 'userPagination10') {
-						throw new Error('User pagination incorrect last user.');
+						throw new Error('users#index pagination - incorrect last user.');
 					}
 				})
 				.expect(200);
@@ -291,19 +291,19 @@ describe('index', () => {
 					const { users, usersCount } = res.body;
 					if (users.length !== 15) {
 						throw new Error(
-							"User's pagination users body property length error."
+							'users#index pagination - users body property length error.'
 						);
 					}
 					if (usersCount !== 30) {
 						throw new Error(
-							"User's pagination usersCount body property error."
+							'users#index pagination - usersCount body property error.'
 						);
 					}
 					if (users[0].firstName !== 'userPagination16') {
-						throw new Error('User pagination incorrect first user.');
+						throw new Error('users#index pagination - incorrect first user.');
 					}
 					if (users[users.length - 1].firstName !== 'userPagination30') {
-						throw new Error('User pagination incorrect last user.');
+						throw new Error('users#index pagination - incorrect last user.');
 					}
 				})
 				.expect(200, done);
