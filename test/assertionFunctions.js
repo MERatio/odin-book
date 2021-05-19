@@ -62,6 +62,12 @@ exports.bodyHasPostsProperty = (res) => {
 	}
 };
 
+exports.bodyHasPostsCountProperty = (res) => {
+	if (!Object.prototype.hasOwnProperty.call(res.body, 'postsCount')) {
+		throw new Error('missing postsCount property');
+	}
+};
+
 exports.bodyHasReactionProperty = (res) => {
 	if (!Object.prototype.hasOwnProperty.call(res.body, 'reaction')) {
 		throw new Error('missing reaction property');

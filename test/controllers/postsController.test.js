@@ -10,6 +10,7 @@ const {
 	bodyHasFriendshipProperty,
 	bodyHasPostProperty,
 	bodyHasPostsProperty,
+	bodyHasPostsCountProperty,
 	bodyHasReactionProperty,
 	bodyHasCommentProperty,
 } = require('../assertionFunctions');
@@ -22,6 +23,7 @@ let user1Post1Id;
 let user1AndUser2FriendshipId;
 let user2Post1Id;
 let user2Post1Comment4Id;
+let indexPostsCount = 0;
 
 beforeAll(async () => await mongoConfigTesting.connect());
 beforeEach(async () => {
@@ -86,7 +88,10 @@ beforeEach(async () => {
 		.set('Authorization', `Bearer ${user1Jwt}`)
 		.expect('Content-Type', /json/)
 		.expect(bodyHasPostProperty)
-		.expect((res) => (user1Post1Id = res.body.post._id))
+		.expect((res) => {
+			user1Post1Id = res.body.post._id;
+			indexPostsCount += 1;
+		})
 		.expect(201);
 	await request(app)
 		.post('/friendships')
@@ -120,7 +125,10 @@ beforeEach(async () => {
 		.set('Authorization', `Bearer ${user2Jwt}`)
 		.expect('Content-Type', /json/)
 		.expect(bodyHasPostProperty)
-		.expect((res) => (user2Post1Id = res.body.post._id))
+		.expect((res) => {
+			user2Post1Id = res.body.post._id;
+			indexPostsCount += 1;
+		})
 		.expect(201);
 	await request(app)
 		.post(`/posts/${user2Post1Id}/reactions`)
@@ -171,7 +179,10 @@ beforeEach(async () => {
 		.expect((res) => (user2Post1Comment4Id = res.body.comment._id))
 		.expect(201);
 });
-afterEach(async () => await mongoConfigTesting.clear());
+afterEach(async () => {
+	indexPostsCount = 0;
+	await mongoConfigTesting.clear();
+});
 afterAll(async () => await mongoConfigTesting.close());
 
 describe('index', () => {
@@ -318,6 +329,82 @@ describe('index', () => {
 						.expect(200, done);
 				});
 			});
+		});
+	});
+
+	describe('pagination', () => {
+		beforeEach(async () => {
+			for (let i = 1; i < 31; i++) {
+				await request(app)
+					.post('/posts')
+					.send({
+						text: `postPagination${i}`,
+					})
+					.set('Accept', 'application/json')
+					.set('Authorization', `Bearer ${user2Jwt}`)
+					.expect('Content-Type', /json/)
+					.expect(bodyHasPostProperty)
+					.expect(() => (indexPostsCount += 1))
+					.expect(201);
+			}
+		});
+
+		test('works with or without query parameters', async (done) => {
+			await request(app)
+				.get('/posts')
+				.set('Accept', 'application/json')
+				.set('Authorization', `Bearer ${user1Jwt}`)
+				.expect('Content-Type', /json/)
+				.expect(bodyHasPostsProperty)
+				.expect(bodyHasPostsCountProperty)
+				.expect((res) => {
+					const { posts, postsCount } = res.body;
+					if (posts.length !== 10) {
+						throw new Error(
+							'posts#index pagination - posts body property length error.'
+						);
+					}
+					if (postsCount !== indexPostsCount) {
+						throw new Error(
+							'posts#index pagination - postsCount body property error.'
+						);
+					}
+					if (posts[0].text !== 'postPagination30') {
+						throw new Error('posts#index pagination - incorrect first post.');
+					}
+					if (posts[posts.length - 1].text !== 'postPagination21') {
+						throw new Error('posts#index pagination - incorrect last post.');
+					}
+				})
+				.expect(200);
+
+			request(app)
+				.get('/posts?page=2&limit=15')
+				.set('Accept', 'application/json')
+				.set('Authorization', `Bearer ${user1Jwt}`)
+				.expect('Content-Type', /json/)
+				.expect(bodyHasPostsProperty)
+				.expect(bodyHasPostsCountProperty)
+				.expect((res) => {
+					const { posts, postsCount } = res.body;
+					if (posts.length !== 15) {
+						throw new Error(
+							'posts#index pagination - posts body property length error.'
+						);
+					}
+					if (postsCount !== indexPostsCount) {
+						throw new Error(
+							'posts#index pagination - postsCount body property error.'
+						);
+					}
+					if (posts[0].text !== 'postPagination15') {
+						throw new Error('posts#index pagination - incorrect first post.');
+					}
+					if (posts[posts.length - 1].text !== 'postPagination1') {
+						throw new Error('posts#index pagination - incorrect last post.');
+					}
+				})
+				.expect(200, done);
 		});
 	});
 });

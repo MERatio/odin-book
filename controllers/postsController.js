@@ -22,13 +22,20 @@ exports.index = [
 		try {
 			const friends = await req.currentUser.getFriends();
 			const friendsIds = friends.map((friend) => friend._id);
+			const userIds = [req.currentUser._id, ...friendsIds];
+			// currentUser and friends posts per page.
 			const posts = await Post.find({})
 				.where('author')
-				.in([req.currentUser._id, ...friendsIds])
+				.in(userIds)
+				.skip(req.skip)
+				.limit(req.query.limit)
 				.sort({ createdAt: -1 })
 				.populate('author reactions')
 				.exec();
-			res.json({ posts });
+			const postsCount = await Post.countDocuments({
+				author: { $in: userIds },
+			}).exec();
+			res.json({ posts, postsCount });
 		} catch (err) {
 			next(err);
 		}

@@ -44,7 +44,7 @@ app.use(paginate.middleware(10, 50));
 /* Set pagination default or minimum limit per page.
 	 This override paginate.middleware() first parameter.
 */
-app.get('/users', (req, res, next) => {
+app.get(['/users', '/posts'], (req, res, next) => {
 	if (req.query.limit < 9) {
 		req.query.limit = 10;
 	}
