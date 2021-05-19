@@ -7,6 +7,7 @@ const {
 	bodyHasErrProperty,
 	bodyHasErrorsProperty,
 	bodyHasUsersProperty,
+	bodyHasUsersCountProperty,
 	bodyHasUserProperty,
 	bodyHasJwtProperty,
 	bodyHasCurrentUserProperty,
@@ -257,6 +258,7 @@ describe('index', () => {
 				.set('Authorization', `Bearer ${user1Jwt}`)
 				.expect('Content-Type', /json/)
 				.expect(bodyHasUsersProperty)
+				.expect(bodyHasUsersCountProperty)
 				.expect((res) => {
 					const { users, usersCount } = res.body;
 					if (users.length !== 10) {
@@ -284,6 +286,7 @@ describe('index', () => {
 				.set('Authorization', `Bearer ${user1Jwt}`)
 				.expect('Content-Type', /json/)
 				.expect(bodyHasUsersProperty)
+				.expect(bodyHasUsersCountProperty)
 				.expect((res) => {
 					const { users, usersCount } = res.body;
 					if (users.length !== 15) {

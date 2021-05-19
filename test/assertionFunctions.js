@@ -20,6 +20,12 @@ exports.bodyHasUsersProperty = (res) => {
 	}
 };
 
+exports.bodyHasUsersCountProperty = (res) => {
+	if (!Object.prototype.hasOwnProperty.call(res.body, 'usersCount')) {
+		throw new Error('missing usersCount property');
+	}
+};
+
 exports.bodyHasUserProperty = (res) => {
 	if (!Object.prototype.hasOwnProperty.call(res.body, 'user')) {
 		throw new Error('missing user property');
