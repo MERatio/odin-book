@@ -1,9 +1,11 @@
+const { body } = require('express-validator');
 const passport = require('passport');
 const { unauthenticated } = require('../lib/middlewares');
 const { createJwt } = require('../lib/helpers');
 
 exports.local = [
 	unauthenticated,
+	body('email').normalizeEmail(),
 	(req, res, next) => {
 		passport.authenticate(
 			'local',
