@@ -3,6 +3,7 @@ require('dotenv').config();
 const path = require('path');
 const { mkdir } = require('fs');
 const express = require('express');
+const cors = require('cors');
 const logger = require('morgan');
 const paginate = require('express-paginate');
 const passportConfig = require('./configs/passportConfig');
@@ -15,6 +16,21 @@ mkdir('public/images', { recursive: true }, (err) => {
 });
 
 const app = express();
+
+// CORS
+const allowedOrigins = ['http://localhost:3000', 'https://meratio.github.io'];
+app.use(
+	cors({
+		origin(origin, callback) {
+			if (allowedOrigins.indexOf(origin) !== -1 || !origin) {
+				callback(null, true);
+			} else {
+				callback(new Error('Not allowed by CORS'));
+			}
+		},
+		optionsSuccessStatus: 200,
+	})
+);
 
 // Routers
 const authRouter = require('./routes/auth');
