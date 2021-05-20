@@ -4,6 +4,7 @@ const path = require('path');
 const { mkdir } = require('fs');
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
 const logger = require('morgan');
 const compression = require('compression');
 const paginate = require('express-paginate');
@@ -32,6 +33,8 @@ app.use(
 		optionsSuccessStatus: 200,
 	})
 );
+
+app.use(helmet());
 
 // Routers
 const authRouter = require('./routes/auth');
