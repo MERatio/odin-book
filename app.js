@@ -5,6 +5,7 @@ const { mkdir } = require('fs');
 const express = require('express');
 const cors = require('cors');
 const logger = require('morgan');
+const compression = require('compression');
 const paginate = require('express-paginate');
 const passportConfig = require('./configs/passportConfig');
 const { setCurrentUser } = require('./lib/middlewares');
@@ -50,6 +51,7 @@ app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(compression()); // Compress all routes
 app.use(passportConfig.initialize({ userProperty: 'currentUser' }));
 app.use(setCurrentUser);
 /* First parameter is used if req.query.limit is not supplied. 
