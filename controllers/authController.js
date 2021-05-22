@@ -36,3 +36,18 @@ exports.local = [
 		)(req, res, next);
 	},
 ];
+
+exports.facebookOauth = [
+	unauthenticated,
+	passport.authenticate('facebook', { session: false, scope: ['email'] }),
+];
+
+exports.facebookCallback = [
+	unauthenticated,
+	passport.authenticate('facebook', { session: false }),
+	(req, res, next) => {
+		const currentUser = req.currentUser;
+		const jwt = createJwt(currentUser);
+		res.json({ jwt, currentUser: currentUser });
+	},
+];
