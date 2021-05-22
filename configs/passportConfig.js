@@ -68,6 +68,11 @@ passport.use(
 		async (accessToken, refreshToken, profile, done) => {
 			// Successful Facebook log in.
 			try {
+				// If Facebook user didn't give permission to use their email.
+				if (profile.emails === undefined) {
+					const err = new Error('email-required');
+					return done(err);
+				}
 				// Find a local user account using their Facebook email.
 				// User can only use unique email.
 				let currentUser = await User.findOne({

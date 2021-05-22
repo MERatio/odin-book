@@ -8,4 +8,6 @@ router.get('/facebook', authController.facebookOauth);
 
 router.get('/facebook/callback', authController.facebookCallback);
 
+router.get('/facebook/rerequest', authController.facebookRerequest);
+
 module.exports = router;
