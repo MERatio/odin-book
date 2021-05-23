@@ -121,16 +121,15 @@ exports.create = [
 				// Data form is valid.
 				// Create the new user with hashed password
 				const hashedPassword = await bcrypt.hash(req.body.password, 10);
-				const user = new User({
+				const user = await User.create({
 					firstName: req.body.firstName,
 					lastName: req.body.lastName,
 					email: req.body.email,
 					password: hashedPassword,
 					profilePicture: req.file ? req.file.filename : '',
 				});
-				const savedUser = await user.save();
 				// Successful
-				res.status(201).json({ user: savedUser });
+				res.status(201).json({ user });
 			}
 		} catch (err) {
 			// If there's an uploaded image delete it.
