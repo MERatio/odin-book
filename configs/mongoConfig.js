@@ -1,5 +1,8 @@
 const mongoose = require('mongoose');
-const mongoDB = process.env.DEV_DB_STRING || process.env.PROD_DB_STRING;
+const mongoDB =
+	process.env.NODE_ENV === 'production'
+		? process.env.PROD_DB_STRING
+		: process.env.DEV_DB_STRING;
 // https://mongoosejs.com/docs/deprecations.html#findandmodify
 mongoose.set('useFindAndModify', false);
 mongoose.connect(mongoDB, { useNewUrlParser: true, useUnifiedTopology: true });
