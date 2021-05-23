@@ -44,7 +44,8 @@ const postsRouter = require('./routes/posts');
 const reactionsRouter = require('./routes/reactions');
 const commentsRouter = require('./routes/comments');
 
-// Exlcude connecting to the real database
+// Exlcude connecting to the real database.
+// Jest automatically defines environment variable NODE_ENV as test.
 if (process.env.NODE_ENV !== 'test') {
 	// Set up default mongoose connection
 	require('./configs/mongoConfig');
