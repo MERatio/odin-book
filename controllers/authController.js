@@ -28,7 +28,7 @@ exports.local = [
 								with object containing the currentUser._id as its payload.
 							*/
 							const jwt = createJwt(currentUser);
-							res.json({ jwt, currentUser: currentUser });
+							res.json({ jwt, currentUser });
 						}
 					});
 				}
