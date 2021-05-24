@@ -416,7 +416,7 @@ describe('create', () => {
 				})
 				.expect(bodyHasUserProperty)
 				.expect(422);
-			// Verify that the valid profilePicture is not saved because of form texts errors.
+			// Verify that the invalid profilePicture is not saved because of image and form texts errors.
 			try {
 				const files = await fs.readdir(imagesPath);
 				expect(files.length).toBe(0);
