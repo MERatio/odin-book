@@ -327,7 +327,7 @@ describe('index', () => {
 
 describe('create', () => {
 	describe('create and return the new user object', () => {
-		it('if all fields are valid', async (done) => {
+		test('if all fields are valid', async (done) => {
 			// Create a valid user.
 			await request(app)
 				.post('/users')
@@ -354,7 +354,7 @@ describe('create', () => {
 			}
 		});
 
-		it('if profilePicture is not supplied but all other fields are valid', (done) => {
+		test('if profilePicture is not supplied but all other fields are valid', (done) => {
 			request(app)
 				.post('/users')
 				.field('firstName', 'user2')
@@ -371,7 +371,7 @@ describe('create', () => {
 	});
 
 	describe('body has santinized user and errors property', () => {
-		it('if form texts has error/s. And if there is a uploaded valid profilePicture delete it', async (done) => {
+		test('if form texts has error/s. And if there is a uploaded valid profilePicture delete it', async (done) => {
 			await request(app)
 				.post('/users')
 				.field('firstName', '')
@@ -395,7 +395,7 @@ describe('create', () => {
 			}
 		});
 
-		it('if profilePicture and form texts has error/s. They should be concatenated in 1 array. profilePicture should not be saved', async (done) => {
+		test('if profilePicture and form texts has error/s. They should be concatenated in 1 array. profilePicture should not be saved', async (done) => {
 			await request(app)
 				.post('/users')
 				.field('firstName', '')
