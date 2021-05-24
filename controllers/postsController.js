@@ -1,4 +1,6 @@
+const fs = require('fs/promises');
 const { body, validationResult } = require('express-validator');
+const { upload } = require('../configs/multerConfig');
 const {
 	authenticated,
 	validMongoObjectIdRouteParams,
@@ -44,45 +46,64 @@ exports.index = [
 
 exports.create = [
 	authenticated,
-	...postValidationAndSanitation,
-	// Validate and sanitise fields.
-	// Process request after validation and sanitization.
 	(req, res, next) => {
+		upload.single('image')(req, res, (err) => {
+			if (err) {
+				req.multerErr = err;
+			}
+			next();
+		});
+	},
+	// Validate and sanitise fields.
+	...postValidationAndSanitation,
+	// Process request after validation and sanitization.
+	async (req, res, next) => {
 		// Extract the validation errors from a request.
 		const errors = validationResult(req);
-		if (!errors.isEmpty()) {
-			// There are errors.
-			res.status(422).json({
-				errors: errors.array(),
-				post: req.body,
-			});
-		} else {
-			// Data is valid.
-			// Create an Post object with escaped and trimmed data.
-			const post = new Post({
-				author: req.currentUser._id,
-				text: req.body.text,
-			});
-			post.save((err, post) => {
-				if (err) {
-					next(err);
-				} else {
-					// Successful
-					req.currentUser.posts.push(post._id);
-					req.currentUser.save((err) => {
-						if (err) {
-							post.remove((err) => {
-								if (err) {
-									return next(err);
-								}
-							});
-							next(err);
-						} else {
-							res.status(201).json({ post });
-						}
-					});
+		try {
+			// There is multerErr or express-validator errors.
+			if (req.multerErr || !errors.isEmpty()) {
+				// If there's an uploaded image delete it.
+				if (req.file) {
+					await fs.unlink(`public/images/${req.file.filename}`);
 				}
-			});
+				const multerErrInArray = req.multerErr
+					? [{ msg: req.multerErr.message }]
+					: [];
+				res.status(422).json({
+					errors: multerErrInArray.concat(errors.array()),
+					post: req.body,
+				});
+			} else {
+				// Data is valid.
+				// Create an Post object with escaped and trimmed data.
+				const post = await Post.create({
+					author: req.currentUser._id,
+					text: req.body.text,
+					image: req.file ? req.file.filename : '',
+				});
+				req.currentUser.posts.push(post._id);
+				req.currentUser.save((err) => {
+					if (err) {
+						post.remove((err) => {
+							if (err) {
+								throw err;
+							}
+						});
+						throw err;
+					} else {
+						res.status(201).json({ post });
+					}
+				});
+			}
+		} catch (err) {
+			// If there's an uploaded image delete it.
+			if (req.file) {
+				(async () => {
+					await fs.unlink(`public/images/${req.file.filename}`);
+				})();
+			}
+			next(err);
 		}
 	},
 ];

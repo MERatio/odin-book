@@ -1,3 +1,5 @@
+const path = require('path');
+const fs = require('fs/promises');
 const request = require('supertest');
 const app = require('../../app');
 const Reaction = require('../../models/reaction');
@@ -27,6 +29,8 @@ let user2Post1Id;
 let user2Post1Reaction1Id;
 let user2Post1Comment4Id;
 let indexPostsCount = 0;
+const imagesPath = 'public/images';
+const image1 = 'post-image-1.jpg';
 
 beforeAll(async () => await mongoConfigTesting.connect());
 beforeEach(async () => {
@@ -185,6 +189,11 @@ beforeEach(async () => {
 });
 afterEach(async () => {
 	indexPostsCount = 0;
+	// Delete all files in public/images directory.
+	const files = await fs.readdir(imagesPath);
+	for (const file of files) {
+		await fs.unlink(path.join(imagesPath, file));
+	}
 	await mongoConfigTesting.clear();
 });
 afterAll(async () => await mongoConfigTesting.close());
@@ -427,6 +436,52 @@ describe('create', () => {
 	});
 
 	describe('body has santinized post and errors property', () => {
+		test('if form texts has error/s. And if there is a uploaded valid image delete it', async (done) => {
+			await request(app)
+				.post('/posts')
+				.field({ text: '' })
+				.attach('image', `test/images/${image1}`)
+				.set('Accept', 'application/json')
+				.set('Authorization', `Bearer ${user1Jwt}`)
+				.expect('Content-Type', /json/)
+				.expect(bodyHasPostProperty)
+				.expect(422);
+			// Verify that the valid imqge is not saved because of form texts errors.
+			try {
+				const files = await fs.readdir(imagesPath);
+				expect(files.length).toBe(0);
+				done();
+			} catch (err) {
+				done(err);
+			}
+		});
+
+		test('if image and form texts has error/s. They should be concatenated in 1 array. image should not be saved', async (done) => {
+			await request(app)
+				.post('/posts')
+				.field({ text: '' })
+				.attach('image', `test/files/dummyJson.json`)
+				.set('Accept', 'application/json')
+				.set('Authorization', `Bearer ${user1Jwt}`)
+				.expect('Content-Type', /json/)
+				.expect(bodyHasErrorsProperty)
+				.expect((res) => {
+					if (res.body.errors.length !== 2) {
+						throw new Error('Should have image and form texts errors.');
+					}
+				})
+				.expect(bodyHasPostProperty)
+				.expect(422);
+			// Verify that the invalid image is not saved because of image and form texts errors.
+			try {
+				const files = await fs.readdir(imagesPath);
+				expect(files.length).toBe(0);
+				done();
+			} catch (err) {
+				done(err);
+			}
+		});
+
 		describe('if text', () => {
 			test('is empty', (done) => {
 				request(app)
@@ -472,17 +527,68 @@ describe('create', () => {
 		});
 	});
 
-	it('should create and return the new post object', (done) => {
-		request(app)
-			.post('/posts')
-			.send({
-				text: 'valid post',
-			})
-			.set('Accept', 'application/json')
-			.set('Authorization', `Bearer ${user1Jwt}`)
-			.expect('Content-Type', /json/)
-			.expect(bodyHasPostProperty)
-			.expect(201, done);
+	describe('if image', () => {
+		/* If the image exceeds the file size limit, the error will be the same.
+				 albeit has different error message.
+		*/
+		test('has invalid extention. File with invalid file type should not be saved', async (done) => {
+			await request(app)
+				.post('/posts')
+				.field({ text: 'hello world' })
+				.attach('image', 'test/files/dummyJson.json')
+				.set('Accept', 'application/json')
+				.set('Authorization', `Bearer ${user1Jwt}`)
+				.expect('Content-Type', /json/)
+				.expect(bodyHasErrorsProperty)
+				.expect(bodyHasPostProperty)
+				.expect(422);
+			// Verify that the file with invalid file type is not saved.
+			try {
+				const files = await fs.readdir(imagesPath);
+				expect(files.length).toBe(0);
+				done();
+			} catch (err) {
+				done(err);
+			}
+		});
+	});
+
+	describe('create and return the new post object', () => {
+		test('if all fields are valid', async (done) => {
+			// Create a valid post.
+			await request(app)
+				.post('/posts')
+				.field({ text: 'valid post' })
+				.attach('image', `test/images/${image1}`)
+				.set('Accept', 'application/json')
+				.set('Authorization', `Bearer ${user1Jwt}`)
+				.expect('Content-Type', /json/)
+				.expect(bodyHasPostProperty)
+				.expect(201);
+			/* Verify that public/images directory now have the recent image.
+				 Then clear the public/images directory after.
+			*/
+			try {
+				const files = await fs.readdir(imagesPath);
+				expect(files.length).toBe(1);
+				expect(files[0].split('.')[1] === 'jpg');
+				done();
+			} catch (err) {
+				done(err);
+			}
+		});
+
+		test('if image is not supplied but all other fields are valid', (done) => {
+			request(app)
+				.post('/posts')
+				.field({ text: 'valid post' })
+				.set('Accept', 'application/json')
+				.set('Authorization', `Bearer ${user1Jwt}`)
+				.expect('Content-Type', /json/)
+				.expect(bodyHasPostProperty)
+				.expect((res) => res.body.post.image === '')
+				.expect(201, done);
+		});
 	});
 
 	test("post should be included in user's posts when post is created", (done) => {
