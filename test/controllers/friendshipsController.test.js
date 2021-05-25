@@ -153,6 +153,29 @@ describe('create', () => {
 		});
 	});
 
+	test('body has friendship and errors if friendship between user already exists', async (done) => {
+		await request(app)
+			.post('/friendships')
+			.send({
+				requesteeId: user3Id,
+			})
+			.set('Accept', 'application/json')
+			.set('Authorization', `Bearer ${user2Jwt}`)
+			.expect('Content-Type', /json/)
+			.expect(bodyHasFriendshipProperty)
+			.expect(201);
+
+		request(app)
+			.post('/friendships')
+			.send({
+				requesteeId: user3Id,
+			})
+			.set('Accept', 'application/json')
+			.set('Authorization', `Bearer ${user2Jwt}`)
+			.expect(bodyHasErrProperty)
+			.expect(422, done);
+	});
+
 	it('should send a friend request to other user', async (done) => {
 		request(app)
 			.post('/friendships')
@@ -207,29 +230,6 @@ describe('create', () => {
 			})
 			.expect(200, done);
 	});
-
-	test('body has friendship and errors if friendship between user already exists', async (done) => {
-		await request(app)
-			.post('/friendships')
-			.send({
-				requesteeId: user3Id,
-			})
-			.set('Accept', 'application/json')
-			.set('Authorization', `Bearer ${user2Jwt}`)
-			.expect('Content-Type', /json/)
-			.expect(bodyHasFriendshipProperty)
-			.expect(201);
-
-		request(app)
-			.post('/friendships')
-			.send({
-				requesteeId: user3Id,
-			})
-			.set('Accept', 'application/json')
-			.set('Authorization', `Bearer ${user2Jwt}`)
-			.expect(bodyHasErrProperty)
-			.expect(422, done);
-	});
 });
 
 describe('update', () => {
@@ -279,21 +279,6 @@ describe('update', () => {
 		});
 	});
 
-	it('should accept the friend request of other user', (done) => {
-		request(app)
-			.put(`/friendships/${user1AndUser2FriendshipId}`)
-			.set('Accept', 'application/json')
-			.set('Authorization', `Bearer ${user2Jwt}`)
-			.expect('Content-Type', /json/)
-			.expect(bodyHasFriendshipProperty)
-			.expect((res) => {
-				if (res.body.friendship.status !== 'friends') {
-					throw new Error('Friend request is not accepted.');
-				}
-			})
-			.expect(200, done);
-	});
-
 	test('body has err property if friend request is already accepted', async (done) => {
 		await request(app)
 			.put(`/friendships/${user1AndUser2FriendshipId}`)
@@ -316,6 +301,21 @@ describe('update', () => {
 			.expect(bodyHasErrProperty)
 			.expect(400, done);
 	});
+});
+
+it('should accept the friend request of other user', (done) => {
+	request(app)
+		.put(`/friendships/${user1AndUser2FriendshipId}`)
+		.set('Accept', 'application/json')
+		.set('Authorization', `Bearer ${user2Jwt}`)
+		.expect('Content-Type', /json/)
+		.expect(bodyHasFriendshipProperty)
+		.expect((res) => {
+			if (res.body.friendship.status !== 'friends') {
+				throw new Error('Friend request is not accepted.');
+			}
+		})
+		.expect(200, done);
 });
 
 describe('destroy', () => {

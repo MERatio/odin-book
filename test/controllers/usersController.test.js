@@ -61,6 +61,17 @@ afterEach(async () => {
 afterAll(async () => await mongoConfigTesting.close());
 
 describe('index', () => {
+	describe('body has err property', () => {
+		test('if JWT is not valid or not supplied', (done) => {
+			request(app)
+				.get('/users')
+				.set('Accept', 'application/json')
+				.expect('Content-Type', /json/)
+				.expect(bodyHasErrProperty)
+				.expect(401, done);
+		});
+	});
+
 	it("should get all users who don't have a friendship with currentUser", async (done) => {
 		let userWithNoFriendshipWithCurrentUserId;
 		let requesteeId;
@@ -312,64 +323,9 @@ describe('index', () => {
 				.expect(200, done);
 		});
 	});
-
-	describe('body has err property', () => {
-		test('if JWT is not valid or not supplied', (done) => {
-			request(app)
-				.get('/users')
-				.set('Accept', 'application/json')
-				.expect('Content-Type', /json/)
-				.expect(bodyHasErrProperty)
-				.expect(401, done);
-		});
-	});
 });
 
 describe('create', () => {
-	describe('create and return the new user object', () => {
-		test('if all fields are valid', async (done) => {
-			// Create a valid user.
-			await request(app)
-				.post('/users')
-				.field('firstName', 'user2')
-				.field('lastName', 'user2')
-				.field('email', 'user2@example.com')
-				.field('password', 'password123')
-				.field('passwordConfirmation', 'password123')
-				.attach('profilePicture', `test/images/${profilePicture1}`)
-				.set('Accept', 'application/json')
-				.expect('Content-Type', /json/)
-				.expect(bodyHasUserProperty)
-				.expect(201);
-			/* Verify that public/images directory now have the recent profile picture.
-				 Then clear the public/images directory after.
-			*/
-			try {
-				const files = await fs.readdir(imagesPath);
-				expect(files.length).toBe(1);
-				expect(files[0].split('.')[1] === 'jpg');
-				done();
-			} catch (err) {
-				done(err);
-			}
-		});
-
-		test('if profilePicture is not supplied but all other fields are valid', (done) => {
-			request(app)
-				.post('/users')
-				.field('firstName', 'user2')
-				.field('lastName', 'user2')
-				.field('email', 'user2@example.com')
-				.field('password', 'password123')
-				.field('passwordConfirmation', 'password123')
-				.set('Accept', 'application/json')
-				.expect('Content-Type', /json/)
-				.expect(bodyHasUserProperty)
-				.expect((res) => res.body.user.profilePicture === '')
-				.expect(201, done);
-		});
-	});
-
 	describe('body has santinized user and errors property', () => {
 		test('if form texts has error/s. And if there is a uploaded valid profilePicture delete it', async (done) => {
 			await request(app)
@@ -651,9 +607,84 @@ describe('create', () => {
 			});
 		});
 	});
+
+	describe('create and return the new user object', () => {
+		test('if all fields are valid', async (done) => {
+			// Create a valid user.
+			await request(app)
+				.post('/users')
+				.field('firstName', 'user2')
+				.field('lastName', 'user2')
+				.field('email', 'user2@example.com')
+				.field('password', 'password123')
+				.field('passwordConfirmation', 'password123')
+				.attach('profilePicture', `test/images/${profilePicture1}`)
+				.set('Accept', 'application/json')
+				.expect('Content-Type', /json/)
+				.expect(bodyHasUserProperty)
+				.expect(201);
+			/* Verify that public/images directory now have the recent profile picture.
+				 Then clear the public/images directory after.
+			*/
+			try {
+				const files = await fs.readdir(imagesPath);
+				expect(files.length).toBe(1);
+				expect(files[0].split('.')[1] === 'jpg');
+				done();
+			} catch (err) {
+				done(err);
+			}
+		});
+
+		test('if profilePicture is not supplied but all other fields are valid', (done) => {
+			request(app)
+				.post('/users')
+				.field('firstName', 'user2')
+				.field('lastName', 'user2')
+				.field('email', 'user2@example.com')
+				.field('password', 'password123')
+				.field('passwordConfirmation', 'password123')
+				.set('Accept', 'application/json')
+				.expect('Content-Type', /json/)
+				.expect(bodyHasUserProperty)
+				.expect((res) => res.body.user.profilePicture === '')
+				.expect(201, done);
+		});
+	});
 });
 
 describe('show', () => {
+	describe('body has err property', () => {
+		test('if JWT is not valid or not supplied', (done) => {
+			request(app)
+				.get(`/users/${user1Id}`)
+				.set('Accept', 'application/json')
+				.expect('Content-Type', /json/)
+				.expect(bodyHasErrProperty)
+				.expect(401, done);
+		});
+
+		test('if userId route parameter is not valid', (done) => {
+			request(app)
+				.get(`/users/${user1Id + '123'}`)
+				.set('Accept', 'application/json')
+				.set('Authorization', `Bearer ${user1Jwt}`)
+				.expect('Content-Type', /json/)
+				.expect(bodyHasErrProperty)
+				.expect(404, done);
+		});
+
+		test('if user does not exists', (done) => {
+			request(app)
+				.get(`/users/${user1Id.substring(0, user1Id.length - 3) + '123'}`)
+				.set('Accept', 'application/json')
+				.set('Authorization', `Bearer ${user1Jwt}`)
+				.expect('Content-Type', /json/)
+				.expect(bodyHasErrProperty)
+				.expect(404, done);
+		});
+	});
+
 	it('should get own user information (except password) as user property', (done) => {
 		request(app)
 			.get(`/users/${user1Id}`)
@@ -712,55 +743,9 @@ describe('show', () => {
 			})
 			.expect(200, done);
 	});
-
-	describe('body has err property', () => {
-		test('if JWT is not valid or not supplied', (done) => {
-			request(app)
-				.get(`/users/${user1Id}`)
-				.set('Accept', 'application/json')
-				.expect('Content-Type', /json/)
-				.expect(bodyHasErrProperty)
-				.expect(401, done);
-		});
-
-		test('if userId route parameter is not valid', (done) => {
-			request(app)
-				.get(`/users/${user1Id + '123'}`)
-				.set('Accept', 'application/json')
-				.set('Authorization', `Bearer ${user1Jwt}`)
-				.expect('Content-Type', /json/)
-				.expect(bodyHasErrProperty)
-				.expect(404, done);
-		});
-
-		test('if user does not exists', (done) => {
-			request(app)
-				.get(`/users/${user1Id.substring(0, user1Id.length - 3) + '123'}`)
-				.set('Accept', 'application/json')
-				.set('Authorization', `Bearer ${user1Jwt}`)
-				.expect('Content-Type', /json/)
-				.expect(bodyHasErrProperty)
-				.expect(404, done);
-		});
-	});
 });
 
 describe('edit', () => {
-	it("should get the user's information as the user property", (done) => {
-		request(app)
-			.get(`/users/${user1Id}/edit`)
-			.set('Accept', 'application/json')
-			.set('Authorization', `Bearer ${user1Jwt}`)
-			.expect('Content-Type', /json/)
-			.expect(bodyHasUserProperty)
-			.expect((res) => {
-				if (res.body.user._id !== user1Id) {
-					throw new Error('Did not get user information for updating.');
-				}
-			})
-			.expect(200, done);
-	});
-
 	describe('body has err property', () => {
 		test('if JWT is not valid or not supplied', (done) => {
 			request(app)
@@ -818,34 +803,24 @@ describe('edit', () => {
 				.expect(401, done);
 		});
 	});
-});
 
-describe('updateInfo', () => {
-	it("should update the user's information, and body has user property", (done) => {
-		const updatedFirstName = 'updatedUser1';
-
+	it("should get the user's information as the user property", (done) => {
 		request(app)
-			.put(`/users/${user1Id}`)
-			.send({
-				oldPassword: 'password123',
-				firstName: updatedFirstName,
-				lastName: 'updatedUser1',
-				email: 'updatedUser1@example.com',
-				password: 'updatedPassword123',
-				passwordConfirmation: 'updatedPassword123',
-			})
+			.get(`/users/${user1Id}/edit`)
 			.set('Accept', 'application/json')
 			.set('Authorization', `Bearer ${user1Jwt}`)
 			.expect('Content-Type', /json/)
 			.expect(bodyHasUserProperty)
 			.expect((res) => {
-				if (res.body.user.firstName !== updatedFirstName) {
-					throw new Error('User is not updated.');
+				if (res.body.user._id !== user1Id) {
+					throw new Error('Did not get user information for updating.');
 				}
 			})
 			.expect(200, done);
 	});
+});
 
+describe('updateInfo', () => {
 	describe('body has err property', () => {
 		test('if JWT is not valid or not supplied', (done) => {
 			request(app)
@@ -1179,71 +1154,35 @@ describe('updateInfo', () => {
 			});
 		});
 	});
+
+	it("should update the user's information, and body has user property", (done) => {
+		const updatedFirstName = 'updatedUser1';
+
+		request(app)
+			.put(`/users/${user1Id}`)
+			.send({
+				oldPassword: 'password123',
+				firstName: updatedFirstName,
+				lastName: 'updatedUser1',
+				email: 'updatedUser1@example.com',
+				password: 'updatedPassword123',
+				passwordConfirmation: 'updatedPassword123',
+			})
+			.set('Accept', 'application/json')
+			.set('Authorization', `Bearer ${user1Jwt}`)
+			.expect('Content-Type', /json/)
+			.expect(bodyHasUserProperty)
+			.expect((res) => {
+				if (res.body.user.firstName !== updatedFirstName) {
+					throw new Error('User is not updated.');
+				}
+			})
+			.expect(200, done);
+	});
 });
 
 describe('updateProfilePicture', () => {
 	const profilePicture2 = 'profile-picture-2.png';
-
-	it("should add the user's profilePicture if there's no old profilePicture, and body has profilePicture property", async (done) => {
-		await request(app)
-			.put(`/users/${user1Id}/profile-picture`)
-			.attach('profilePicture', `test/images/${profilePicture1}`)
-			.set('Accept', 'application/json')
-			.set('Authorization', `Bearer ${user1Jwt}`)
-			.expect('Content-Type', /json/)
-			.expect(bodyHasProfilePictureProperty)
-			.expect(200);
-		/* Verify that public/images directory now have the recent profile picture.
-			 Then clear the public/images directory after.
-		*/
-		try {
-			const files = await fs.readdir(imagesPath);
-			expect(files.length).toBe(1);
-			expect(files[0].split('.')[1] === 'jpg');
-			done();
-		} catch (err) {
-			done(err);
-		}
-	});
-
-	it("should delete the old profilePicture if there's any and if profilePicture is successfully updated. And body has profilePicture property", async (done) => {
-		await request(app)
-			.put(`/users/${user1Id}/profile-picture`)
-			.attach('profilePicture', `test/images/${profilePicture1}`)
-			.set('Accept', 'application/json')
-			.set('Authorization', `Bearer ${user1Jwt}`)
-			.expect('Content-Type', /json/)
-			.expect(bodyHasProfilePictureProperty)
-			.expect(200);
-
-		// Verify first profilePicture of the user.
-		try {
-			const files = await fs.readdir(imagesPath);
-			expect(files.length).toBe(1);
-			expect(files[0].split('.')[1] === 'jpg');
-		} catch (err) {
-			done(err);
-		}
-
-		await request(app)
-			.put(`/users/${user1Id}/profile-picture`)
-			.attach('profilePicture', `test/images/${profilePicture2}`)
-			.set('Accept', 'application/json')
-			.set('Authorization', `Bearer ${user1Jwt}`)
-			.expect('Content-Type', /json/)
-			.expect(bodyHasProfilePictureProperty)
-			.expect(200);
-
-		// Verify that the old profilePicture is deleted. And new one is saved.
-		try {
-			const files = await fs.readdir(imagesPath);
-			expect(files.length).toBe(1);
-			expect(files[0].split('.')[1] === 'png');
-			done();
-		} catch (err) {
-			done(err);
-		}
-	});
 
 	describe('body has err property', () => {
 		test('if JWT is not valid or not supplied', (done) => {
@@ -1336,5 +1275,66 @@ describe('updateProfilePicture', () => {
 				}
 			});
 		});
+	});
+
+	it("should add the user's profilePicture if there's no old profilePicture, and body has profilePicture property", async (done) => {
+		await request(app)
+			.put(`/users/${user1Id}/profile-picture`)
+			.attach('profilePicture', `test/images/${profilePicture1}`)
+			.set('Accept', 'application/json')
+			.set('Authorization', `Bearer ${user1Jwt}`)
+			.expect('Content-Type', /json/)
+			.expect(bodyHasProfilePictureProperty)
+			.expect(200);
+		/* Verify that public/images directory now have the recent profile picture.
+			 Then clear the public/images directory after.
+		*/
+		try {
+			const files = await fs.readdir(imagesPath);
+			expect(files.length).toBe(1);
+			expect(files[0].split('.')[1] === 'jpg');
+			done();
+		} catch (err) {
+			done(err);
+		}
+	});
+
+	it("should delete the old profilePicture if there's any and if profilePicture is successfully updated. And body has profilePicture property", async (done) => {
+		await request(app)
+			.put(`/users/${user1Id}/profile-picture`)
+			.attach('profilePicture', `test/images/${profilePicture1}`)
+			.set('Accept', 'application/json')
+			.set('Authorization', `Bearer ${user1Jwt}`)
+			.expect('Content-Type', /json/)
+			.expect(bodyHasProfilePictureProperty)
+			.expect(200);
+
+		// Verify first profilePicture of the user.
+		try {
+			const files = await fs.readdir(imagesPath);
+			expect(files.length).toBe(1);
+			expect(files[0].split('.')[1] === 'jpg');
+		} catch (err) {
+			done(err);
+		}
+
+		await request(app)
+			.put(`/users/${user1Id}/profile-picture`)
+			.attach('profilePicture', `test/images/${profilePicture2}`)
+			.set('Accept', 'application/json')
+			.set('Authorization', `Bearer ${user1Jwt}`)
+			.expect('Content-Type', /json/)
+			.expect(bodyHasProfilePictureProperty)
+			.expect(200);
+
+		// Verify that the old profilePicture is deleted. And new one is saved.
+		try {
+			const files = await fs.readdir(imagesPath);
+			expect(files.length).toBe(1);
+			expect(files[0].split('.')[1] === 'png');
+			done();
+		} catch (err) {
+			done(err);
+		}
 	});
 });

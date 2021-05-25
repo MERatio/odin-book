@@ -112,6 +112,16 @@ describe('create', () => {
 		});
 	});
 
+	test('body has err property if currentUser have duplicate reaction type in the same post', async (done) => {
+		request(app)
+			.post(`/posts/${post1Id}/reactions`)
+			.set('Accept', 'application/json')
+			.set('Authorization', `Bearer ${user1Jwt}`)
+			.expect('Content-Type', /json/)
+			.expect(bodyHasErrProperty)
+			.expect(422, done);
+	});
+
 	it('should like the post', (done) => {
 		request(app)
 			.post(`/posts/${post2Id}/reactions`)
@@ -154,16 +164,6 @@ describe('create', () => {
 				}
 			})
 			.expect(200, done);
-	});
-
-	test('body has err property if currentUser have duplicate reaction type in the same post', async (done) => {
-		request(app)
-			.post(`/posts/${post1Id}/reactions`)
-			.set('Accept', 'application/json')
-			.set('Authorization', `Bearer ${user1Jwt}`)
-			.expect('Content-Type', /json/)
-			.expect(bodyHasErrProperty)
-			.expect(422, done);
 	});
 });
 

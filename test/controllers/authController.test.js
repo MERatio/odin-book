@@ -29,33 +29,6 @@ describe('local', () => {
 			.expect(201);
 	});
 
-	it('body has jwt and currentUser property if credentials are correct', (done) => {
-		request(app)
-			.post('/auth/local')
-			.send({
-				email: 'user1@example.com',
-				password: 'password123',
-			})
-			.set('Accept', 'application/json')
-			.expect('Content-Type', /json/)
-			.expect(bodyHasJwtProperty)
-			.expect(bodyHasCurrentUserProperty)
-			.expect(200, done);
-	});
-
-	it('body has error property if credentials are incorrect', (done) => {
-		request(app)
-			.post('/auth/local')
-			.send({
-				email: 'user1@example.com',
-				password: 'incorrectPassword123',
-			})
-			.set('Accept', 'application/json')
-			.expect('Content-Type', /json/)
-			.expect(bodyHasErrProperty)
-			.expect(401, done);
-	});
-
 	it('body has error property if user already have a valid jwt', async (done) => {
 		let jwt;
 
@@ -83,5 +56,32 @@ describe('local', () => {
 			.expect('Content-Type', /json/)
 			.expect(bodyHasErrProperty)
 			.expect(403, done);
+	});
+
+	it('body has error property if credentials are incorrect', (done) => {
+		request(app)
+			.post('/auth/local')
+			.send({
+				email: 'user1@example.com',
+				password: 'incorrectPassword123',
+			})
+			.set('Accept', 'application/json')
+			.expect('Content-Type', /json/)
+			.expect(bodyHasErrProperty)
+			.expect(401, done);
+	});
+
+	it('body has jwt and currentUser property if credentials are correct', (done) => {
+		request(app)
+			.post('/auth/local')
+			.send({
+				email: 'user1@example.com',
+				password: 'password123',
+			})
+			.set('Accept', 'application/json')
+			.expect('Content-Type', /json/)
+			.expect(bodyHasJwtProperty)
+			.expect(bodyHasCurrentUserProperty)
+			.expect(200, done);
 	});
 });
