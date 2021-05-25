@@ -326,6 +326,25 @@ describe('index', () => {
 });
 
 describe('create', () => {
+	describe('body has err property', () => {
+		test('if valid JWT is supplied', (done) => {
+			request(app)
+				.post(`/users`)
+				.send({
+					firstName: 'userNotSaved',
+					lastName: 'userNotSaved',
+					email: 'userNotSaved@example.com',
+					password: 'password123',
+					passwordConfirmation: 'password123',
+				})
+				.set('Accept', 'application/json')
+				.set('Authorization', `Bearer ${user1Jwt}`)
+				.expect('Content-Type', /json/)
+				.expect(bodyHasErrProperty)
+				.expect(403, done);
+		});
+	});
+
 	describe('body has santinized user and errors property', () => {
 		test('if form texts has error/s. And if there is a uploaded valid profilePicture delete it', async (done) => {
 			await request(app)
