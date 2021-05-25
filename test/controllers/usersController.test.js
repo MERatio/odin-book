@@ -642,9 +642,7 @@ describe('create', () => {
 				.expect('Content-Type', /json/)
 				.expect(bodyHasUserProperty)
 				.expect(201);
-			/* Verify that public/images directory now have the recent profile picture.
-				 Then clear the public/images directory after.
-			*/
+			// Verify that public/images directory now have the recent profile picture.
 			try {
 				const files = await fs.readdir(imagesPath);
 				expect(files.length).toBe(1);
@@ -1305,9 +1303,7 @@ describe('updateProfilePicture', () => {
 			.expect('Content-Type', /json/)
 			.expect(bodyHasProfilePictureProperty)
 			.expect(200);
-		/* Verify that public/images directory now have the recent profile picture.
-			 Then clear the public/images directory after.
-		*/
+		// Verify that public/images directory now have the recent profile picture.
 		try {
 			const files = await fs.readdir(imagesPath);
 			expect(files.length).toBe(1);

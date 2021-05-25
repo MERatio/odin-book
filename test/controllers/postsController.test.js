@@ -566,9 +566,7 @@ describe('create', () => {
 				.expect('Content-Type', /json/)
 				.expect(bodyHasPostProperty)
 				.expect(201);
-			/* Verify that public/images directory now have the recent image.
-				 Then clear the public/images directory after.
-			*/
+			// Verify that public/images directory now have the recent image.
 			try {
 				const files = await fs.readdir(imagesPath);
 				expect(files.length).toBe(1);
