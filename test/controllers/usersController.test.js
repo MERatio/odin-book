@@ -1315,6 +1315,7 @@ describe('updateProfilePicture', () => {
 	});
 
 	it("should delete the old profilePicture if there's any and if profilePicture is successfully updated. And body has profilePicture property", async (done) => {
+		// Add first profilePicture
 		await request(app)
 			.put(`/users/${user1Id}/profile-picture`)
 			.attach('profilePicture', `test/images/${profilePicture1}`)
@@ -1333,6 +1334,7 @@ describe('updateProfilePicture', () => {
 			done(err);
 		}
 
+		// Update profilePicture
 		await request(app)
 			.put(`/users/${user1Id}/profile-picture`)
 			.attach('profilePicture', `test/images/${profilePicture2}`)
