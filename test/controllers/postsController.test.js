@@ -31,6 +31,7 @@ let user2Post1Comment4Id;
 let indexPostsCount = 0;
 const imagesPath = 'public/images';
 const image1 = 'post-image-1.jpg';
+const updatedUser1PostText = 'updatedUser1Post1Text';
 
 beforeAll(async () => await mongoConfigTesting.connect());
 beforeEach(async () => {
@@ -525,31 +526,31 @@ describe('create', () => {
 					.expect(422, done);
 			});
 		});
-	});
 
-	describe('if image', () => {
-		/* If the image exceeds the file size limit, the error will be the same.
+		describe('if image', () => {
+			/* If the image exceeds the file size limit, the error will be the same.
 				 albeit has different error message.
-		*/
-		test('has invalid extention. File with invalid file type should not be saved', async (done) => {
-			await request(app)
-				.post('/posts')
-				.field({ text: 'hello world' })
-				.attach('image', 'test/files/dummyJson.json')
-				.set('Accept', 'application/json')
-				.set('Authorization', `Bearer ${user1Jwt}`)
-				.expect('Content-Type', /json/)
-				.expect(bodyHasErrorsProperty)
-				.expect(bodyHasPostProperty)
-				.expect(422);
-			// Verify that the file with invalid file type is not saved.
-			try {
-				const files = await fs.readdir(imagesPath);
-				expect(files.length).toBe(0);
-				done();
-			} catch (err) {
-				done(err);
-			}
+			*/
+			test('has invalid extention. File with invalid file type should not be saved', async (done) => {
+				await request(app)
+					.post('/posts')
+					.field({ text: 'hello world' })
+					.attach('image', 'test/files/dummyJson.json')
+					.set('Accept', 'application/json')
+					.set('Authorization', `Bearer ${user1Jwt}`)
+					.expect('Content-Type', /json/)
+					.expect(bodyHasErrorsProperty)
+					.expect(bodyHasPostProperty)
+					.expect(422);
+				// Verify that the file with invalid file type is not saved.
+				try {
+					const files = await fs.readdir(imagesPath);
+					expect(files.length).toBe(0);
+					done();
+				} catch (err) {
+					done(err);
+				}
+			});
 		});
 	});
 
@@ -812,18 +813,17 @@ describe('update', () => {
 	});
 
 	it('should update post and body should have a post property', (done) => {
-		const updatedCommentText = 'updatedUser1Post1';
 		request(app)
 			.put(`/posts/${user1Post1Id}`)
 			.send({
-				text: updatedCommentText,
+				text: updatedUser1PostText,
 			})
 			.set('Accept', 'application/json')
 			.set('Authorization', `Bearer ${user1Jwt}`)
 			.expect('Content-Type', /json/)
 			.expect(bodyHasPostProperty)
 			.expect((res) => {
-				if (res.body.post.text !== updatedCommentText) {
+				if (res.body.post.text !== updatedUser1PostText) {
 					throw new Error('Post is not updated.');
 				}
 			})
