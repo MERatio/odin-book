@@ -9,10 +9,10 @@ const {
 	bodyHasUsersProperty,
 	bodyHasUsersCountProperty,
 	bodyHasUserProperty,
+	bodyHasProfilePictureProperty,
 	bodyHasJwtProperty,
 	bodyHasCurrentUserProperty,
 	bodyHasFriendshipProperty,
-	bodyHasProfilePictureProperty,
 } = require('../assertionFunctions');
 
 let user1Id;

@@ -32,6 +32,12 @@ exports.bodyHasUserProperty = (res) => {
 	}
 };
 
+exports.bodyHasProfilePictureProperty = (res) => {
+	if (!Object.prototype.hasOwnProperty.call(res.body, 'profilePicture')) {
+		throw new Error('missing profilePicture property');
+	}
+};
+
 exports.bodyHasJwtProperty = (res) => {
 	if (!Object.prototype.hasOwnProperty.call(res.body, 'jwt')) {
 		throw new Error('missing jwt property');
@@ -77,11 +83,5 @@ exports.bodyHasReactionProperty = (res) => {
 exports.bodyHasCommentProperty = (res) => {
 	if (!Object.prototype.hasOwnProperty.call(res.body, 'comment')) {
 		throw new Error('missing comment property');
-	}
-};
-
-exports.bodyHasProfilePictureProperty = (res) => {
-	if (!Object.prototype.hasOwnProperty.call(res.body, 'profilePicture')) {
-		throw new Error('missing profilePicture property');
 	}
 };
