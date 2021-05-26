@@ -56,12 +56,6 @@ exports.bodyHasFriendshipProperty = (res) => {
 	}
 };
 
-exports.bodyHasPostProperty = (res) => {
-	if (!Object.prototype.hasOwnProperty.call(res.body, 'post')) {
-		throw new Error('missing post property');
-	}
-};
-
 exports.bodyHasPostsProperty = (res) => {
 	if (!Object.prototype.hasOwnProperty.call(res.body, 'posts')) {
 		throw new Error('missing posts property');
@@ -71,6 +65,18 @@ exports.bodyHasPostsProperty = (res) => {
 exports.bodyHasPostsCountProperty = (res) => {
 	if (!Object.prototype.hasOwnProperty.call(res.body, 'postsCount')) {
 		throw new Error('missing postsCount property');
+	}
+};
+
+exports.bodyHasPostProperty = (res) => {
+	if (!Object.prototype.hasOwnProperty.call(res.body, 'post')) {
+		throw new Error('missing post property');
+	}
+};
+
+exports.bodyHasImageProperty = (res) => {
+	if (!Object.prototype.hasOwnProperty.call(res.body, 'image')) {
+		throw new Error('missing image property');
 	}
 };
 

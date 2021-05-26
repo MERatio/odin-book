@@ -167,6 +167,65 @@ exports.update = [
 	},
 ];
 
+exports.updateImage = [
+	authenticated,
+	validMongoObjectIdRouteParams,
+	getResourceFromParamsAndCurrentUserIsTheAuthor('Post'),
+	(req, res, next) => {
+		upload.single('image')(req, res, (err) => {
+			if (err) {
+				req.multerErr = err;
+			}
+			next();
+		});
+	},
+	async (req, res, next) => {
+		try {
+			// If there's a multer error or the user didn't upload an image.
+			if (req.multerErr || !req.file) {
+				let errors = [];
+				if (req.file) {
+					await fs.unlink(`public/images/${req.file.filename}`);
+				}
+				if (req.multerErr) {
+					errors = errors.concat({
+						msg: req.multerErr.message,
+					});
+				}
+				if (!req.file) {
+					errors = errors.concat({
+						msg: 'Upload an image',
+					});
+				}
+				res.status(422).json({
+					errors,
+					image: req.file ? req.file.filename : '',
+				});
+			} else {
+				// Data form is valid.
+				// Update post's image
+				const post = req.post;
+				// Delete the old profilePicture if there's any.
+				if (post.image !== '') {
+					await fs.unlink(`public/images/${post.image}`);
+				}
+				post.image = req.file.filename;
+				const updatedPost = await post.save();
+				// Successful
+				res.status(200).json({ image: updatedPost.image });
+			}
+		} catch (err) {
+			// If there's an uploaded image delete it.
+			if (req.file) {
+				(async () => {
+					await fs.unlink(`public/images/${req.file.filename}`);
+				})();
+			}
+			next(err);
+		}
+	},
+];
+
 exports.destroy = [
 	authenticated,
 	validMongoObjectIdRouteParams,
