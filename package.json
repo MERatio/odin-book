@@ -1,5 +1,5 @@
 {
-  "name": "odin-book",
+  "name": "odin-book-api",
   "version": "0.0.0",
   "private": true,
   "engines": {
@@ -8,7 +8,7 @@
   "scripts": {
     "start": "node ./bin/www",
     "devstart": "nodemon ./bin/www",
-    "serverstart": "DEBUG=odin-book:* npm run devstart",
+    "serverstart": "DEBUG=odin-book-api:* npm run devstart",
     "test": "jest --testTimeout=60000 --detectOpenHandles"
   },
   "dependencies": {
