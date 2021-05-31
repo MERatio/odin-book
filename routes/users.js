@@ -7,6 +7,8 @@ router.get('/', usersController.index);
 
 router.post('/', usersController.create);
 
+router.get('/current-user', usersController.getCurrentUser);
+
 router.get('/:userId', usersController.show);
 
 router.get('/:userId/edit', usersController.edit);

@@ -1355,3 +1355,42 @@ describe('updateProfilePicture', () => {
 		}
 	});
 });
+
+describe('getCurrentUser', () => {
+	describe('body has currentUser set to false', () => {
+		test('if JWT is not valid or not supplied', (done) => {
+			request(app)
+				.get('/users/current-user')
+				.set('Accept', 'application/json')
+				.expect('Content-Type', /json/)
+				.expect(bodyHasCurrentUserProperty)
+				.expect((res) => {
+					if (res.body.currentUser !== false) {
+						throw new Error(
+							'getCurrentUser error: currentUser is not set to false.'
+						);
+					}
+				})
+				.expect(200, done);
+		});
+	});
+
+	describe('body has currentUser set to currentUser data', () => {
+		test('if JWT is valid', (done) => {
+			request(app)
+				.get('/users/current-user')
+				.set('Accept', 'application/json')
+				.set('Authorization', `Bearer ${user1Jwt}`)
+				.expect('Content-Type', /json/)
+				.expect(bodyHasCurrentUserProperty)
+				.expect((res) => {
+					if (res.body.currentUser._id !== user1Id) {
+						throw new Error(
+							'getCurrentUser error: currentUser is not set to currentUser data.'
+						);
+					}
+				})
+				.expect(200, done);
+		});
+	});
+});

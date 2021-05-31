@@ -143,6 +143,10 @@ exports.create = [
 	},
 ];
 
+exports.getCurrentUser = (req, res, next) => {
+	res.json({ currentUser: req.currentUser ? req.currentUser : false });
+};
+
 // Get user's profile information except password.
 exports.show = [
 	authenticated,
