@@ -2,12 +2,10 @@ const fs = require('fs/promises');
 const { body, validationResult } = require('express-validator');
 const bcrypt = require('bcryptjs');
 const { upload } = require('../configs/multerConfig');
-const {
-	authenticated,
-	unauthenticated,
-	validMongoObjectIdRouteParams,
-	getResourceFromParams,
-} = require('../lib/middlewares');
+const authenticated = require('../middlewares/authenticated');
+const unauthenticated = require('../middlewares/unauthenticated');
+const validMongoObjectIdRouteParams = require('../middlewares/validMongoObjectIdRouteParams');
+const getResourceFromParams = require('../middlewares/getResourceFromParams');
 const User = require('../models/user');
 const Friendship = require('../models/friendship');
 

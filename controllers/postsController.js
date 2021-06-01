@@ -1,11 +1,9 @@
 const fs = require('fs/promises');
 const { body, validationResult } = require('express-validator');
 const { upload } = require('../configs/multerConfig');
-const {
-	authenticated,
-	validMongoObjectIdRouteParams,
-	getResourceFromParamsAndCurrentUserIsTheAuthor,
-} = require('../lib/middlewares');
+const authenticated = require('../middlewares/authenticated');
+const validMongoObjectIdRouteParams = require('../middlewares/validMongoObjectIdRouteParams');
+const getResourceFromParamsAndCurrentUserIsTheAuthor = require('../middlewares/getResourceFromParamsAndCurrentUserIsTheAuthor');
 const Post = require('../models/post');
 
 const postValidationAndSanitation = [

@@ -1,10 +1,9 @@
 const { body, validationResult } = require('express-validator');
-const {
-	authenticated,
-	validMongoObjectIdRouteParams,
-	getResourceFromParams,
-	getResourceFromParamsAndCurrentUserIsTheAuthor,
-} = require('../lib/middlewares');
+const authenticated = require('../middlewares/authenticated');
+const validMongoObjectIdRouteParams = require('../middlewares/validMongoObjectIdRouteParams');
+const getResourceFromParams = require('../middlewares/getResourceFromParams');
+const getResourceFromParamsAndCurrentUserIsTheAuthor = require('../middlewares/getResourceFromParamsAndCurrentUserIsTheAuthor');
+
 const Comment = require('../models/comment');
 
 const commentSanitationAndValidation = [

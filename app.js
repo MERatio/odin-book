@@ -9,7 +9,7 @@ const logger = require('morgan');
 const compression = require('compression');
 const paginate = require('express-paginate');
 const passportConfig = require('./configs/passportConfig');
-const { setCurrentUser } = require('./lib/middlewares');
+const setCurrentUser = require('./middlewares/setCurrentUser');
 
 mkdir('public/images', { recursive: true }, (err) => {
 	if (err) {

@@ -1,9 +1,7 @@
 const { body, validationResult } = require('express-validator');
-const {
-	authenticated,
-	validMongoObjectIdRouteParams,
-	getResourceFromParams,
-} = require('../lib/middlewares');
+const authenticated = require('../middlewares/authenticated');
+const validMongoObjectIdRouteParams = require('../middlewares/validMongoObjectIdRouteParams');
+const getResourceFromParams = require('../middlewares/getResourceFromParams');
 const Reaction = require('../models/reaction');
 
 exports.create = [

@@ -1,7 +1,7 @@
 const { body } = require('express-validator');
 const passport = require('passport');
-const { unauthenticated } = require('../lib/middlewares');
-const { createJwt } = require('../lib/helpers');
+const unauthenticated = require('../middlewares/unauthenticated');
+const createJwt  = require('../helpers/createJwt');
 
 exports.local = [
 	unauthenticated,
