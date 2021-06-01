@@ -26,6 +26,7 @@ describe('local', () => {
 			.set('Accept', 'application/json')
 			.expect('Content-Type', /json/)
 			.expect(bodyHasUserProperty)
+			.expect(bodyHasJwtProperty)
 			.expect(201);
 	});
 

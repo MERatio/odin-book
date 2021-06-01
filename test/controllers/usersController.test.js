@@ -34,6 +34,7 @@ beforeEach(async () => {
 		.set('Accept', 'application/json')
 		.expect('Content-Type', /json/)
 		.expect(bodyHasUserProperty)
+		.expect(bodyHasJwtProperty)
 		.expect((res) => (user1Id = res.body.user._id))
 		.expect(201);
 
@@ -93,6 +94,7 @@ describe('index', () => {
 			.set('Accept', 'application/json')
 			.expect('Content-Type', /json/)
 			.expect(bodyHasUserProperty)
+			.expect(bodyHasJwtProperty)
 			.expect(
 				(res) => (userWithNoFriendshipWithCurrentUserId = res.body.user._id)
 			)
@@ -110,6 +112,7 @@ describe('index', () => {
 			.set('Accept', 'application/json')
 			.expect('Content-Type', /json/)
 			.expect(bodyHasUserProperty)
+			.expect(bodyHasJwtProperty)
 			.expect((res) => (requesteeId = res.body.user._id))
 			.expect(201);
 
@@ -125,6 +128,7 @@ describe('index', () => {
 			.set('Accept', 'application/json')
 			.expect('Content-Type', /json/)
 			.expect(bodyHasUserProperty)
+			.expect(bodyHasJwtProperty)
 			.expect((res) => (requestorId = res.body.user._id))
 			.expect(201);
 
@@ -153,6 +157,7 @@ describe('index', () => {
 			.set('Accept', 'application/json')
 			.expect('Content-Type', /json/)
 			.expect(bodyHasUserProperty)
+			.expect(bodyHasJwtProperty)
 			.expect((res) => (friendId = res.body.user._id))
 			.expect(201);
 
@@ -260,6 +265,7 @@ describe('index', () => {
 					.set('Accept', 'application/json')
 					.expect('Content-Type', /json/)
 					.expect(bodyHasUserProperty)
+					.expect(bodyHasJwtProperty)
 					.expect(() => (indexUsersCount += 1))
 					.expect(201);
 			}
@@ -641,6 +647,7 @@ describe('create', () => {
 				.set('Accept', 'application/json')
 				.expect('Content-Type', /json/)
 				.expect(bodyHasUserProperty)
+				.expect(bodyHasJwtProperty)
 				.expect(201);
 			// Verify that public/images directory now have the recent profile picture.
 			try {
@@ -664,6 +671,7 @@ describe('create', () => {
 				.set('Accept', 'application/json')
 				.expect('Content-Type', /json/)
 				.expect(bodyHasUserProperty)
+				.expect(bodyHasJwtProperty)
 				.expect((res) => res.body.user.profilePicture === '')
 				.expect(201, done);
 		});
@@ -738,6 +746,7 @@ describe('show', () => {
 			.set('Accept', 'application/json')
 			.expect('Content-Type', /json/)
 			.expect(bodyHasUserProperty)
+			.expect(bodyHasJwtProperty)
 			.expect((res) => (user2Id = res.body.user._id))
 			.expect(201);
 
@@ -808,6 +817,7 @@ describe('edit', () => {
 				.set('Accept', 'application/json')
 				.expect('Content-Type', /json/)
 				.expect(bodyHasUserProperty)
+				.expect(bodyHasJwtProperty)
 				.expect((res) => (user2Id = res.body.user._id))
 				.expect(201);
 
@@ -907,6 +917,7 @@ describe('updateInfo', () => {
 				.set('Accept', 'application/json')
 				.expect('Content-Type', /json/)
 				.expect(bodyHasUserProperty)
+				.expect(bodyHasJwtProperty)
 				.expect((res) => (user2Id = res.body.user._id))
 				.expect(201);
 
@@ -1253,6 +1264,7 @@ describe('updateProfilePicture', () => {
 				.set('Accept', 'application/json')
 				.expect('Content-Type', /json/)
 				.expect(bodyHasUserProperty)
+				.expect(bodyHasJwtProperty)
 				.expect((res) => (user2Id = res.body.user._id))
 				.expect(201);
 

@@ -32,6 +32,7 @@ beforeEach(async () => {
 		.set('Accept', 'application/json')
 		.expect('Content-Type', /json/)
 		.expect(bodyHasUserProperty)
+		.expect(bodyHasJwtProperty)
 		.expect((res) => (user1Id = res.body.user._id))
 		.expect(201);
 	await request(app)
@@ -46,6 +47,7 @@ beforeEach(async () => {
 		.set('Accept', 'application/json')
 		.expect('Content-Type', /json/)
 		.expect(bodyHasUserProperty)
+		.expect(bodyHasJwtProperty)
 		.expect((res) => (user2Id = res.body.user._id))
 		.expect(201);
 	await request(app)
@@ -60,6 +62,7 @@ beforeEach(async () => {
 		.set('Accept', 'application/json')
 		.expect('Content-Type', /json/)
 		.expect(bodyHasUserProperty)
+		.expect(bodyHasJwtProperty)
 		.expect((res) => (user3Id = res.body.user._id))
 		.expect(201);
 	await request(app)

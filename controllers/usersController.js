@@ -2,6 +2,7 @@ const fs = require('fs/promises');
 const { body, validationResult } = require('express-validator');
 const bcrypt = require('bcryptjs');
 const { upload } = require('../configs/multerConfig');
+const createJwt = require('../helpers/createJwt');
 const authenticated = require('../middlewares/authenticated');
 const unauthenticated = require('../middlewares/unauthenticated');
 const validMongoObjectIdRouteParams = require('../middlewares/validMongoObjectIdRouteParams');
@@ -126,8 +127,9 @@ exports.create = [
 					password: hashedPassword,
 					profilePicture: req.file ? req.file.filename : '',
 				});
+				const jwt = createJwt(user);
 				// Successful
-				res.status(201).json({ user });
+				res.status(201).json({ user, jwt });
 			}
 		} catch (err) {
 			// If there's an uploaded image delete it.
