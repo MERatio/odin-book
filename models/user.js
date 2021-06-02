@@ -14,8 +14,6 @@ const UserSchema = new Schema(
 		posts: [{ type: Schema.Types.ObjectId, ref: 'Post' }],
 		reactions: [{ type: Schema.Types.ObjectId, ref: 'Reaction' }],
 		comments: [{ type: Schema.Types.ObjectId, ref: 'Comment' }],
-		// User can have many providers, but can only use unique email.
-		providers: [{ type: Schema.Types.ObjectId, ref: 'Provider' }],
 	},
 	{
 		timestamps: true,
