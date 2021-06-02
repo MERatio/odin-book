@@ -20,7 +20,11 @@ mkdir('public/images', { recursive: true }, (err) => {
 const app = express();
 
 // CORS
-const allowedOrigins = ['http://localhost:3000', 'https://meratio.github.io'];
+const allowedOrigins = [
+	'http://localhost:3000',
+	'https://localhost:3000',
+	'https://meratio.github.io',
+];
 app.use(
 	cors({
 		origin(origin, callback) {
