@@ -1,5 +1,5 @@
 const path = require('path');
-const fs = require('fs/promises');
+const fsPromises = require('fs/promises');
 const request = require('supertest');
 const app = require('../../app');
 const mongoConfigTesting = require('../../configs/mongoConfigTesting');
@@ -53,9 +53,9 @@ beforeEach(async () => {
 });
 afterEach(async () => {
 	// Delete all files in public/images directory.
-	const files = await fs.readdir(imagesPath);
+	const files = await fsPromises.readdir(imagesPath);
 	for (const file of files) {
-		await fs.unlink(path.join(imagesPath, file));
+		await fsPromises.unlink(path.join(imagesPath, file));
 	}
 	await mongoConfigTesting.clear();
 });
@@ -368,7 +368,7 @@ describe('create', () => {
 				.expect(422);
 			// Verify that the valid profilePicture is not saved because of form texts errors.
 			try {
-				const files = await fs.readdir(imagesPath);
+				const files = await fsPromises.readdir(imagesPath);
 				expect(files.length).toBe(0);
 				done();
 			} catch (err) {
@@ -399,7 +399,7 @@ describe('create', () => {
 				.expect(422);
 			// Verify that the invalid profilePicture is not saved because of image and form texts errors.
 			try {
-				const files = await fs.readdir(imagesPath);
+				const files = await fsPromises.readdir(imagesPath);
 				expect(files.length).toBe(0);
 				done();
 			} catch (err) {
@@ -584,7 +584,7 @@ describe('create', () => {
 					.expect(422);
 				// Verify that the file with invalid file type is not saved.
 				try {
-					const files = await fs.readdir(imagesPath);
+					const files = await fsPromises.readdir(imagesPath);
 					expect(files.length).toBe(0);
 					done();
 				} catch (err) {
@@ -651,7 +651,7 @@ describe('create', () => {
 				.expect(201);
 			// Verify that public/images directory now have the recent profile picture.
 			try {
-				const files = await fs.readdir(imagesPath);
+				const files = await fsPromises.readdir(imagesPath);
 				expect(files.length).toBe(1);
 				expect(files[0].split('.')[1] === 'jpg');
 				done();
@@ -1296,7 +1296,7 @@ describe('updateProfilePicture', () => {
 					.expect(422);
 				// Verify that the file with invalid file type is not saved.
 				try {
-					const files = await fs.readdir(imagesPath);
+					const files = await fsPromises.readdir(imagesPath);
 					expect(files.length).toBe(0);
 					done();
 				} catch (err) {
@@ -1317,7 +1317,7 @@ describe('updateProfilePicture', () => {
 			.expect(200);
 		// Verify that public/images directory now have the recent profile picture.
 		try {
-			const files = await fs.readdir(imagesPath);
+			const files = await fsPromises.readdir(imagesPath);
 			expect(files.length).toBe(1);
 			expect(files[0].split('.')[1] === 'jpg');
 			done();
@@ -1339,7 +1339,7 @@ describe('updateProfilePicture', () => {
 
 		// Verify first profilePicture of the user.
 		try {
-			const files = await fs.readdir(imagesPath);
+			const files = await fsPromises.readdir(imagesPath);
 			expect(files.length).toBe(1);
 			expect(files[0].split('.')[1] === 'jpg');
 		} catch (err) {
@@ -1358,7 +1358,7 @@ describe('updateProfilePicture', () => {
 
 		// Verify that the old profilePicture is deleted. And new one is saved.
 		try {
-			const files = await fs.readdir(imagesPath);
+			const files = await fsPromises.readdir(imagesPath);
 			expect(files.length).toBe(1);
 			expect(files[0].split('.')[1] === 'png');
 			done();

@@ -1,5 +1,5 @@
 const path = require('path');
-const fs = require('fs/promises');
+const fsPromises = require('fs/promises');
 const request = require('supertest');
 const app = require('../../app');
 const Reaction = require('../../models/reaction');
@@ -194,9 +194,9 @@ beforeEach(async () => {
 afterEach(async () => {
 	indexPostsCount = 0;
 	// Delete all files in public/images directory.
-	const files = await fs.readdir(imagesPath);
+	const files = await fsPromises.readdir(imagesPath);
 	for (const file of files) {
-		await fs.unlink(path.join(imagesPath, file));
+		await fsPromises.unlink(path.join(imagesPath, file));
 	}
 	await mongoConfigTesting.clear();
 });
@@ -453,7 +453,7 @@ describe('create', () => {
 				.expect(422);
 			// Verify that the valid imqge is not saved because of form texts errors.
 			try {
-				const files = await fs.readdir(imagesPath);
+				const files = await fsPromises.readdir(imagesPath);
 				expect(files.length).toBe(0);
 				done();
 			} catch (err) {
@@ -479,7 +479,7 @@ describe('create', () => {
 				.expect(422);
 			// Verify that the invalid image is not saved because of image and form texts errors.
 			try {
-				const files = await fs.readdir(imagesPath);
+				const files = await fsPromises.readdir(imagesPath);
 				expect(files.length).toBe(0);
 				done();
 			} catch (err) {
@@ -548,7 +548,7 @@ describe('create', () => {
 					.expect(422);
 				// Verify that the file with invalid file type is not saved.
 				try {
-					const files = await fs.readdir(imagesPath);
+					const files = await fsPromises.readdir(imagesPath);
 					expect(files.length).toBe(0);
 					done();
 				} catch (err) {
@@ -572,7 +572,7 @@ describe('create', () => {
 				.expect(201);
 			// Verify that public/images directory now have the recent image.
 			try {
-				const files = await fs.readdir(imagesPath);
+				const files = await fsPromises.readdir(imagesPath);
 				expect(files.length).toBe(1);
 				expect(files[0].split('.')[1] === 'jpg');
 				done();
@@ -902,7 +902,7 @@ describe('updateImage', () => {
 					.expect(422);
 				// Verify that the file with invalid file type is not saved.
 				try {
-					const files = await fs.readdir(imagesPath);
+					const files = await fsPromises.readdir(imagesPath);
 					expect(files.length).toBe(0);
 					done();
 				} catch (err) {
@@ -924,7 +924,7 @@ describe('updateImage', () => {
 
 		// Verify that public/images directory now have the recent image.
 		try {
-			const files = await fs.readdir(imagesPath);
+			const files = await fsPromises.readdir(imagesPath);
 			expect(files.length).toBe(1);
 			expect(files[0].split('.')[1] === 'jpg');
 			done();
@@ -946,7 +946,7 @@ describe('updateImage', () => {
 
 		// Verify first image of the post.
 		try {
-			const files = await fs.readdir(imagesPath);
+			const files = await fsPromises.readdir(imagesPath);
 			expect(files.length).toBe(1);
 			expect(files[0].split('.')[1] === 'jpg');
 		} catch (err) {
@@ -965,7 +965,7 @@ describe('updateImage', () => {
 
 		// Verify that the old image is deleted. And new one is saved.
 		try {
-			const files = await fs.readdir(imagesPath);
+			const files = await fsPromises.readdir(imagesPath);
 			expect(files.length).toBe(1);
 			expect(files[0].split('.')[1] === 'png');
 			done();

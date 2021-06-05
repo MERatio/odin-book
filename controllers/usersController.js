@@ -1,4 +1,4 @@
-const fs = require('fs/promises');
+const fsPromises = require('fs/promises');
 const { body, validationResult } = require('express-validator');
 const bcrypt = require('bcryptjs');
 const { upload } = require('../configs/multerConfig');
@@ -107,7 +107,7 @@ exports.create = [
 			if (req.multerErr || !errors.isEmpty()) {
 				// If there's an uploaded image delete it.
 				if (req.file) {
-					await fs.unlink(`public/images/${req.file.filename}`);
+					await fsPromises.unlink(`public/images/${req.file.filename}`);
 				}
 				const multerErrInArray = req.multerErr
 					? [{ msg: req.multerErr.message }]
@@ -135,7 +135,7 @@ exports.create = [
 			// If there's an uploaded image delete it.
 			if (req.file) {
 				(async () => {
-					await fs.unlink(`public/images/${req.file.filename}`);
+					await fsPromises.unlink(`public/images/${req.file.filename}`);
 				})();
 			}
 			next(err);
@@ -322,7 +322,7 @@ exports.updateProfilePicture = [
 			if (req.multerErr || !req.file) {
 				let errors = [];
 				if (req.file) {
-					await fs.unlink(`public/images/${req.file.filename}`);
+					await fsPromises.unlink(`public/images/${req.file.filename}`);
 				}
 				if (req.multerErr) {
 					errors = errors.concat({
@@ -344,7 +344,7 @@ exports.updateProfilePicture = [
 				const user = req.user;
 				// Delete the old profilePicture if there's any.
 				if (user.profilePicture !== '') {
-					await fs.unlink(`public/images/${user.profilePicture}`);
+					await fsPromises.unlink(`public/images/${user.profilePicture}`);
 				}
 				user.profilePicture = req.file.filename;
 				const updatedUser = await user.save();
@@ -355,7 +355,7 @@ exports.updateProfilePicture = [
 			// If there's an uploaded image delete it.
 			if (req.file) {
 				(async () => {
-					await fs.unlink(`public/images/${req.file.filename}`);
+					await fsPromises.unlink(`public/images/${req.file.filename}`);
 				})();
 			}
 			next(err);

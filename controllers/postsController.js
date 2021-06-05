@@ -1,4 +1,4 @@
-const fs = require('fs/promises');
+const fsPromises = require('fs/promises');
 const { body, validationResult } = require('express-validator');
 const { upload } = require('../configs/multerConfig');
 const authenticated = require('../middlewares/authenticated');
@@ -63,7 +63,7 @@ exports.create = [
 			if (req.multerErr || !errors.isEmpty()) {
 				// If there's an uploaded image delete it.
 				if (req.file) {
-					await fs.unlink(`public/images/${req.file.filename}`);
+					await fsPromises.unlink(`public/images/${req.file.filename}`);
 				}
 				const multerErrInArray = req.multerErr
 					? [{ msg: req.multerErr.message }]
@@ -98,7 +98,7 @@ exports.create = [
 			// If there's an uploaded image delete it.
 			if (req.file) {
 				(async () => {
-					await fs.unlink(`public/images/${req.file.filename}`);
+					await fsPromises.unlink(`public/images/${req.file.filename}`);
 				})();
 			}
 			next(err);
@@ -183,7 +183,7 @@ exports.updateImage = [
 			if (req.multerErr || !req.file) {
 				let errors = [];
 				if (req.file) {
-					await fs.unlink(`public/images/${req.file.filename}`);
+					await fsPromises.unlink(`public/images/${req.file.filename}`);
 				}
 				if (req.multerErr) {
 					errors = errors.concat({
@@ -205,7 +205,7 @@ exports.updateImage = [
 				const post = req.post;
 				// Delete the old profilePicture if there's any.
 				if (post.image !== '') {
-					await fs.unlink(`public/images/${post.image}`);
+					await fsPromises.unlink(`public/images/${post.image}`);
 				}
 				post.image = req.file.filename;
 				const updatedPost = await post.save();
@@ -216,7 +216,7 @@ exports.updateImage = [
 			// If there's an uploaded image delete it.
 			if (req.file) {
 				(async () => {
-					await fs.unlink(`public/images/${req.file.filename}`);
+					await fsPromises.unlink(`public/images/${req.file.filename}`);
 				})();
 			}
 			next(err);
