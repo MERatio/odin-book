@@ -10,21 +10,7 @@ const {
 
 let user1Jwt;
 
-beforeAll(async () => {
-	await mongoConfigTesting.connect();
-	await request(app)
-		.post('/auth/local')
-		.send({
-			email: 'user1@example.com',
-			password: 'password123',
-		})
-		.set('Accept', 'application/json')
-		.expect('Content-Type', /json/)
-		.expect(bodyHasJwtProperty)
-		.expect(bodyHasCurrentUserProperty)
-		.expect((req) => (user1Jwt = req.body.jwt))
-		.expect(200);
-});
+beforeAll(async () => await mongoConfigTesting.connect());
 afterEach(async () => await mongoConfigTesting.clear());
 afterAll(async () => await mongoConfigTesting.close());
 
@@ -43,6 +29,7 @@ describe('local', () => {
 			.expect('Content-Type', /json/)
 			.expect(bodyHasUserProperty)
 			.expect(bodyHasJwtProperty)
+			.expect((res) => user1Jwt = res.body.jwt)
 			.expect(201);
 	});
 
