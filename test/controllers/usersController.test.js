@@ -633,7 +633,7 @@ describe('create', () => {
 		});
 	});
 
-	describe('create and return the new user object', () => {
+	describe('create and return the new user and jwt,', () => {
 		test('if all fields are valid', async (done) => {
 			// Create a valid user.
 			await request(app)
