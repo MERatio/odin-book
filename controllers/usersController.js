@@ -8,6 +8,7 @@ const unauthenticated = require('../middlewares/unauthenticated');
 const validMongoObjectIdRouteParams = require('../middlewares/validMongoObjectIdRouteParams');
 const getResourceFromParams = require('../middlewares/getResourceFromParams');
 const User = require('../models/user');
+const ProfilePicture = require('../models/profilePicture');
 const Friendship = require('../models/friendship');
 
 const userValidationAndSanitation = [
@@ -71,6 +72,7 @@ exports.index = [
 				.nin(userIds)
 				.skip(req.skip)
 				.limit(req.query.limit)
+				.populate('profilePicture')
 				.exec();
 			// Total count of users with no friendship with currentUser.
 			const usersCount = await User.countDocuments({
@@ -120,13 +122,20 @@ exports.create = [
 				// Data form is valid.
 				// Create the new user with hashed password
 				const hashedPassword = await bcrypt.hash(req.body.password, 10);
-				const user = await User.create({
+				const user = new User({
 					firstName: req.body.firstName,
 					lastName: req.body.lastName,
 					email: req.body.email,
 					password: hashedPassword,
-					profilePicture: req.file ? req.file.filename : '',
 				});
+				const profilePicture = new ProfilePicture({
+					filename: req.file ? req.file.filename : '',
+					origin: 'local',
+				});
+				user.profilePicture = profilePicture._id;
+				profilePicture.user = user._id;
+				await user.save();
+				await profilePicture.save();
 				const jwt = createJwt(user);
 				// Successful
 				res.status(201).json({ user, jwt });
@@ -154,6 +163,7 @@ exports.show = [
 	async (req, res, next) => {
 		try {
 			const user = await User.findById(req.params.userId)
+				.populate('profilePicture')
 				.populate({
 					path: 'friendships',
 					populate: { path: 'requestor requestee' },
@@ -285,79 +295,6 @@ exports.updateInfo = [
 				res.json({ user: updatedUser });
 			}
 		} catch (err) {
-			next(err);
-		}
-	},
-];
-
-exports.updateProfilePicture = [
-	authenticated,
-	validMongoObjectIdRouteParams,
-	getResourceFromParams('User'),
-	async (req, res, next) => {
-		try {
-			const user = req.user;
-			if (!req.currentUser._id.equals(user._id)) {
-				const err = new Error('Unauthorized');
-				err.status = 401;
-				next(err);
-			} else {
-				next();
-			}
-		} catch (err) {
-			next(err);
-		}
-	},
-	(req, res, next) => {
-		upload.single('profilePicture')(req, res, (err) => {
-			if (err) {
-				req.multerErr = err;
-			}
-			next();
-		});
-	},
-	async (req, res, next) => {
-		try {
-			// If there's a multer error or the user didn't upload an image.
-			if (req.multerErr || !req.file) {
-				let errors = [];
-				if (req.file) {
-					await fsPromises.unlink(`public/images/${req.file.filename}`);
-				}
-				if (req.multerErr) {
-					errors = errors.concat({
-						msg: req.multerErr.message,
-					});
-				}
-				if (!req.file) {
-					errors = errors.concat({
-						msg: 'Upload a profile picture.',
-					});
-				}
-				res.status(422).json({
-					errors,
-					profilePicture: req.file ? req.file.filename : '',
-				});
-			} else {
-				// Data form is valid.
-				// Update user's profile picture
-				const user = req.user;
-				// Delete the old profilePicture if there's any.
-				if (user.profilePicture !== '') {
-					await fsPromises.unlink(`public/images/${user.profilePicture}`);
-				}
-				user.profilePicture = req.file.filename;
-				const updatedUser = await user.save();
-				// Successful
-				res.status(200).json({ profilePicture: updatedUser.profilePicture });
-			}
-		} catch (err) {
-			// If there's an uploaded image delete it.
-			if (req.file) {
-				(async () => {
-					await fsPromises.unlink(`public/images/${req.file.filename}`);
-				})();
-			}
 			next(err);
 		}
 	},

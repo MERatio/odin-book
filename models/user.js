@@ -8,8 +8,12 @@ const UserSchema = new Schema(
 		firstName: { type: String, required: true, maxlength: 255 },
 		lastName: { type: String, required: true, maxlength: 255 },
 		email: { type: String, required: true, index: true, unique: true },
-		profilePicture: { type: String, default: '' },
 		password: { type: String, required: true },
+		profilePicture: {
+			type: Schema.Types.ObjectId,
+			ref: 'ProfilePicture',
+			required: true,
+		},
 		friendships: [{ type: Schema.Types.ObjectId, ref: 'Friendship' }],
 		posts: [{ type: Schema.Types.ObjectId, ref: 'Post' }],
 		reactions: [{ type: Schema.Types.ObjectId, ref: 'Reaction' }],

@@ -14,7 +14,9 @@ passport.use(
 		},
 		async (email, password, done) => {
 			try {
-				const currentUser = await User.findOne({ email }).exec();
+				const currentUser = await User.findOne({ email })
+					.populate('profilePicture')
+					.exec();
 				if (!currentUser) {
 					done(null, false, { message: 'Incorrect email or password.' });
 				} else {
@@ -43,9 +45,9 @@ passport.use(
 		},
 		async (jwtPayload, done) => {
 			try {
-				const currentUser = await User.findById(
-					jwtPayload.currentUserId
-				).exec();
+				const currentUser = await User.findById(jwtPayload.currentUserId)
+					.populate('profilePicture')
+					.exec();
 				done(null, currentUser);
 			} catch (err) {
 				done(err);
