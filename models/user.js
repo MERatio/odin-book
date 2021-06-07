@@ -5,6 +5,7 @@ const Schema = mongoose.Schema;
 
 const UserSchema = new Schema(
 	{
+		provider: { type: String, enum: ['local', 'facebook'], default: 'local' },
 		firstName: { type: String, required: true, maxlength: 255 },
 		lastName: { type: String, required: true, maxlength: 255 },
 		email: { type: String, required: true, index: true, unique: true },

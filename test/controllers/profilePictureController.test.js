@@ -228,4 +228,25 @@ describe('updateProfilePicture', () => {
 			done(err);
 		}
 	});
+
+	it('should update profilePicture if profilePicture origin is Facebook. And body has profilePicture property', async (done) => {
+		await request(app)
+			.put(`/profile-picture/${user1ProfilePictureId}`)
+			.attach('profilePicture', `test/images/${profilePicture1}`)
+			.set('Accept', 'application/json')
+			.set('Authorization', `Bearer ${user1Jwt}`)
+			.expect('Content-Type', /json/)
+			.expect(bodyHasProfilePictureProperty)
+			.expect(200);
+
+		// Verify that public/images directory now have the recent profile picture.
+		try {
+			const files = await fsPromises.readdir(imagesPath);
+			expect(files.length).toBe(1);
+			expect(files[0].split('.')[1] === 'jpg');
+			done()
+		} catch (err) {
+			done(err);
+		}
+	});
 });
