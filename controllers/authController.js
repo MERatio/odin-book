@@ -6,7 +6,7 @@ const bcrypt = require('bcryptjs');
 const User = require('../models/user');
 const ProfilePicture = require('../models/profilePicture');
 const unauthenticated = require('../middlewares/unauthenticated');
-const createJwt = require('../helpers/createJwt');
+const createJwt = require('../lib/createJwt');
 
 exports.local = [
 	unauthenticated,
