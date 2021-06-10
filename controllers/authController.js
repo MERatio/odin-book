@@ -23,7 +23,7 @@ exports.local = [
 					err.status = 401;
 					next(err);
 				} else {
-					req.logIn(currentUser, { session: false }, (err) => {
+					req.logIn(currentUser, { session: false }, async (err) => {
 						if (err) {
 							next(err);
 						} else {
@@ -33,7 +33,10 @@ exports.local = [
 								with object containing the currentUser._id as its payload.
 							*/
 							const jwt = createJwt(currentUser);
-							res.json({ jwt, currentUser });
+							res.json({
+								jwt,
+								currentUser: await currentUser.populateAllFields(),
+							});
 						}
 					});
 				}
@@ -103,7 +106,9 @@ exports.facebook = [
 					/* Initialized (doc = new Model()) and saved documents (savedDoc = await doc.save()) 
 						 have the same reference and properties.
 					*/
-					res.status(201).json({ jwt, currentUser });
+					res
+						.status(201)
+						.json({ jwt, currentUser: await currentUser.populateAllFields() });
 				}
 			}
 		} catch (err) {

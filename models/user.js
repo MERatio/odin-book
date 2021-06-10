@@ -25,6 +25,38 @@ const UserSchema = new Schema(
 	}
 );
 
+UserSchema.methods.populateAllFields = async function () {
+	return this.populate('profilePicture')
+		.populate({
+			path: 'friendships',
+			populate: { path: 'requestor requestee' },
+			options: {
+				sort: { createdAt: -1 },
+			},
+		})
+		.populate({
+			path: 'posts',
+			options: {
+				sort: { createdAt: -1 },
+			},
+		})
+		.populate({
+			path: 'reactions',
+			populate: { path: 'post' },
+			options: {
+				sort: { createdAt: -1 },
+			},
+		})
+		.populate({
+			path: 'comments',
+			populate: { path: 'post' },
+			options: {
+				sort: { createdAt: -1 },
+			},
+		})
+		.execPopulate();
+};
+
 // UserSchema.methods methods still works even if cb parameter is supplied or not (except getFriends()).
 UserSchema.methods.sendFriendRequest = function (requesteeId, cb) {
 	return mongoose.model('Friendship').create(

@@ -36,7 +36,7 @@ beforeEach(async () => {
 		.expect(bodyHasJwtProperty)
 		.expect((res) => {
 			user1Id = res.body.user._id;
-			user1ProfilePictureId = res.body.user.profilePicture;
+			user1ProfilePictureId = res.body.user.profilePicture._id;
 		})
 		.expect(201);
 

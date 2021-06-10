@@ -138,7 +138,7 @@ exports.create = [
 				await profilePicture.save();
 				const jwt = createJwt(user);
 				// Successful
-				res.status(201).json({ user, jwt });
+				res.status(201).json({ user: await user.populateAllFields(), jwt });
 			}
 		} catch (err) {
 			// If there's an uploaded image delete it.
@@ -154,36 +154,7 @@ exports.create = [
 
 exports.getCurrentUser = async (req, res, next) => {
 	const currentUser = req.currentUser
-		? await req.currentUser
-				.populate('profilePicture')
-				.populate({
-					path: 'friendships',
-					populate: { path: 'requestor requestee' },
-					options: {
-						sort: { createdAt: -1 },
-					},
-				})
-				.populate({
-					path: 'posts',
-					options: {
-						sort: { createdAt: -1 },
-					},
-				})
-				.populate({
-					path: 'reactions',
-					populate: { path: 'post' },
-					options: {
-						sort: { createdAt: -1 },
-					},
-				})
-				.populate({
-					path: 'comments',
-					populate: { path: 'post' },
-					options: {
-						sort: { createdAt: -1 },
-					},
-				})
-				.execPopulate()
+		? await req.currentUser.populateAllFields()
 		: false;
 	res.json({ currentUser });
 };
@@ -194,42 +165,13 @@ exports.show = [
 	validMongoObjectIdRouteParams,
 	async (req, res, next) => {
 		try {
-			const user = await User.findById(req.params.userId)
-				.populate('profilePicture')
-				.populate({
-					path: 'friendships',
-					populate: { path: 'requestor requestee' },
-					options: {
-						sort: { createdAt: -1 },
-					},
-				})
-				.populate({
-					path: 'posts',
-					options: {
-						sort: { createdAt: -1 },
-					},
-				})
-				.populate({
-					path: 'reactions',
-					populate: { path: 'post' },
-					options: {
-						sort: { createdAt: -1 },
-					},
-				})
-				.populate({
-					path: 'comments',
-					populate: { path: 'post' },
-					options: {
-						sort: { createdAt: -1 },
-					},
-				})
-				.exec();
+			const user = await User.findById(req.params.userId).exec();
 			if (user === null) {
 				const err = new Error('User not found.');
 				err.status = 404;
 				next(err);
 			} else {
-				res.json({ user });
+				res.json({ user: await user.populateAllFields() });
 			}
 		} catch (err) {
 			next(err);
@@ -325,7 +267,7 @@ exports.updateInfo = [
 				user.password = hashedPassword;
 				const updatedUser = await user.save();
 				// Successful
-				res.json({ user: updatedUser });
+				res.json({ user: await updatedUser.populateAllFields() });
 			}
 		} catch (err) {
 			next(err);
