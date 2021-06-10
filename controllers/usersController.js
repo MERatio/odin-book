@@ -152,8 +152,40 @@ exports.create = [
 	},
 ];
 
-exports.getCurrentUser = (req, res, next) => {
-	res.json({ currentUser: req.currentUser ? req.currentUser : false });
+exports.getCurrentUser = async (req, res, next) => {
+	const currentUser = req.currentUser
+		? await req.currentUser
+				.populate('profilePicture')
+				.populate({
+					path: 'friendships',
+					populate: { path: 'requestor requestee' },
+					options: {
+						sort: { createdAt: -1 },
+					},
+				})
+				.populate({
+					path: 'posts',
+					options: {
+						sort: { createdAt: -1 },
+					},
+				})
+				.populate({
+					path: 'reactions',
+					populate: { path: 'post' },
+					options: {
+						sort: { createdAt: -1 },
+					},
+				})
+				.populate({
+					path: 'comments',
+					populate: { path: 'post' },
+					options: {
+						sort: { createdAt: -1 },
+					},
+				})
+				.execPopulate()
+		: false;
+	res.json({ currentUser });
 };
 
 // Get user's profile information except password.
