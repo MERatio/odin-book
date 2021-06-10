@@ -320,7 +320,8 @@ exports.updateInfo = [
 				const hashedPassword = await bcrypt.hash(req.body.password, 10);
 				const user = req.currentUser;
 				user.firstName = req.body.firstName;
-				user.lastName = req.body.email;
+				user.lastName = req.body.lastName;
+				user.email = req.body.email;
 				user.password = hashedPassword;
 				const updatedUser = await user.save();
 				// Successful
