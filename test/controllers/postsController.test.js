@@ -852,7 +852,7 @@ describe('updateImage', () => {
 		test('if JWT is not valid or not supplied', (done) => {
 			request(app)
 				.put(`/posts/${user1Post1Id}/image`)
-				.attach('profilePicture', `test/images/${image1}`)
+				.attach('image', `test/images/${image1}`)
 				.set('Accept', 'application/json')
 				.expect('Content-Type', /json/)
 				.expect(bodyHasErrProperty)
@@ -862,7 +862,7 @@ describe('updateImage', () => {
 		test('if postId route parameter is not valid', (done) => {
 			request(app)
 				.put(`/posts/${user1Post1Id + '123'}/image`)
-				.attach('profilePicture', `test/images/${image1}`)
+				.attach('image', `test/images/${image1}`)
 				.set('Accept', 'application/json')
 				.set('Authorization', `Bearer ${user1Jwt}`)
 				.expect('Content-Type', /json/)
@@ -877,7 +877,7 @@ describe('updateImage', () => {
 						user1Post1Id.substring(0, user1Post1Id.length - 3) + '123'
 					}/image`
 				)
-				.attach('profilePicture', `test/images/${image1}`)
+				.attach('image', `test/images/${image1}`)
 				.set('Accept', 'application/json')
 				.set('Authorization', `Bearer ${user1Jwt}`)
 				.expect('Content-Type', /json/)
@@ -888,7 +888,7 @@ describe('updateImage', () => {
 		test("if currentUser is not the post's author", (done) => {
 			request(app)
 				.put(`/posts/${user1Post1Id}/image`)
-				.attach('profilePicture', `test/images/${image1}`)
+				.attach('image', `test/images/${image1}`)
 				.set('Accept', 'application/json')
 				.set('Authorization', `Bearer ${user2Jwt}`)
 				.expect('Content-Type', /json/)

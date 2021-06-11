@@ -204,7 +204,7 @@ exports.updateImage = [
 				// Data form is valid.
 				// Update post's image
 				const post = req.post;
-				// Delete the old profilePicture if there's any.
+				// Delete the old image if there's any.
 				if (post.image !== '') {
 					await fsPromises.unlink(`public/images/${post.image}`);
 				}
