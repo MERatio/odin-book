@@ -107,6 +107,7 @@ exports.create = [
 ];
 
 exports.show = [
+	authenticated,
 	validMongoObjectIdRouteParams,
 	async (req, res, next) => {
 		try {

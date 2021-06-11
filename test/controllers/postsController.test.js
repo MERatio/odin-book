@@ -613,10 +613,20 @@ describe('create', () => {
 
 describe('show', () => {
 	describe('body has err property', () => {
+		test('if JWT is not valid or not supplied', (done) => {
+			request(app)
+				.get(`/posts/${user2Post1Id}`)
+				.set('Accept', 'application/json')
+				.expect('Content-Type', /json/)
+				.expect(bodyHasErrProperty)
+				.expect(401, done);
+		});
+
 		test('if postId route parameter is not valid', (done) => {
 			request(app)
 				.get(`/posts/${user2Post1Id}` + '123')
 				.set('Accept', 'application/json')
+				.set('Authorization', `Bearer ${user1Jwt}`)
 				.expect('Content-Type', /json/)
 				.expect(bodyHasErrProperty)
 				.expect(404, done);
@@ -628,6 +638,7 @@ describe('show', () => {
 					`/posts/${user2Post1Id.substring(0, user2Post1Id.length - 3)}` + '123'
 				)
 				.set('Accept', 'application/json')
+				.set('Authorization', `Bearer ${user1Jwt}`)
 				.expect('Content-Type', /json/)
 				.expect(bodyHasErrProperty)
 				.expect(404, done);
@@ -638,6 +649,7 @@ describe('show', () => {
 		request(app)
 			.get(`/posts/${user2Post1Id}`)
 			.set('Accept', 'application/json')
+			.set('Authorization', `Bearer ${user1Jwt}`)
 			.expect('Content-Type', /json/)
 			.expect(bodyHasPostProperty)
 			.expect(200, done);
