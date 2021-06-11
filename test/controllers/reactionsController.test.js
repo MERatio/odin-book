@@ -155,6 +155,7 @@ describe('create', () => {
 		request(app)
 			.get(`/posts/${post1Id}`)
 			.set('Accept', 'application/json')
+			.set('Authorization', `Bearer ${user1Jwt}`)
 			.expect('Content-Type', /json/)
 			.expect((res) => {
 				const postReactionsIds = res.body.post.reactions.map((reaction) => {
@@ -274,6 +275,7 @@ describe('destroy', () => {
 		request(app)
 			.get(`/posts/${post2Id}`)
 			.set('Accept', 'application/json')
+			.set('Authorization', `Bearer ${user1Jwt}`)
 			.expect('Content-Type', /json/)
 			.expect(bodyHasPostProperty)
 			.expect((res) => {
