@@ -1,3 +1,4 @@
+const fsPromises = require('fs/promises');
 const mongoose = require('mongoose');
 
 const Schema = mongoose.Schema;
@@ -14,6 +15,17 @@ const PostSchema = new Schema(
 		timestamps: true,
 	}
 );
+
+// Remove post's image.
+PostSchema.pre('remove', async function (next) {
+	try {
+		if (this.image !== '') {
+			await fsPromises.unlink(`public/images/${this.image}`);
+		}
+	} catch (err) {
+		next(err);
+	}
+});
 
 // Remove the post._id from author.posts
 PostSchema.pre('remove', async function (next) {

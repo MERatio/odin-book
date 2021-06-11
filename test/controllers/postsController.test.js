@@ -1031,7 +1031,26 @@ describe('destroy', () => {
 		});
 	});
 
-	it('should remove the post and body should have a post property', async (done) => {
+	it('should remove the post and its image, and body should have a post property', async (done) => {
+		// Add post's image
+		await request(app)
+			.put(`/posts/${user2Post1Id}/image`)
+			.attach('image', `test/images/${image1}`)
+			.set('Accept', 'application/json')
+			.set('Authorization', `Bearer ${user2Jwt}`)
+			.expect('Content-Type', /json/)
+			.expect(bodyHasImageProperty)
+			.expect(200);
+
+		// Verify that public/images directory now have the recent image.
+		try {
+			const files = await fsPromises.readdir(imagesPath);
+			expect(files.length).toBe(1);
+			expect(files[0].split('.')[1] === 'jpg');
+		} catch (err) {
+			done(err);
+		}
+
 		// Test to see if post's reactions and comments exists.
 		expect(await Reaction.exists({ _id: user2Post1Reaction1Id })).toBe(true);
 		expect(await Comment.exists({ _id: user2Post1Comment4Id })).toBe(true);
@@ -1044,6 +1063,14 @@ describe('destroy', () => {
 			.expect('Content-Type', /json/)
 			.expect(bodyHasPostProperty)
 			.expect(200);
+
+		// Verify that post's image is deleted.
+		try {
+			const files = await fsPromises.readdir(imagesPath);
+			expect(files.length).toBe(0);
+		} catch (err) {
+			done(err);
+		}
 
 		// Test to see if post's reactions and comments are deleted.
 		expect(await Reaction.exists({ _id: user2Post1Reaction1Id })).toBe(false);
