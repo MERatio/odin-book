@@ -81,7 +81,7 @@ exports.facebook = [
 					} else {
 						// Sign in
 						const jwt = createJwt(user);
-						res.json({ jwt, currentUser: user });
+						res.json({ jwt, currentUser: await user.populateAllFields() });
 					}
 				} else {
 					// Create user
