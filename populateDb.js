@@ -21,6 +21,7 @@ const faker = require('faker');
 
 // Model
 const User = require('./models/user');
+const ProfilePicture = require('./models/profilePicture');
 
 // Set up default mongoose connection
 const mongoDB = userArgs[0];
@@ -30,19 +31,6 @@ const db = mongoose.connection;
 db.on('error', console.error.bind(console, 'MongoDB connection error:'));
 
 const users = [];
-
-async function userCreate(firstName, lastName, email, password, cb) {
-  try {
-    const userDetail = { firstName, lastName, email, password };
-    const user = new User(userDetail);
-    const savedUser = await user.save();
-    console.log('New User: ' + savedUser);
-    users.push(savedUser);
-    cb(null, savedUser);
-  } catch (err) {
-    cb(err, null);
-  }
-}
 
 async function emptyCollections(models, cb) {
   try {
@@ -58,12 +46,38 @@ async function emptyCollections(models, cb) {
 }
 
 function createUsers(cb) {
-  const hashedPassword = bcrypt.hashSync('password123', 10);
+  async function createUser(
+    provider,
+    firstName,
+    lastName,
+    email,
+    password,
+    cb
+  ) {
+    try {
+      let user = new User({ firstName, lastName, email, password });
+      let profilePicture = new ProfilePicture({
+        filename: '',
+        origin: 'local',
+      });
+      user.profilePicture = profilePicture._id;
+      profilePicture.user = user._id;
+      user = await user.save();
+      profilePicture = await profilePicture.save();
+      console.log('New User: ' + user);
+      users.push(user);
+      cb(null, user);
+    } catch (err) {
+      cb(err, null);
+    }
+  }
 
   function createTasks() {
+    const hashedPassword = bcrypt.hashSync('password123', 10);
     const tasks = [
       (callback) => {
-        userCreate(
+        createUser(
+          'local',
           'John',
           'Doe',
           'johndoe@gmail.com',
@@ -76,7 +90,8 @@ function createUsers(cb) {
       tasks.push((callback) => {
         const firstName = faker.name.firstName();
         const lastName = faker.name.lastName();
-        userCreate(
+        createUser(
+          'local',
           firstName,
           lastName,
           `${firstName + lastName}@gmail.com`.toLowerCase(),
@@ -96,7 +111,7 @@ function createUsers(cb) {
 }
 
 async.series(
-  [(cb) => emptyCollections([User], cb), createUsers],
+  [(cb) => emptyCollections([User, ProfilePicture], cb), createUsers],
   // Optional callback
   (err) => {
     if (err) {
