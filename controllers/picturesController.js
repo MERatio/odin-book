@@ -9,12 +9,19 @@ exports.update = [
 	validMongoObjectIdRouteParams,
 	async (req, res, next) => {
 		try {
-			const picture = await Picture.findById(req.params.pictureId).exec();
+			const picture = await Picture.findById(req.params.pictureId)
+				.populate('of')
+				.exec();
 			if (picture === null) {
 				const err = new Error(`Picture not found.`);
 				err.status = 404;
 				throw err;
-			} else if (!req.currentUser._id.equals(picture.of)) {
+			} else if (
+				!(
+					req.currentUser._id.equals(picture.of._id) ||
+					req.currentUser.equals(picture.of.author)
+				)
+			) {
 				const err = new Error('Unauthorized');
 				err.status = 401;
 				throw err;

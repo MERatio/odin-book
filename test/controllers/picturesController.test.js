@@ -63,6 +63,7 @@ afterEach(async () => {
 });
 afterAll(async () => await mongoConfigTesting.close());
 
+// Both User and Post use the Picture model
 describe('update', () => {
 	describe('body has err property', () => {
 		test('if JWT is not valid or not supplied', (done) => {

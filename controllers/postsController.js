@@ -5,6 +5,7 @@ const authenticated = require('../middlewares/authenticated');
 const validMongoObjectIdRouteParams = require('../middlewares/validMongoObjectIdRouteParams');
 const getResourceFromParamsAndCurrentUserIsTheAuthor = require('../middlewares/getResourceFromParamsAndCurrentUserIsTheAuthor');
 const Post = require('../models/post');
+const Picture = require('../models/picture');
 
 const postValidationAndSanitation = [
 	body('text')
@@ -30,7 +31,7 @@ exports.index = [
 				.skip(req.skip)
 				.limit(req.query.limit)
 				.sort({ createdAt: -1 })
-				.populate('author reactions')
+				.populate('author picture reactions')
 				.exec();
 			const postsCount = await Post.countDocuments({
 				author: { $in: userIds },
@@ -45,7 +46,7 @@ exports.index = [
 exports.create = [
 	authenticated,
 	(req, res, next) => {
-		upload.single('image')(req, res, (err) => {
+		upload.single('picture')(req, res, (err) => {
 			if (err) {
 				req.multerErr = err;
 			}
@@ -61,7 +62,7 @@ exports.create = [
 		try {
 			// There is multerErr or express-validator errors.
 			if (req.multerErr || !errors.isEmpty()) {
-				// If there's an uploaded image delete it.
+				// If there's an uploaded picture delete it.
 				if (req.file) {
 					await fsPromises.unlink(`public/images/${req.file.filename}`);
 				}
@@ -75,11 +76,19 @@ exports.create = [
 			} else {
 				// Data is valid.
 				// Create an Post object with escaped and trimmed data.
-				const post = await Post.create({
+				const post = new Post({
 					author: req.currentUser._id,
 					text: req.body.text,
-					image: req.file ? req.file.filename : '',
 				});
+				const picture = new Picture({
+					ofModel: 'Post',
+					filename: req.file ? req.file.filename : '',
+					isLocal: true,
+				});
+				post.picture = picture._id;
+				picture.of = post._id;
+				await post.save();
+				await picture.save();
 				req.currentUser.posts.push(post._id);
 				req.currentUser.save((err) => {
 					if (err) {
@@ -95,7 +104,7 @@ exports.create = [
 				});
 			}
 		} catch (err) {
-			// If there's an uploaded image delete it.
+			// If there's an uploaded picture delete it.
 			if (req.file) {
 				(async () => {
 					await fsPromises.unlink(`public/images/${req.file.filename}`);
@@ -112,7 +121,7 @@ exports.show = [
 	async (req, res, next) => {
 		try {
 			const post = await Post.findById(req.params.postId)
-				.populate('author reactions')
+				.populate('author picture reactions')
 				.populate({
 					path: 'comments',
 					populate: { path: 'author' },
@@ -162,65 +171,6 @@ exports.update = [
 			} catch (err) {
 				next(err);
 			}
-		}
-	},
-];
-
-exports.updateImage = [
-	authenticated,
-	validMongoObjectIdRouteParams,
-	getResourceFromParamsAndCurrentUserIsTheAuthor('Post'),
-	(req, res, next) => {
-		upload.single('image')(req, res, (err) => {
-			if (err) {
-				req.multerErr = err;
-			}
-			next();
-		});
-	},
-	async (req, res, next) => {
-		try {
-			// If there's a multer error or the user didn't upload an image.
-			if (req.multerErr || !req.file) {
-				let errors = [];
-				if (req.file) {
-					await fsPromises.unlink(`public/images/${req.file.filename}`);
-				}
-				if (req.multerErr) {
-					errors = errors.concat({
-						msg: req.multerErr.message,
-					});
-				}
-				if (!req.file) {
-					errors = errors.concat({
-						msg: 'Upload an image',
-					});
-				}
-				res.status(422).json({
-					errors,
-					image: req.file ? req.file.filename : '',
-				});
-			} else {
-				// Data form is valid.
-				// Update post's image
-				const post = req.post;
-				// Delete the old image if there's any.
-				if (post.image !== '') {
-					await fsPromises.unlink(`public/images/${post.image}`);
-				}
-				post.image = req.file.filename;
-				const updatedPost = await post.save();
-				// Successful
-				res.status(200).json({ image: updatedPost.image });
-			}
-		} catch (err) {
-			// If there's an uploaded image delete it.
-			if (req.file) {
-				(async () => {
-					await fsPromises.unlink(`public/images/${req.file.filename}`);
-				})();
-			}
-			next(err);
 		}
 	},
 ];

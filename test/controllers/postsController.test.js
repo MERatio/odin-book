@@ -15,7 +15,7 @@ const {
 	bodyHasPostsProperty,
 	bodyHasPostsCountProperty,
 	bodyHasPostProperty,
-	bodyHasImageProperty,
+	bodyHasPictureProperty,
 	bodyHasReactionProperty,
 	bodyHasCommentProperty,
 } = require('../assertionFunctions');
@@ -27,11 +27,12 @@ let user2Jwt;
 let user1Post1Id;
 let user1AndUser2FriendshipId;
 let user2Post1Id;
+let user2Post1Picture1Id;
 let user2Post1Reaction1Id;
 let user2Post1Comment4Id;
 let indexPostsCount = 0;
 const imagesPath = 'public/images';
-const image1 = 'post-image-1.jpg';
+const post1Picture = 'post-picture-1.jpg';
 const updatedUser1PostText = 'updatedUser1Post1Text';
 
 beforeAll(async () => await mongoConfigTesting.connect());
@@ -139,6 +140,7 @@ beforeEach(async () => {
 		.expect((res) => {
 			user2Post1Id = res.body.post._id;
 			indexPostsCount += 1;
+			user2Post1Picture1Id = res.body.post.picture;
 		})
 		.expect(201);
 	await request(app)
@@ -441,11 +443,11 @@ describe('create', () => {
 	});
 
 	describe('body has santinized post and errors property', () => {
-		test('if form texts has error/s. And if there is a uploaded valid image delete it', async (done) => {
+		test('if form texts has error/s. And if there is a uploaded valid picture delete it', async (done) => {
 			await request(app)
 				.post('/posts')
 				.field({ text: '' })
-				.attach('image', `test/images/${image1}`)
+				.attach('picture', `test/images/${post1Picture}`)
 				.set('Accept', 'application/json')
 				.set('Authorization', `Bearer ${user1Jwt}`)
 				.expect('Content-Type', /json/)
@@ -461,23 +463,23 @@ describe('create', () => {
 			}
 		});
 
-		test('if image and form texts has error/s. They should be concatenated in 1 array. image should not be saved', async (done) => {
+		test('if picture and form texts has error/s. They should be concatenated in 1 array. picture should not be saved', async (done) => {
 			await request(app)
 				.post('/posts')
 				.field({ text: '' })
-				.attach('image', `test/files/dummyJson.json`)
+				.attach('picture', `test/files/dummyJson.json`)
 				.set('Accept', 'application/json')
 				.set('Authorization', `Bearer ${user1Jwt}`)
 				.expect('Content-Type', /json/)
 				.expect(bodyHasErrorsProperty)
 				.expect((res) => {
 					if (res.body.errors.length !== 2) {
-						throw new Error('Should have image and form texts errors.');
+						throw new Error('Should have picture and form texts errors.');
 					}
 				})
 				.expect(bodyHasPostProperty)
 				.expect(422);
-			// Verify that the invalid image is not saved because of image and form texts errors.
+			// Verify that the invalid picture is not saved because of picture and form texts errors.
 			try {
 				const files = await fsPromises.readdir(imagesPath);
 				expect(files.length).toBe(0);
@@ -531,15 +533,15 @@ describe('create', () => {
 			});
 		});
 
-		describe('if image', () => {
-			/* If the image exceeds the file size limit, the error will be the same.
+		describe('if picture', () => {
+			/* If the picture exceeds the file size limit, the error will be the same.
 				 albeit has different error message.
 			*/
 			test('has invalid extention. File with invalid file type should not be saved', async (done) => {
 				await request(app)
 					.post('/posts')
 					.field({ text: 'hello world' })
-					.attach('image', 'test/files/dummyJson.json')
+					.attach('picture', 'test/files/dummyJson.json')
 					.set('Accept', 'application/json')
 					.set('Authorization', `Bearer ${user1Jwt}`)
 					.expect('Content-Type', /json/)
@@ -564,13 +566,13 @@ describe('create', () => {
 			await request(app)
 				.post('/posts')
 				.field({ text: 'valid post' })
-				.attach('image', `test/images/${image1}`)
+				.attach('picture', `test/images/${post1Picture}`)
 				.set('Accept', 'application/json')
 				.set('Authorization', `Bearer ${user1Jwt}`)
 				.expect('Content-Type', /json/)
 				.expect(bodyHasPostProperty)
 				.expect(201);
-			// Verify that public/images directory now have the recent image.
+			// Verify that public/images directory now have the recent picture.
 			try {
 				const files = await fsPromises.readdir(imagesPath);
 				expect(files.length).toBe(1);
@@ -581,7 +583,7 @@ describe('create', () => {
 			}
 		});
 
-		test('if image is not supplied but all other fields are valid', (done) => {
+		test('if picture is not supplied but all other fields are valid', (done) => {
 			request(app)
 				.post('/posts')
 				.field({ text: 'valid post' })
@@ -589,7 +591,6 @@ describe('create', () => {
 				.set('Authorization', `Bearer ${user1Jwt}`)
 				.expect('Content-Type', /json/)
 				.expect(bodyHasPostProperty)
-				.expect((res) => res.body.post.image === '')
 				.expect(201, done);
 		});
 	});
@@ -845,148 +846,6 @@ describe('update', () => {
 	});
 });
 
-describe('updateImage', () => {
-	const image2 = 'post-image-2.png';
-
-	describe('body has err property', () => {
-		test('if JWT is not valid or not supplied', (done) => {
-			request(app)
-				.put(`/posts/${user1Post1Id}/image`)
-				.attach('image', `test/images/${image1}`)
-				.set('Accept', 'application/json')
-				.expect('Content-Type', /json/)
-				.expect(bodyHasErrProperty)
-				.expect(401, done);
-		});
-
-		test('if postId route parameter is not valid', (done) => {
-			request(app)
-				.put(`/posts/${user1Post1Id + '123'}/image`)
-				.attach('image', `test/images/${image1}`)
-				.set('Accept', 'application/json')
-				.set('Authorization', `Bearer ${user1Jwt}`)
-				.expect('Content-Type', /json/)
-				.expect(bodyHasErrProperty)
-				.expect(404, done);
-		});
-
-		test('if post does not exists', (done) => {
-			request(app)
-				.put(
-					`/posts/${
-						user1Post1Id.substring(0, user1Post1Id.length - 3) + '123'
-					}/image`
-				)
-				.attach('image', `test/images/${image1}`)
-				.set('Accept', 'application/json')
-				.set('Authorization', `Bearer ${user1Jwt}`)
-				.expect('Content-Type', /json/)
-				.expect(bodyHasErrProperty)
-				.expect(404, done);
-		});
-
-		test("if currentUser is not the post's author", (done) => {
-			request(app)
-				.put(`/posts/${user1Post1Id}/image`)
-				.attach('image', `test/images/${image1}`)
-				.set('Accept', 'application/json')
-				.set('Authorization', `Bearer ${user2Jwt}`)
-				.expect('Content-Type', /json/)
-				.expect(bodyHasErrProperty)
-				.expect(401, done);
-		});
-	});
-
-	describe('body has santinized post and errors property', () => {
-		describe('if image', () => {
-			/* If the image exceeds the file size limit, the error will be the same.
-				 albeit has different error message.
-			*/
-			test('has invalid extention. File with invalid file type should not be saved', async (done) => {
-				await request(app)
-					.put(`/posts/${user1Post1Id}/image`)
-					.attach('image', 'test/files/dummyJson.json')
-					.set('Accept', 'application/json')
-					.set('Authorization', `Bearer ${user1Jwt}`)
-					.expect('Content-Type', /json/)
-					.expect(bodyHasErrorsProperty)
-					.expect(bodyHasImageProperty)
-					.expect(422);
-				// Verify that the file with invalid file type is not saved.
-				try {
-					const files = await fsPromises.readdir(imagesPath);
-					expect(files.length).toBe(0);
-					done();
-				} catch (err) {
-					done(err);
-				}
-			});
-		});
-	});
-
-	it("should add the image if there's no old image, and body has image property", async (done) => {
-		await request(app)
-			.put(`/posts/${user1Post1Id}/image`)
-			.attach('image', `test/images/${image1}`)
-			.set('Accept', 'application/json')
-			.set('Authorization', `Bearer ${user1Jwt}`)
-			.expect('Content-Type', /json/)
-			.expect(bodyHasImageProperty)
-			.expect(200);
-
-		// Verify that public/images directory now have the recent image.
-		try {
-			const files = await fsPromises.readdir(imagesPath);
-			expect(files.length).toBe(1);
-			expect(files[0].split('.')[1] === 'jpg');
-			done();
-		} catch (err) {
-			done(err);
-		}
-	});
-
-	it("should delete the old image if there's any, and if image is successfully updated. And body has image property", async (done) => {
-		// Add first image
-		await request(app)
-			.put(`/posts/${user1Post1Id}/image`)
-			.attach('image', `test/images/${image1}`)
-			.set('Accept', 'application/json')
-			.set('Authorization', `Bearer ${user1Jwt}`)
-			.expect('Content-Type', /json/)
-			.expect(bodyHasImageProperty)
-			.expect(200);
-
-		// Verify first image of the post.
-		try {
-			const files = await fsPromises.readdir(imagesPath);
-			expect(files.length).toBe(1);
-			expect(files[0].split('.')[1] === 'jpg');
-		} catch (err) {
-			done(err);
-		}
-
-		// Update image
-		await request(app)
-			.put(`/posts/${user1Post1Id}/image`)
-			.attach('image', `test/images/${image2}`)
-			.set('Accept', 'application/json')
-			.set('Authorization', `Bearer ${user1Jwt}`)
-			.expect('Content-Type', /json/)
-			.expect(bodyHasImageProperty)
-			.expect(200);
-
-		// Verify that the old image is deleted. And new one is saved.
-		try {
-			const files = await fsPromises.readdir(imagesPath);
-			expect(files.length).toBe(1);
-			expect(files[0].split('.')[1] === 'png');
-			done();
-		} catch (err) {
-			done(err);
-		}
-	});
-});
-
 describe('destroy', () => {
 	describe('body has err property', () => {
 		test('if JWT is not valid or not supplied', (done) => {
@@ -1031,18 +890,18 @@ describe('destroy', () => {
 		});
 	});
 
-	it('should remove the post and its image, and body should have a post property', async (done) => {
-		// Add post's image
+	it('should remove the post and its picture, and body should have a post property', async (done) => {
+		// Add post's picture
 		await request(app)
-			.put(`/posts/${user2Post1Id}/image`)
-			.attach('image', `test/images/${image1}`)
+			.put(`/picture/${user2Post1Picture1Id}`)
+			.attach('picture', `test/images/${post1Picture}`)
 			.set('Accept', 'application/json')
 			.set('Authorization', `Bearer ${user2Jwt}`)
 			.expect('Content-Type', /json/)
-			.expect(bodyHasImageProperty)
+			.expect(bodyHasPictureProperty)
 			.expect(200);
 
-		// Verify that public/images directory now have the recent image.
+		// Verify that public/images directory now have the recent picture.
 		try {
 			const files = await fsPromises.readdir(imagesPath);
 			expect(files.length).toBe(1);
@@ -1064,7 +923,7 @@ describe('destroy', () => {
 			.expect(bodyHasPostProperty)
 			.expect(200);
 
-		// Verify that post's image is deleted.
+		// Verify that post's picture is deleted.
 		try {
 			const files = await fsPromises.readdir(imagesPath);
 			expect(files.length).toBe(0);

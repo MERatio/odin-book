@@ -1,4 +1,3 @@
-const fsPromises = require('fs/promises');
 const mongoose = require('mongoose');
 
 const Schema = mongoose.Schema;
@@ -7,7 +6,11 @@ const PostSchema = new Schema(
 	{
 		author: { type: Schema.Types.ObjectId, ref: 'User', required: true },
 		text: { type: String, required: true, maxlength: 1000 },
-		image: { type: String, default: '' },
+		picture: {
+			type: Schema.Types.ObjectId,
+			ref: 'Picture',
+			required: true,
+		},
 		reactions: [{ type: Schema.Types.ObjectId, ref: 'Reaction' }],
 		comments: [{ type: Schema.Types.ObjectId, ref: 'Comment' }],
 	},
@@ -16,12 +19,11 @@ const PostSchema = new Schema(
 	}
 );
 
-// Remove post's image.
+// Remove post's picture.
 PostSchema.pre('remove', async function (next) {
 	try {
-		if (this.image !== '') {
-			await fsPromises.unlink(`public/images/${this.image}`);
-		}
+		const picture = await mongoose.model('Picture').findById(this.picture);
+		await picture.remove();
 	} catch (err) {
 		next(err);
 	}

@@ -74,12 +74,6 @@ exports.bodyHasPostProperty = (res) => {
 	}
 };
 
-exports.bodyHasImageProperty = (res) => {
-	if (!Object.prototype.hasOwnProperty.call(res.body, 'image')) {
-		throw new Error('missing image property');
-	}
-};
-
 exports.bodyHasReactionProperty = (res) => {
 	if (!Object.prototype.hasOwnProperty.call(res.body, 'reaction')) {
 		throw new Error('missing reaction property');

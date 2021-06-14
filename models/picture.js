@@ -1,3 +1,4 @@
+const fsPromises = require('fs/promises');
 const mongoose = require('mongoose');
 
 const Schema = mongoose.Schema;
@@ -25,5 +26,16 @@ const PictureSchema = new Schema(
 		timestamps: true,
 	}
 );
+
+// Remove actual picture.
+PictureSchema.pre('remove', async function (next) {
+	try {
+		if (this.isLocal && this.filename !== '') {
+			await fsPromises.unlink(`public/images/${this.filename}`);
+		}
+	} catch (err) {
+		next(err);
+	}
+});
 
 module.exports = mongoose.model('Picture', PictureSchema);

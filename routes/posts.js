@@ -11,8 +11,6 @@ router.get('/:postId', postsController.show);
 
 router.put('/:postId', postsController.update);
 
-router.put('/:postId/image', postsController.updateImage);
-
 router.delete('/:postId', postsController.destroy);
 
 module.exports = router;
