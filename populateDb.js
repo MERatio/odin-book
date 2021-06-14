@@ -81,7 +81,7 @@ function createUsers(cb) {
           'local',
           'John',
           'Doe',
-          'johndoe@gmail.com',
+          'johndoe@example.com',
           hashedPassword,
           callback
         );
@@ -95,7 +95,7 @@ function createUsers(cb) {
           'local',
           firstName,
           lastName,
-          `${firstName + lastName}@gmail.com`.toLowerCase(),
+          `${firstName + lastName}@example.com`.toLowerCase(),
           hashedPassword,
           callback
         );
