@@ -142,7 +142,7 @@ exports.create = [
 				res.status(201).json({ user: await user.populateAllFields(), jwt });
 			}
 		} catch (err) {
-			// If there's an uploaded image delete it.
+			// If there's an uploaded picture delete it.
 			if (req.file) {
 				(async () => {
 					await fsPromises.unlink(`public/images/${req.file.filename}`);

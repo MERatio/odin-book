@@ -143,7 +143,7 @@ describe('update', () => {
 	});
 
 	describe('body has picture and errors property', () => {
-		/* If the image exceeds the file size limit, the error will be the same.
+		/* If the picture exceeds the file size limit, the error will be the same.
 			 albeit has different error message.
 		*/
 		describe('if picture', () => {

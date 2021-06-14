@@ -43,7 +43,7 @@ exports.update = [
 	},
 	async (req, res, next) => {
 		try {
-			// If there's a multer error or the user didn't upload an image.
+			// If there's a multer error or the user didn't upload an picture.
 			if (req.multerErr || !req.file) {
 				let errors = [];
 				if (req.file) {
@@ -77,7 +77,7 @@ exports.update = [
 				res.status(200).json({ picture });
 			}
 		} catch (err) {
-			// If there's an uploaded image delete it.
+			// If there's an uploaded picture delete it.
 			if (req.file) {
 				(async () => {
 					await fsPromises.unlink(`public/images/${req.file.filename}`);

@@ -564,7 +564,7 @@ describe('create', () => {
 		});
 
 		describe('if picture', () => {
-			/* If the image exceeds the file size limit, the error will be the same.
+			/* If the picture exceeds the file size limit, the error will be the same.
 				 albeit has different error message.
 			*/
 			test('has invalid extention. File with invalid file type should not be saved', async (done) => {
