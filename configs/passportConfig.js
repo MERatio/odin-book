@@ -14,9 +14,7 @@ passport.use(
 		},
 		async (email, password, done) => {
 			try {
-				const currentUser = await User.findOne({ email })
-					.populate('profilePicture')
-					.exec();
+				const currentUser = await User.findOne({ email }).exec();
 				if (!currentUser) {
 					done(null, false, { message: 'Incorrect email or password.' });
 				} else {

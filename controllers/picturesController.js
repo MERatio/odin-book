@@ -2,26 +2,24 @@ const fsPromises = require('fs/promises');
 const { upload } = require('../configs/multerConfig');
 const authenticated = require('../middlewares/authenticated');
 const validMongoObjectIdRouteParams = require('../middlewares/validMongoObjectIdRouteParams');
-const ProfilePicture = require('../models/profilePicture');
+const Picture = require('../models/picture');
 
 exports.update = [
 	authenticated,
 	validMongoObjectIdRouteParams,
 	async (req, res, next) => {
 		try {
-			const profilePicture = await ProfilePicture.findById(
-				req.params.profilePictureId
-			).exec();
-			if (profilePicture === null) {
-				const err = new Error(`profile picture not found.`);
+			const picture = await Picture.findById(req.params.pictureId).exec();
+			if (picture === null) {
+				const err = new Error(`Picture not found.`);
 				err.status = 404;
 				throw err;
-			} else if (!req.currentUser._id.equals(profilePicture.user)) {
+			} else if (!req.currentUser._id.equals(picture.of)) {
 				const err = new Error('Unauthorized');
 				err.status = 401;
 				throw err;
 			} else {
-				req.profilePicture = profilePicture;
+				req.picture = picture;
 				next();
 			}
 		} catch (err) {
@@ -29,7 +27,7 @@ exports.update = [
 		}
 	},
 	(req, res, next) => {
-		upload.single('profilePicture')(req, res, (err) => {
+		upload.single('picture')(req, res, (err) => {
 			if (err) {
 				req.multerErr = err;
 			}
@@ -51,29 +49,25 @@ exports.update = [
 				}
 				if (!req.file) {
 					errors = errors.concat({
-						msg: 'Upload a profile picture.',
+						msg: 'Upload a picture.',
 					});
 				}
 				res.status(422).json({
 					errors,
-					profilePicture: { filename: req.file ? req.file.filename : '' },
+					picture: { filename: req.file ? req.file.filename : '' },
 				});
 			} else {
 				// Data form is valid.
-				// Update user's profile picture
-				// Delete the old profilePicture if it came from form and if there's any.
-				if (
-					req.profilePicture.origin === 'local' &&
-					req.profilePicture.filename !== ''
-				) {
-					await fsPromises.unlink(
-						`public/images/${req.profilePicture.filename}`
-					);
+				// Update user's picture
+				// Delete the old picture if there's any and if it's local.
+				if (req.picture.isLocal && req.picture.filename !== '') {
+					await fsPromises.unlink(`public/images/${req.picture.filename}`);
 				}
-				req.profilePicture.filename = req.file.filename;
-				const updatedProfilePicture = await req.profilePicture.save();
+				req.picture.filename = req.file.filename;
+				req.picture.isLocal = true;
+				const picture = await req.picture.save();
 				// Successful
-				res.status(200).json({ profilePicture: updatedProfilePicture });
+				res.status(200).json({ picture });
 			}
 		} catch (err) {
 			// If there's an uploaded image delete it.

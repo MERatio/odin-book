@@ -17,7 +17,7 @@ const {
 let user1Id;
 let user1Jwt;
 const imagesPath = 'public/images';
-const profilePicture1 = 'profile-picture-1.jpg';
+const userPicture1 = 'user-picture-1.jpg';
 
 beforeAll(async () => await mongoConfigTesting.connect());
 beforeEach(async () => {
@@ -351,7 +351,7 @@ describe('create', () => {
 	});
 
 	describe('body has santinized user and errors property', () => {
-		test('if form texts has error/s. And if there is a uploaded valid profilePicture delete it', async (done) => {
+		test('if form texts has error/s. And if there is a uploaded valid picture delete it', async (done) => {
 			await request(app)
 				.post('/users')
 				.field('firstName', '')
@@ -359,13 +359,13 @@ describe('create', () => {
 				.field('email', 'user2@example.com')
 				.field('password', 'password123')
 				.field('passwordConfirmation', 'password123')
-				.attach('profilePicture', `test/images/${profilePicture1}`)
+				.attach('picture', `test/images/${userPicture1}`)
 				.set('Accept', 'application/json')
 				.expect('Content-Type', /json/)
 				.expect(bodyHasErrorsProperty)
 				.expect(bodyHasUserProperty)
 				.expect(422);
-			// Verify that the valid profilePicture is not saved because of form texts errors.
+			// Verify that the valid picture is not saved because of form texts errors.
 			try {
 				const files = await fsPromises.readdir(imagesPath);
 				expect(files.length).toBe(0);
@@ -375,7 +375,7 @@ describe('create', () => {
 			}
 		});
 
-		test('if profilePicture and form texts has error/s. They should be concatenated in 1 array. profilePicture should not be saved', async (done) => {
+		test('if picture and form texts has error/s. They should be concatenated in 1 array. picture should not be saved', async (done) => {
 			await request(app)
 				.post('/users')
 				.field('firstName', '')
@@ -383,20 +383,20 @@ describe('create', () => {
 				.field('email', 'user2@example.com')
 				.field('password', 'password123')
 				.field('passwordConfirmation', 'password123')
-				.attach('profilePicture', `test/files/dummyJson.json`)
+				.attach('picture', `test/files/dummyJson.json`)
 				.set('Accept', 'application/json')
 				.expect('Content-Type', /json/)
 				.expect(bodyHasErrorsProperty)
 				.expect((res) => {
 					if (res.body.errors.length !== 2) {
 						throw new Error(
-							'Should have profilePicture and form texts errors.'
+							'Should have picture and form texts errors.'
 						);
 					}
 				})
 				.expect(bodyHasUserProperty)
 				.expect(422);
-			// Verify that the invalid profilePicture is not saved because of image and form texts errors.
+			// Verify that the invalid picture is not saved because of image and form texts errors.
 			try {
 				const files = await fsPromises.readdir(imagesPath);
 				expect(files.length).toBe(0);
@@ -563,7 +563,7 @@ describe('create', () => {
 			});
 		});
 
-		describe('if profilePicture', () => {
+		describe('if picture', () => {
 			/* If the image exceeds the file size limit, the error will be the same.
 				 albeit has different error message.
 			*/
@@ -575,7 +575,7 @@ describe('create', () => {
 					.field('email', 'invalidUser@example.com')
 					.field('password', 'password123')
 					.field('passwordConfirmation', 'password123')
-					.attach('profilePicture', 'test/files/dummyJson.json')
+					.attach('picture', 'test/files/dummyJson.json')
 					.set('Accept', 'application/json')
 					.expect('Content-Type', /json/)
 					.expect(bodyHasErrorsProperty)
@@ -642,13 +642,13 @@ describe('create', () => {
 				.field('email', 'user2@example.com')
 				.field('password', 'password123')
 				.field('passwordConfirmation', 'password123')
-				.attach('profilePicture', `test/images/${profilePicture1}`)
+				.attach('picture', `test/images/${userPicture1}`)
 				.set('Accept', 'application/json')
 				.expect('Content-Type', /json/)
 				.expect(bodyHasUserProperty)
 				.expect(bodyHasJwtProperty)
 				.expect(201);
-			// Verify that public/images directory now have the recent profile picture.
+			// Verify that public/images directory now have the recent picture.
 			try {
 				const files = await fsPromises.readdir(imagesPath);
 				expect(files.length).toBe(1);
@@ -659,7 +659,7 @@ describe('create', () => {
 			}
 		});
 
-		test('if profilePicture is not supplied but all other fields are valid', (done) => {
+		test('if picture is not supplied but all other fields are valid', (done) => {
 			request(app)
 				.post('/users')
 				.field('firstName', 'user2')
@@ -671,7 +671,7 @@ describe('create', () => {
 				.expect('Content-Type', /json/)
 				.expect(bodyHasUserProperty)
 				.expect(bodyHasJwtProperty)
-				.expect((res) => res.body.user.profilePicture.filename === '')
+				.expect((res) => res.body.user.picture.filename === '')
 				.expect(201, done);
 		});
 	});

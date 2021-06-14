@@ -7,17 +7,17 @@ const {
 	bodyHasErrProperty,
 	bodyHasErrorsProperty,
 	bodyHasUserProperty,
-	bodyHasProfilePictureProperty,
+	bodyHasPictureProperty,
 	bodyHasJwtProperty,
 	bodyHasCurrentUserProperty,
 } = require('../assertionFunctions');
 
 let user1Id;
 let user1Jwt;
-let user1ProfilePictureId;
+let user1PictureId;
 const imagesPath = 'public/images';
-const profilePicture1 = 'profile-picture-1.jpg';
-const profilePicture2 = 'profile-picture-2.png';
+const userPicture1 = 'user-picture-1.jpg';
+const userPicture2 = 'user-picture-2.png';
 
 beforeAll(async () => await mongoConfigTesting.connect());
 beforeEach(async () => {
@@ -36,7 +36,7 @@ beforeEach(async () => {
 		.expect(bodyHasJwtProperty)
 		.expect((res) => {
 			user1Id = res.body.user._id;
-			user1ProfilePictureId = res.body.user.profilePicture._id;
+			user1PictureId = res.body.user.picture._id;
 		})
 		.expect(201);
 
@@ -63,22 +63,22 @@ afterEach(async () => {
 });
 afterAll(async () => await mongoConfigTesting.close());
 
-describe('updateProfilePicture', () => {
+describe('update', () => {
 	describe('body has err property', () => {
 		test('if JWT is not valid or not supplied', (done) => {
 			request(app)
-				.put(`/profile-picture/${user1ProfilePictureId}`)
-				.attach('profilePicture', `test/images/${profilePicture1}`)
+				.put(`/picture/${user1PictureId}`)
+				.attach('picture', `test/images/${userPicture1}`)
 				.set('Accept', 'application/json')
 				.expect('Content-Type', /json/)
 				.expect(bodyHasErrProperty)
 				.expect(401, done);
 		});
 
-		test('if profilePictureId route parameter is not valid', (done) => {
+		test('if pictureId route parameter is not valid', (done) => {
 			request(app)
-				.put(`/profile-picture/${user1ProfilePictureId + '123'}`)
-				.attach('profilePicture', `test/images/${profilePicture1}`)
+				.put(`/picture/${user1PictureId + '123'}`)
+				.attach('picture', `test/images/${userPicture1}`)
 				.set('Accept', 'application/json')
 				.set('Authorization', `Bearer ${user1Jwt}`)
 				.expect('Content-Type', /json/)
@@ -86,12 +86,12 @@ describe('updateProfilePicture', () => {
 				.expect(404, done);
 		});
 
-		test('if profilePicture does not exists', (done) => {
+		test('if picture does not exists', (done) => {
 			request(app)
 				.put(
-					`/profile-picture/${user1Id.substring(0, user1Id.length - 3) + '123'}`
+					`/picture/${user1Id.substring(0, user1Id.length - 3) + '123'}`
 				)
-				.attach('profilePicture', `test/images/${profilePicture1}`)
+				.attach('picture', `test/images/${userPicture1}`)
 				.set('Accept', 'application/json')
 				.set('Authorization', `Bearer ${user1Jwt}`)
 				.expect('Content-Type', /json/)
@@ -99,7 +99,7 @@ describe('updateProfilePicture', () => {
 				.expect(404, done);
 		});
 
-		test("if currentUser doesn't own the profilePicture", async (done) => {
+		test("if currentUser doesn't own the picture", async (done) => {
 			let user2Jwt;
 
 			await request(app)
@@ -131,8 +131,8 @@ describe('updateProfilePicture', () => {
 				.expect(200);
 
 			request(app)
-				.put(`/profile-picture/${user1ProfilePictureId}`)
-				.attach('profilePicture', `test/images/${profilePicture1}`)
+				.put(`/picture/${user1PictureId}`)
+				.attach('picture', `test/images/${userPicture1}`)
 				.set('Accept', 'application/json')
 				.set('Authorization', `Bearer ${user2Jwt}`)
 				.expect('Content-Type', /json/)
@@ -141,20 +141,20 @@ describe('updateProfilePicture', () => {
 		});
 	});
 
-	describe('body has profilePicture and errors property', () => {
+	describe('body has picture and errors property', () => {
 		/* If the image exceeds the file size limit, the error will be the same.
 			 albeit has different error message.
 		*/
-		describe('if profilePicture', () => {
+		describe('if picture', () => {
 			test('has invalid extention. File with invalid file type should not be saved', async (done) => {
 				await request(app)
-					.put(`/profile-picture/${user1ProfilePictureId}`)
-					.attach('profilePicture', 'test/files/dummyJson.json')
+					.put(`/picture/${user1PictureId}`)
+					.attach('picture', 'test/files/dummyJson.json')
 					.set('Accept', 'application/json')
 					.set('Authorization', `Bearer ${user1Jwt}`)
 					.expect('Content-Type', /json/)
 					.expect(bodyHasErrorsProperty)
-					.expect(bodyHasProfilePictureProperty)
+					.expect(bodyHasPictureProperty)
 					.expect(422);
 				// Verify that the file with invalid file type is not saved.
 				try {
@@ -168,16 +168,16 @@ describe('updateProfilePicture', () => {
 		});
 	});
 
-	it("should add the user's profilePicture if there's no old profilePicture, and body has profilePicture property", async (done) => {
+	it("should add the user's picture if there's no old picture, and body has picture property", async (done) => {
 		await request(app)
-			.put(`/profile-picture/${user1ProfilePictureId}`)
-			.attach('profilePicture', `test/images/${profilePicture1}`)
+			.put(`/picture/${user1PictureId}`)
+			.attach('picture', `test/images/${userPicture1}`)
 			.set('Accept', 'application/json')
 			.set('Authorization', `Bearer ${user1Jwt}`)
 			.expect('Content-Type', /json/)
-			.expect(bodyHasProfilePictureProperty)
+			.expect(bodyHasPictureProperty)
 			.expect(200);
-		// Verify that public/images directory now have the recent profile picture.
+		// Verify that public/images directory now have the recent user picture.
 		try {
 			const files = await fsPromises.readdir(imagesPath);
 			expect(files.length).toBe(1);
@@ -188,18 +188,18 @@ describe('updateProfilePicture', () => {
 		}
 	});
 
-	it("should delete the old profilePicture if there's any and if profilePicture is successfully updated. And body has profilePicture property", async (done) => {
-		// Add first profilePicture
+	it("should delete the old picture if there's any and if picture is successfully updated. And body has picture property", async (done) => {
+		// Add first picture
 		await request(app)
-			.put(`/profile-picture/${user1ProfilePictureId}`)
-			.attach('profilePicture', `test/images/${profilePicture1}`)
+			.put(`/picture/${user1PictureId}`)
+			.attach('picture', `test/images/${userPicture1}`)
 			.set('Accept', 'application/json')
 			.set('Authorization', `Bearer ${user1Jwt}`)
 			.expect('Content-Type', /json/)
-			.expect(bodyHasProfilePictureProperty)
+			.expect(bodyHasPictureProperty)
 			.expect(200);
 
-		// Verify first profilePicture of the user.
+		// Verify first picture of the user.
 		try {
 			const files = await fsPromises.readdir(imagesPath);
 			expect(files.length).toBe(1);
@@ -208,17 +208,17 @@ describe('updateProfilePicture', () => {
 			done(err);
 		}
 
-		// Update profilePicture
+		// Update picture
 		await request(app)
-			.put(`/profile-picture/${user1ProfilePictureId}`)
-			.attach('profilePicture', `test/images/${profilePicture2}`)
+			.put(`/picture/${user1PictureId}`)
+			.attach('picture', `test/images/${userPicture2}`)
 			.set('Accept', 'application/json')
 			.set('Authorization', `Bearer ${user1Jwt}`)
 			.expect('Content-Type', /json/)
-			.expect(bodyHasProfilePictureProperty)
+			.expect(bodyHasPictureProperty)
 			.expect(200);
 
-		// Verify that the old profilePicture is deleted. And new one is saved.
+		// Verify that the old picture is deleted. And new one is saved.
 		try {
 			const files = await fsPromises.readdir(imagesPath);
 			expect(files.length).toBe(1);
@@ -229,17 +229,17 @@ describe('updateProfilePicture', () => {
 		}
 	});
 
-	it('should update profilePicture if profilePicture origin is Facebook. And body has profilePicture property', async (done) => {
+	it('should update picture if picture origin is Facebook. And body has picture property', async (done) => {
 		await request(app)
-			.put(`/profile-picture/${user1ProfilePictureId}`)
-			.attach('profilePicture', `test/images/${profilePicture1}`)
+			.put(`/picture/${user1PictureId}`)
+			.attach('picture', `test/images/${userPicture1}`)
 			.set('Accept', 'application/json')
 			.set('Authorization', `Bearer ${user1Jwt}`)
 			.expect('Content-Type', /json/)
-			.expect(bodyHasProfilePictureProperty)
+			.expect(bodyHasPictureProperty)
 			.expect(200);
 
-		// Verify that public/images directory now have the recent profile picture.
+		// Verify that public/images directory now have the recent user picture.
 		try {
 			const files = await fsPromises.readdir(imagesPath);
 			expect(files.length).toBe(1);

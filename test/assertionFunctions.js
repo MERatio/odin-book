@@ -32,9 +32,9 @@ exports.bodyHasUserProperty = (res) => {
 	}
 };
 
-exports.bodyHasProfilePictureProperty = (res) => {
-	if (!Object.prototype.hasOwnProperty.call(res.body, 'profilePicture')) {
-		throw new Error('missing profilePicture property');
+exports.bodyHasPictureProperty = (res) => {
+	if (!Object.prototype.hasOwnProperty.call(res.body, 'picture')) {
+		throw new Error('missing picture property');
 	}
 };
 

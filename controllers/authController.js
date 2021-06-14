@@ -4,7 +4,7 @@ const nodeFetch = require('node-fetch');
 const { nanoid } = require('nanoid');
 const bcrypt = require('bcryptjs');
 const User = require('../models/user');
-const ProfilePicture = require('../models/profilePicture');
+const Picture = require('../models/picture');
 const unauthenticated = require('../middlewares/unauthenticated');
 const createJwt = require('../lib/createJwt');
 
@@ -94,14 +94,15 @@ exports.facebook = [
 						email: meData.email,
 						password: hashedPassword,
 					});
-					const profilePicture = new ProfilePicture({
+					const picture = new Picture({
+						ofModel: 'User',
 						filename: meData.picture.data.url,
-						origin: 'facebook',
+						isLocal: false,
 					});
-					currentUser.profilePicture = profilePicture._id;
-					profilePicture.user = currentUser._id;
+					currentUser.picture = picture._id;
+					picture.of = currentUser._id;
 					await currentUser.save();
-					await profilePicture.save();
+					await picture.save();
 					const jwt = createJwt(currentUser);
 					/* Initialized (doc = new Model()) and saved documents (savedDoc = await doc.save()) 
 						 have the same reference and properties.

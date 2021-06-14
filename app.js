@@ -43,7 +43,7 @@ app.use(helmet());
 // Routers
 const authRouter = require('./routes/auth');
 const usersRouter = require('./routes/users');
-const profilePictureRouter = require('./routes/profilePicture');
+const picturesRouter = require('./routes/pictures');
 const friendshipsRouter = require('./routes/friendships');
 const postsRouter = require('./routes/posts');
 const reactionsRouter = require('./routes/reactions');
@@ -81,7 +81,7 @@ app.get(['/users', '/posts'], (req, res, next) => {
 // Use routers
 app.use('/auth', authRouter);
 app.use('/users', usersRouter);
-app.use('/profile-picture', profilePictureRouter);
+app.use('/picture', picturesRouter);
 app.use('/friendships', friendshipsRouter);
 app.use('/posts', postsRouter);
 app.use('/posts/:postId/reactions', reactionsRouter);

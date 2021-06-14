@@ -1,0 +1,29 @@
+const mongoose = require('mongoose');
+
+const Schema = mongoose.Schema;
+
+const PictureSchema = new Schema(
+	{
+		of: {
+			type: Schema.Types.ObjectId,
+			required: true,
+			// Instead of a hardcoded model name in `ref`, `refPath` means Mongoose
+			// will look at the `ofModel` property to find the right model.
+			refPath: 'ofModel',
+		},
+		ofModel: {
+			type: String,
+			required: true,
+			enum: ['User', 'Post'],
+		},
+		filename: { type: String, default: '' },
+		// App only allow picture form upload for now.
+		// I'm using link in Facebook auth and will be using it in populateDb.js.
+		isLocal: { type: Boolean, required: true, default: true },
+	},
+	{
+		timestamps: true,
+	}
+);
+
+module.exports = mongoose.model('Picture', PictureSchema);

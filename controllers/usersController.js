@@ -8,7 +8,7 @@ const unauthenticated = require('../middlewares/unauthenticated');
 const validMongoObjectIdRouteParams = require('../middlewares/validMongoObjectIdRouteParams');
 const getResourceFromParams = require('../middlewares/getResourceFromParams');
 const User = require('../models/user');
-const ProfilePicture = require('../models/profilePicture');
+const Picture = require('../models/picture');
 const Friendship = require('../models/friendship');
 
 const userValidationAndSanitation = [
@@ -72,7 +72,7 @@ exports.index = [
 				.nin(userIds)
 				.skip(req.skip)
 				.limit(req.query.limit)
-				.populate('profilePicture')
+				.populate('picture')
 				.exec();
 			// Total count of users with no friendship with currentUser.
 			const usersCount = await User.countDocuments({
@@ -91,7 +91,7 @@ exports.index = [
 exports.create = [
 	unauthenticated,
 	(req, res, next) => {
-		upload.single('profilePicture')(req, res, (err) => {
+		upload.single('picture')(req, res, (err) => {
 			if (err) {
 				req.multerErr = err;
 			}
@@ -128,14 +128,15 @@ exports.create = [
 					email: req.body.email,
 					password: hashedPassword,
 				});
-				const profilePicture = new ProfilePicture({
+				const picture = new Picture({
+					ofModel: 'User',
 					filename: req.file ? req.file.filename : '',
-					origin: 'local',
+					isLocal: true,
 				});
-				user.profilePicture = profilePicture._id;
-				profilePicture.user = user._id;
+				user.picture = picture._id;
+				picture.of = user._id;
 				await user.save();
-				await profilePicture.save();
+				await picture.save();
 				const jwt = createJwt(user);
 				// Successful
 				res.status(201).json({ user: await user.populateAllFields(), jwt });

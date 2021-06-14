@@ -10,9 +10,9 @@ const UserSchema = new Schema(
 		lastName: { type: String, required: true, maxlength: 255 },
 		email: { type: String, required: true, index: true, unique: true },
 		password: { type: String, required: true },
-		profilePicture: {
+		picture: {
 			type: Schema.Types.ObjectId,
-			ref: 'ProfilePicture',
+			ref: 'Picture',
 			required: true,
 		},
 		friendships: [{ type: Schema.Types.ObjectId, ref: 'Friendship' }],
@@ -26,7 +26,7 @@ const UserSchema = new Schema(
 );
 
 UserSchema.methods.populateAllFields = async function () {
-	return this.populate('profilePicture')
+	return this.populate('picture')
 		.populate({
 			path: 'friendships',
 			populate: { path: 'requestor requestee' },
