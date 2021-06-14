@@ -22,6 +22,7 @@ const faker = require('faker');
 // Model
 const User = require('./models/user');
 const ProfilePicture = require('./models/profilePicture');
+const Friendship = require('./models/friendship');
 
 // Set up default mongoose connection
 const mongoDB = userArgs[0];
@@ -110,8 +111,48 @@ function createUsers(cb) {
   );
 }
 
+function createFriendships(cb) {
+  async function createFriendship(requestor, requestee, status, cb) {
+    try {
+      const friendship = await Friendship.create({
+        requestor,
+        requestee,
+        status,
+      });
+      requestor.friendships.push(friendship._id);
+      requestee.friendships.push(friendship._id);
+      await requestor.save();
+      await requestee.save();
+      console.log('New Friendship: ' + friendship);
+      cb(null, friendship);
+    } catch (err) {
+      cb(err, null);
+    }
+  }
+
+  function createTasks() {
+    const tasks = [];
+    for (let i = 1; i < users.length; i++) {
+      tasks.push((callback) => {
+        createFriendship(users[0], users[i], 'friends', callback);
+      });
+    }
+    return tasks;
+  }
+
+  async.series(
+    createTasks(),
+    // Optional callback
+    cb
+  );
+}
+
 async.series(
-  [(cb) => emptyCollections([User, ProfilePicture], cb), createUsers],
+  [
+    (cb) => emptyCollections([User, ProfilePicture, Friendship], cb),
+    createUsers,
+    createFriendships,
+  ],
   // Optional callback
   (err) => {
     if (err) {
