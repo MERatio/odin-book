@@ -68,7 +68,7 @@ describe('update', () => {
 	describe('body has err property', () => {
 		test('if JWT is not valid or not supplied', (done) => {
 			request(app)
-				.put(`/picture/${user1PictureId}`)
+				.put(`/pictures/${user1PictureId}`)
 				.attach('picture', `test/images/${userPicture1}`)
 				.set('Accept', 'application/json')
 				.expect('Content-Type', /json/)
@@ -78,7 +78,7 @@ describe('update', () => {
 
 		test('if pictureId route parameter is not valid', (done) => {
 			request(app)
-				.put(`/picture/${user1PictureId + '123'}`)
+				.put(`/pictures/${user1PictureId + '123'}`)
 				.attach('picture', `test/images/${userPicture1}`)
 				.set('Accept', 'application/json')
 				.set('Authorization', `Bearer ${user1Jwt}`)
@@ -90,7 +90,7 @@ describe('update', () => {
 		test('if picture does not exists', (done) => {
 			request(app)
 				.put(
-					`/picture/${user1Id.substring(0, user1Id.length - 3) + '123'}`
+					`/pictures/${user1Id.substring(0, user1Id.length - 3) + '123'}`
 				)
 				.attach('picture', `test/images/${userPicture1}`)
 				.set('Accept', 'application/json')
@@ -132,7 +132,7 @@ describe('update', () => {
 				.expect(200);
 
 			request(app)
-				.put(`/picture/${user1PictureId}`)
+				.put(`/pictures/${user1PictureId}`)
 				.attach('picture', `test/images/${userPicture1}`)
 				.set('Accept', 'application/json')
 				.set('Authorization', `Bearer ${user2Jwt}`)
@@ -149,7 +149,7 @@ describe('update', () => {
 		describe('if picture', () => {
 			test('has invalid extention. File with invalid file type should not be saved', async (done) => {
 				await request(app)
-					.put(`/picture/${user1PictureId}`)
+					.put(`/pictures/${user1PictureId}`)
 					.attach('picture', 'test/files/dummyJson.json')
 					.set('Accept', 'application/json')
 					.set('Authorization', `Bearer ${user1Jwt}`)
@@ -171,7 +171,7 @@ describe('update', () => {
 
 	it("should add the user's picture if there's no old picture, and body has picture property", async (done) => {
 		await request(app)
-			.put(`/picture/${user1PictureId}`)
+			.put(`/pictures/${user1PictureId}`)
 			.attach('picture', `test/images/${userPicture1}`)
 			.set('Accept', 'application/json')
 			.set('Authorization', `Bearer ${user1Jwt}`)
@@ -192,7 +192,7 @@ describe('update', () => {
 	it("should delete the old picture if there's any and if picture is successfully updated. And body has picture property", async (done) => {
 		// Add first picture
 		await request(app)
-			.put(`/picture/${user1PictureId}`)
+			.put(`/pictures/${user1PictureId}`)
 			.attach('picture', `test/images/${userPicture1}`)
 			.set('Accept', 'application/json')
 			.set('Authorization', `Bearer ${user1Jwt}`)
@@ -211,7 +211,7 @@ describe('update', () => {
 
 		// Update picture
 		await request(app)
-			.put(`/picture/${user1PictureId}`)
+			.put(`/pictures/${user1PictureId}`)
 			.attach('picture', `test/images/${userPicture2}`)
 			.set('Accept', 'application/json')
 			.set('Authorization', `Bearer ${user1Jwt}`)
@@ -232,7 +232,7 @@ describe('update', () => {
 
 	it('should update picture if picture origin is Facebook. And body has picture property', async (done) => {
 		await request(app)
-			.put(`/picture/${user1PictureId}`)
+			.put(`/pictures/${user1PictureId}`)
 			.attach('picture', `test/images/${userPicture1}`)
 			.set('Accept', 'application/json')
 			.set('Authorization', `Bearer ${user1Jwt}`)

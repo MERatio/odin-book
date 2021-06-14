@@ -893,7 +893,7 @@ describe('destroy', () => {
 	it('should remove the post and its picture, and body should have a post property', async (done) => {
 		// Add post's picture
 		await request(app)
-			.put(`/picture/${user2Post1Picture1Id}`)
+			.put(`/pictures/${user2Post1Picture1Id}`)
 			.attach('picture', `test/images/${post1Picture}`)
 			.set('Accept', 'application/json')
 			.set('Authorization', `Bearer ${user2Jwt}`)

@@ -81,7 +81,7 @@ app.get(['/users', '/posts'], (req, res, next) => {
 // Use routers
 app.use('/auth', authRouter);
 app.use('/users', usersRouter);
-app.use('/picture', picturesRouter);
+app.use('/pictures', picturesRouter);
 app.use('/friendships', friendshipsRouter);
 app.use('/posts', postsRouter);
 app.use('/posts/:postId/reactions', reactionsRouter);
