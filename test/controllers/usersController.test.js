@@ -1,8 +1,15 @@
-const path = require('path');
 const fsPromises = require('fs/promises');
 const request = require('supertest');
 const app = require('../../app');
 const mongoConfigTesting = require('../../configs/mongoConfigTesting');
+const {
+	imagesPath,
+	testImagesPath,
+	testFilesPath,
+	userPicture1,
+	json1,
+} = require('../variables');
+const emptyDir = require('../lib/emptyDir');
 const {
 	bodyHasErrProperty,
 	bodyHasErrorsProperty,
@@ -16,10 +23,12 @@ const {
 
 let user1Id;
 let user1Jwt;
-const imagesPath = 'public/images';
-const userPicture1 = 'user-picture-1.jpg';
+let imagesDirFileInitialCount = 0;
 
-beforeAll(async () => await mongoConfigTesting.connect());
+beforeAll(async () => {
+	await mongoConfigTesting.connect();
+	imagesDirFileInitialCount = (await fsPromises.readdir(imagesPath)).length;
+});
 beforeEach(async () => {
 	await request(app)
 		.post('/users')
@@ -51,11 +60,7 @@ beforeEach(async () => {
 		.expect(200);
 });
 afterEach(async () => {
-	// Delete all files in public/images directory.
-	const files = await fsPromises.readdir(imagesPath);
-	for (const file of files) {
-		await fsPromises.unlink(path.join(imagesPath, file));
-	}
+	await emptyDir(imagesPath, ['user.jpg', 'post.jpg']);
 	await mongoConfigTesting.clear();
 });
 afterAll(async () => await mongoConfigTesting.close());
@@ -359,7 +364,7 @@ describe('create', () => {
 				.field('email', 'user2@example.com')
 				.field('password', 'password123')
 				.field('passwordConfirmation', 'password123')
-				.attach('picture', `test/images/${userPicture1}`)
+				.attach('picture', `${testImagesPath}/${userPicture1}`)
 				.set('Accept', 'application/json')
 				.expect('Content-Type', /json/)
 				.expect(bodyHasErrorsProperty)
@@ -368,7 +373,11 @@ describe('create', () => {
 			// Verify that the valid picture is not saved because of form texts errors.
 			try {
 				const files = await fsPromises.readdir(imagesPath);
-				expect(files.length).toBe(0);
+				expect(files.length).toBe(imagesDirFileInitialCount);
+				const isNewFileSaved = files.some((file) =>
+					file.includes(userPicture1)
+				);
+				expect(isNewFileSaved).toBe(false);
 				done();
 			} catch (err) {
 				done(err);
@@ -383,15 +392,13 @@ describe('create', () => {
 				.field('email', 'user2@example.com')
 				.field('password', 'password123')
 				.field('passwordConfirmation', 'password123')
-				.attach('picture', `test/files/dummyJson.json`)
+				.attach('picture', `${testFilesPath}/${json1}`)
 				.set('Accept', 'application/json')
 				.expect('Content-Type', /json/)
 				.expect(bodyHasErrorsProperty)
 				.expect((res) => {
 					if (res.body.errors.length !== 2) {
-						throw new Error(
-							'Should have picture and form texts errors.'
-						);
+						throw new Error('Should have picture and form texts errors.');
 					}
 				})
 				.expect(bodyHasUserProperty)
@@ -399,7 +406,9 @@ describe('create', () => {
 			// Verify that the invalid picture is not saved because of image and form texts errors.
 			try {
 				const files = await fsPromises.readdir(imagesPath);
-				expect(files.length).toBe(0);
+				expect(files.length).toBe(imagesDirFileInitialCount);
+				const isNewFileSaved = files.some((file) => file.includes(json1));
+				expect(isNewFileSaved).toBe(false);
 				done();
 			} catch (err) {
 				done(err);
@@ -575,7 +584,7 @@ describe('create', () => {
 					.field('email', 'invalidUser@example.com')
 					.field('password', 'password123')
 					.field('passwordConfirmation', 'password123')
-					.attach('picture', 'test/files/dummyJson.json')
+					.attach('picture', `${testFilesPath}/${json1}`)
 					.set('Accept', 'application/json')
 					.expect('Content-Type', /json/)
 					.expect(bodyHasErrorsProperty)
@@ -584,7 +593,9 @@ describe('create', () => {
 				// Verify that the file with invalid file type is not saved.
 				try {
 					const files = await fsPromises.readdir(imagesPath);
-					expect(files.length).toBe(0);
+					expect(files.length).toBe(imagesDirFileInitialCount);
+					const isNewFileSaved = files.some((file) => file.includes(json1));
+					expect(isNewFileSaved).toBe(false);
 					done();
 				} catch (err) {
 					done(err);
@@ -642,7 +653,7 @@ describe('create', () => {
 				.field('email', 'user2@example.com')
 				.field('password', 'password123')
 				.field('passwordConfirmation', 'password123')
-				.attach('picture', `test/images/${userPicture1}`)
+				.attach('picture', `${testImagesPath}/${userPicture1}`)
 				.set('Accept', 'application/json')
 				.expect('Content-Type', /json/)
 				.expect(bodyHasUserProperty)
@@ -651,8 +662,11 @@ describe('create', () => {
 			// Verify that public/images directory now have the recent picture.
 			try {
 				const files = await fsPromises.readdir(imagesPath);
-				expect(files.length).toBe(1);
-				expect(files[0].split('.')[1] === 'jpg');
+				expect(files.length).toBe(imagesDirFileInitialCount + 1);
+				const isNewFileSaved = files.some((file) =>
+					file.includes(userPicture1)
+				);
+				expect(isNewFileSaved).toBe(true);
 				done();
 			} catch (err) {
 				done(err);

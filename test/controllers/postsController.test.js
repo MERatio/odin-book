@@ -1,10 +1,17 @@
-const path = require('path');
 const fsPromises = require('fs/promises');
 const request = require('supertest');
 const app = require('../../app');
 const Reaction = require('../../models/reaction');
 const Comment = require('../../models/comment');
 const mongoConfigTesting = require('../../configs/mongoConfigTesting');
+const {
+	imagesPath,
+	testImagesPath,
+	testFilesPath,
+	postPicture1,
+	json1,
+} = require('../variables');
+const emptyDir = require('../lib/emptyDir');
 const {
 	bodyHasErrProperty,
 	bodyHasErrorsProperty,
@@ -31,11 +38,13 @@ let user2Post1Picture1Id;
 let user2Post1Reaction1Id;
 let user2Post1Comment4Id;
 let indexPostsCount = 0;
-const imagesPath = 'public/images';
-const post1Picture = 'post-picture-1.jpg';
 const updatedUser1PostText = 'updatedUser1Post1Text';
+let imagesDirFileInitialCount = 0;
 
-beforeAll(async () => await mongoConfigTesting.connect());
+beforeAll(async () => {
+	await mongoConfigTesting.connect();
+	imagesDirFileInitialCount = (await fsPromises.readdir(imagesPath)).length;
+});
 beforeEach(async () => {
 	await request(app)
 		.post('/users')
@@ -195,11 +204,7 @@ beforeEach(async () => {
 });
 afterEach(async () => {
 	indexPostsCount = 0;
-	// Delete all files in public/images directory.
-	const files = await fsPromises.readdir(imagesPath);
-	for (const file of files) {
-		await fsPromises.unlink(path.join(imagesPath, file));
-	}
+	await emptyDir(imagesPath, ['user.jpg', 'post.jpg']);
 	await mongoConfigTesting.clear();
 });
 afterAll(async () => await mongoConfigTesting.close());
@@ -447,16 +452,20 @@ describe('create', () => {
 			await request(app)
 				.post('/posts')
 				.field({ text: '' })
-				.attach('picture', `test/images/${post1Picture}`)
+				.attach('picture', `${testImagesPath}/${postPicture1}`)
 				.set('Accept', 'application/json')
 				.set('Authorization', `Bearer ${user1Jwt}`)
 				.expect('Content-Type', /json/)
 				.expect(bodyHasPostProperty)
 				.expect(422);
-			// Verify that the valid imqge is not saved because of form texts errors.
+			// Verify that the valid image is not saved because of form texts errors.
 			try {
 				const files = await fsPromises.readdir(imagesPath);
-				expect(files.length).toBe(0);
+				expect(files.length).toBe(imagesDirFileInitialCount);
+				const isNewFileSaved = files.some((file) =>
+					file.includes(postPicture1)
+				);
+				expect(isNewFileSaved).toBe(false);
 				done();
 			} catch (err) {
 				done(err);
@@ -467,7 +476,7 @@ describe('create', () => {
 			await request(app)
 				.post('/posts')
 				.field({ text: '' })
-				.attach('picture', `test/files/dummyJson.json`)
+				.attach('picture', `${testFilesPath}/${json1}`)
 				.set('Accept', 'application/json')
 				.set('Authorization', `Bearer ${user1Jwt}`)
 				.expect('Content-Type', /json/)
@@ -482,7 +491,9 @@ describe('create', () => {
 			// Verify that the invalid picture is not saved because of picture and form texts errors.
 			try {
 				const files = await fsPromises.readdir(imagesPath);
-				expect(files.length).toBe(0);
+				expect(files.length).toBe(imagesDirFileInitialCount);
+				const isNewFileSaved = files.some((file) => file.includes(json1));
+				expect(isNewFileSaved).toBe(false);
 				done();
 			} catch (err) {
 				done(err);
@@ -541,7 +552,7 @@ describe('create', () => {
 				await request(app)
 					.post('/posts')
 					.field({ text: 'hello world' })
-					.attach('picture', 'test/files/dummyJson.json')
+					.attach('picture', `${testFilesPath}/${json1}`)
 					.set('Accept', 'application/json')
 					.set('Authorization', `Bearer ${user1Jwt}`)
 					.expect('Content-Type', /json/)
@@ -551,7 +562,9 @@ describe('create', () => {
 				// Verify that the file with invalid file type is not saved.
 				try {
 					const files = await fsPromises.readdir(imagesPath);
-					expect(files.length).toBe(0);
+					expect(files.length).toBe(imagesDirFileInitialCount);
+					const isNewFileSaved = files.some((file) => file.includes(json1));
+					expect(isNewFileSaved).toBe(false);
 					done();
 				} catch (err) {
 					done(err);
@@ -566,7 +579,7 @@ describe('create', () => {
 			await request(app)
 				.post('/posts')
 				.field({ text: 'valid post' })
-				.attach('picture', `test/images/${post1Picture}`)
+				.attach('picture', `${testImagesPath}/${postPicture1}`)
 				.set('Accept', 'application/json')
 				.set('Authorization', `Bearer ${user1Jwt}`)
 				.expect('Content-Type', /json/)
@@ -575,8 +588,11 @@ describe('create', () => {
 			// Verify that public/images directory now have the recent picture.
 			try {
 				const files = await fsPromises.readdir(imagesPath);
-				expect(files.length).toBe(1);
-				expect(files[0].split('.')[1] === 'jpg');
+				expect(files.length).toBe(imagesDirFileInitialCount + 1);
+				const isNewFileSaved = files.some((file) =>
+					file.includes(postPicture1)
+				);
+				expect(isNewFileSaved).toBe(true);
 				done();
 			} catch (err) {
 				done(err);
@@ -894,7 +910,7 @@ describe('destroy', () => {
 		// Add post's picture
 		await request(app)
 			.put(`/pictures/${user2Post1Picture1Id}`)
-			.attach('picture', `test/images/${post1Picture}`)
+			.attach('picture', `${testImagesPath}/${postPicture1}`)
 			.set('Accept', 'application/json')
 			.set('Authorization', `Bearer ${user2Jwt}`)
 			.expect('Content-Type', /json/)
@@ -904,8 +920,9 @@ describe('destroy', () => {
 		// Verify that public/images directory now have the recent picture.
 		try {
 			const files = await fsPromises.readdir(imagesPath);
-			expect(files.length).toBe(1);
-			expect(files[0].split('.')[1] === 'jpg');
+			expect(files.length).toBe(imagesDirFileInitialCount + 1);
+			const isNewFileSaved = files.some((file) => file.includes(postPicture1));
+			expect(isNewFileSaved).toBe(true);
 		} catch (err) {
 			done(err);
 		}
@@ -926,7 +943,9 @@ describe('destroy', () => {
 		// Verify that post's picture is deleted.
 		try {
 			const files = await fsPromises.readdir(imagesPath);
-			expect(files.length).toBe(0);
+			expect(files.length).toBe(imagesDirFileInitialCount);
+			const isOldFileSaved = files.some((file) => file.includes(postPicture1));
+			expect(isOldFileSaved).toBe(false);
 		} catch (err) {
 			done(err);
 		}

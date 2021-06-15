@@ -1,8 +1,16 @@
-const path = require('path');
 const fsPromises = require('fs/promises');
 const request = require('supertest');
 const app = require('../../app');
 const mongoConfigTesting = require('../../configs/mongoConfigTesting');
+const {
+	imagesPath,
+	testImagesPath,
+	testFilesPath,
+	userPicture1,
+	userPicture2,
+	json1,
+} = require('../variables');
+const emptyDir = require('../lib/emptyDir');
 const {
 	bodyHasErrProperty,
 	bodyHasErrorsProperty,
@@ -15,11 +23,12 @@ const {
 let user1Id;
 let user1Jwt;
 let user1PictureId;
-const imagesPath = 'public/images';
-const userPicture1 = 'user-picture-1.jpg';
-const userPicture2 = 'user-picture-2.png';
+let imagesDirFileInitialCount = 0;
 
-beforeAll(async () => await mongoConfigTesting.connect());
+beforeAll(async () => {
+	await mongoConfigTesting.connect();
+	imagesDirFileInitialCount = (await fsPromises.readdir(imagesPath)).length;
+});
 beforeEach(async () => {
 	await request(app)
 		.post('/users')
@@ -54,11 +63,7 @@ beforeEach(async () => {
 		.expect(200);
 });
 afterEach(async () => {
-	// Delete all files in public/images directory.
-	const files = await fsPromises.readdir(imagesPath);
-	for (const file of files) {
-		await fsPromises.unlink(path.join(imagesPath, file));
-	}
+	await emptyDir(imagesPath, ['user.jpg', 'post.jpg']);
 	await mongoConfigTesting.clear();
 });
 afterAll(async () => await mongoConfigTesting.close());
@@ -69,7 +74,7 @@ describe('update', () => {
 		test('if JWT is not valid or not supplied', (done) => {
 			request(app)
 				.put(`/pictures/${user1PictureId}`)
-				.attach('picture', `test/images/${userPicture1}`)
+				.attach('picture', `${testImagesPath}/${userPicture1}`)
 				.set('Accept', 'application/json')
 				.expect('Content-Type', /json/)
 				.expect(bodyHasErrProperty)
@@ -79,7 +84,7 @@ describe('update', () => {
 		test('if pictureId route parameter is not valid', (done) => {
 			request(app)
 				.put(`/pictures/${user1PictureId + '123'}`)
-				.attach('picture', `test/images/${userPicture1}`)
+				.attach('picture', `${testImagesPath}/${userPicture1}`)
 				.set('Accept', 'application/json')
 				.set('Authorization', `Bearer ${user1Jwt}`)
 				.expect('Content-Type', /json/)
@@ -89,10 +94,8 @@ describe('update', () => {
 
 		test('if picture does not exists', (done) => {
 			request(app)
-				.put(
-					`/pictures/${user1Id.substring(0, user1Id.length - 3) + '123'}`
-				)
-				.attach('picture', `test/images/${userPicture1}`)
+				.put(`/pictures/${user1Id.substring(0, user1Id.length - 3) + '123'}`)
+				.attach('picture', `${testImagesPath}/${userPicture1}`)
 				.set('Accept', 'application/json')
 				.set('Authorization', `Bearer ${user1Jwt}`)
 				.expect('Content-Type', /json/)
@@ -133,7 +136,7 @@ describe('update', () => {
 
 			request(app)
 				.put(`/pictures/${user1PictureId}`)
-				.attach('picture', `test/images/${userPicture1}`)
+				.attach('picture', `${testImagesPath}/${userPicture1}`)
 				.set('Accept', 'application/json')
 				.set('Authorization', `Bearer ${user2Jwt}`)
 				.expect('Content-Type', /json/)
@@ -150,7 +153,7 @@ describe('update', () => {
 			test('has invalid extention. File with invalid file type should not be saved', async (done) => {
 				await request(app)
 					.put(`/pictures/${user1PictureId}`)
-					.attach('picture', 'test/files/dummyJson.json')
+					.attach('picture', `${testFilesPath}/${json1}`)
 					.set('Accept', 'application/json')
 					.set('Authorization', `Bearer ${user1Jwt}`)
 					.expect('Content-Type', /json/)
@@ -160,7 +163,9 @@ describe('update', () => {
 				// Verify that the file with invalid file type is not saved.
 				try {
 					const files = await fsPromises.readdir(imagesPath);
-					expect(files.length).toBe(0);
+					expect(files.length).toBe(imagesDirFileInitialCount);
+					const isNewFileSaved = files.some((file) => file.includes(json1));
+					expect(isNewFileSaved).toBe(false);
 					done();
 				} catch (err) {
 					done(err);
@@ -169,10 +174,10 @@ describe('update', () => {
 		});
 	});
 
-	it("should add the user's picture if there's no old picture, and body has picture property", async (done) => {
+	it("should add the user's picture if there's no old local picture, and body has picture property", async (done) => {
 		await request(app)
 			.put(`/pictures/${user1PictureId}`)
-			.attach('picture', `test/images/${userPicture1}`)
+			.attach('picture', `${testImagesPath}/${userPicture1}`)
 			.set('Accept', 'application/json')
 			.set('Authorization', `Bearer ${user1Jwt}`)
 			.expect('Content-Type', /json/)
@@ -181,19 +186,20 @@ describe('update', () => {
 		// Verify that public/images directory now have the recent user picture.
 		try {
 			const files = await fsPromises.readdir(imagesPath);
-			expect(files.length).toBe(1);
-			expect(files[0].split('.')[1] === 'jpg');
+			expect(files.length).toBe(imagesDirFileInitialCount + 1);
+			const isNewFileSaved = files.some((file) => file.includes(userPicture1));
+			expect(isNewFileSaved).toBe(true);
 			done();
 		} catch (err) {
 			done(err);
 		}
 	});
 
-	it("should delete the old picture if there's any and if picture is successfully updated. And body has picture property", async (done) => {
+	it("should update user's picture and deleted the old picture. And body has picture property", async (done) => {
 		// Add first picture
 		await request(app)
 			.put(`/pictures/${user1PictureId}`)
-			.attach('picture', `test/images/${userPicture1}`)
+			.attach('picture', `${testImagesPath}/${userPicture1}`)
 			.set('Accept', 'application/json')
 			.set('Authorization', `Bearer ${user1Jwt}`)
 			.expect('Content-Type', /json/)
@@ -203,16 +209,17 @@ describe('update', () => {
 		// Verify first picture of the user.
 		try {
 			const files = await fsPromises.readdir(imagesPath);
-			expect(files.length).toBe(1);
-			expect(files[0].split('.')[1] === 'jpg');
+			expect(files.length).toBe(imagesDirFileInitialCount + 1);
+			const isNewFileSaved = files.some((file) => file.includes(userPicture1));
+			expect(isNewFileSaved).toBe(true);
 		} catch (err) {
 			done(err);
 		}
 
-		// Update picture
+		// Update picture.
 		await request(app)
 			.put(`/pictures/${user1PictureId}`)
-			.attach('picture', `test/images/${userPicture2}`)
+			.attach('picture', `${testImagesPath}/${userPicture2}`)
 			.set('Accept', 'application/json')
 			.set('Authorization', `Bearer ${user1Jwt}`)
 			.expect('Content-Type', /json/)
@@ -222,30 +229,55 @@ describe('update', () => {
 		// Verify that the old picture is deleted. And new one is saved.
 		try {
 			const files = await fsPromises.readdir(imagesPath);
-			expect(files.length).toBe(1);
-			expect(files[0].split('.')[1] === 'png');
+			expect(files.length).toBe(imagesDirFileInitialCount + 1);
+			const isOldFileSaved = files.some((file) => file.includes(userPicture1));
+			expect(isOldFileSaved).toBe(false);
+			const isNewFileSaved = files.some((file) => file.includes(userPicture2));
+			expect(isNewFileSaved).toBe(true);
 			done();
 		} catch (err) {
 			done(err);
 		}
 	});
 
-	it('should update picture if picture origin is Facebook. And body has picture property', async (done) => {
+	it("should update user's picture if old picture is not local. And body has picture property", async (done) => {
+		let facebookUser1Jwt;
+		let facebookUser1PictureId;
+
+		// Creates user using their Facebook data.
+		// Picture document is created on User creation.
 		await request(app)
-			.put(`/pictures/${user1PictureId}`)
-			.attach('picture', `test/images/${userPicture1}`)
+			.post('/auth/facebook')
+			.send({
+				userAccessToken: process.env.FACEBOOK_USER_ACCESS_TOKEN,
+			})
 			.set('Accept', 'application/json')
-			.set('Authorization', `Bearer ${user1Jwt}`)
+			.expect('Content-Type', /json/)
+			.expect(bodyHasJwtProperty)
+			.expect(bodyHasCurrentUserProperty)
+			.expect((res) => {
+				facebookUser1Jwt = res.body.jwt;
+				facebookUser1PictureId = res.body.currentUser.picture._id;
+			})
+			.expect(201);
+
+		// Update picture.
+		await request(app)
+			.put(`/pictures/${facebookUser1PictureId}`)
+			.attach('picture', `${testImagesPath}/${userPicture1}`)
+			.set('Accept', 'application/json')
+			.set('Authorization', `Bearer ${facebookUser1Jwt}`)
 			.expect('Content-Type', /json/)
 			.expect(bodyHasPictureProperty)
 			.expect(200);
 
-		// Verify that public/images directory now have the recent user picture.
+		// Verify that the new picture is saved.
 		try {
 			const files = await fsPromises.readdir(imagesPath);
-			expect(files.length).toBe(1);
-			expect(files[0].split('.')[1] === 'jpg');
-			done()
+			expect(files.length).toBe(imagesDirFileInitialCount + 1);
+			const isNewFileSaved = files.some((file) => file.includes(userPicture1));
+			expect(isNewFileSaved).toBe(true);
+			done();
 		} catch (err) {
 			done(err);
 		}

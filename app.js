@@ -1,7 +1,6 @@
 require('dotenv').config();
 
 const path = require('path');
-const fs = require('fs');
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -10,12 +9,6 @@ const compression = require('compression');
 const paginate = require('express-paginate');
 const passportConfig = require('./configs/passportConfig');
 const setCurrentUser = require('./middlewares/setCurrentUser');
-
-fs.mkdir('public/images', { recursive: true }, (err) => {
-	if (err) {
-		throw err;
-	}
-});
 
 const app = express();
 
