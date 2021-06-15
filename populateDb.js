@@ -21,7 +21,7 @@ const faker = require('faker');
 
 // Model
 const User = require('./models/user');
-const ProfilePicture = require('./models/profilePicture');
+const Picture = require('./models/picture');
 const Friendship = require('./models/friendship');
 
 // Set up default mongoose connection
@@ -57,14 +57,15 @@ function createUsers(cb) {
   ) {
     try {
       let user = new User({ firstName, lastName, email, password });
-      let profilePicture = new ProfilePicture({
+      let picture = new Picture({
+        ofModel: 'User',
         filename: '',
-        origin: 'local',
+        isLocal: true,
       });
-      user.profilePicture = profilePicture._id;
-      profilePicture.user = user._id;
+      user.picture = picture._id;
+      picture.of = user._id;
       user = await user.save();
-      profilePicture = await profilePicture.save();
+      picture = await picture.save();
       console.log('New User: ' + user);
       users.push(user);
       cb(null, user);
@@ -149,7 +150,7 @@ function createFriendships(cb) {
 
 async.series(
   [
-    (cb) => emptyCollections([User, ProfilePicture, Friendship], cb),
+    (cb) => emptyCollections([User, Picture, Friendship], cb),
     createUsers,
     createFriendships,
   ],
