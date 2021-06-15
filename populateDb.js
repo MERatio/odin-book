@@ -31,6 +31,7 @@ mongoose.Promise = global.Promise;
 const db = mongoose.connection;
 db.on('error', console.error.bind(console, 'MongoDB connection error:'));
 
+let nonMassCreatedUserCount = 0;
 const users = [];
 
 async function emptyCollections(models, cb) {
@@ -53,19 +54,19 @@ function createUsers(cb) {
     lastName,
     email,
     password,
+    picture,
     cb
   ) {
     try {
-      let user = new User({ firstName, lastName, email, password });
-      let picture = new Picture({
-        ofModel: 'User',
-        filename: '',
-        isLocal: true,
+      const user = await User.create({
+        firstName,
+        lastName,
+        email,
+        password,
+        picture,
       });
-      user.picture = picture._id;
       picture.of = user._id;
-      user = await user.save();
-      picture = await picture.save();
+      await picture.save();
       console.log('New User: ' + user);
       users.push(user);
       cb(null, user);
@@ -78,26 +79,57 @@ function createUsers(cb) {
     const hashedPassword = bcrypt.hashSync('password123', 10);
     const tasks = [
       (callback) => {
+        const picture = new Picture({
+          ofModel: 'User',
+          filename: 'user.jpg',
+          isLocal: true,
+        });
         createUser(
           'local',
           'John',
           'Doe',
           'johndoe@example.com',
           hashedPassword,
+          picture,
           callback
         );
+        nonMassCreatedUserCount += 1;
+      },
+      (callback) => {
+        const picture = new Picture({
+          ofModel: 'User',
+          filename: faker.image.avatar(),
+          isLocal: false,
+        });
+        createUser(
+          'local',
+          'Jane',
+          'Doe',
+          'janedoe@example.com',
+          hashedPassword,
+          picture,
+          callback
+        );
+        nonMassCreatedUserCount += 1;
       },
     ];
     for (let i = 0; i < 10; i++) {
       tasks.push((callback) => {
         const firstName = faker.name.firstName();
         const lastName = faker.name.lastName();
+        const isIEven = i % 2 === 0;
+        const picture = new Picture({
+          ofModel: 'User',
+          filename: isIEven ? 'user.jpg' : faker.image.avatar(),
+          isLocal: isIEven,
+        });
         createUser(
           'local',
           firstName,
           lastName,
           `${firstName + lastName}@example.com`.toLowerCase(),
           hashedPassword,
+          picture,
           callback
         );
       });
@@ -133,7 +165,7 @@ function createFriendships(cb) {
 
   function createTasks() {
     const tasks = [];
-    for (let i = 1; i < users.length; i++) {
+    for (let i = nonMassCreatedUserCount; i < users.length; i++) {
       tasks.push((callback) => {
         createFriendship(users[0], users[i], 'friends', callback);
       });
