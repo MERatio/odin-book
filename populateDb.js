@@ -23,6 +23,7 @@ const faker = require('faker');
 const User = require('./models/user');
 const Picture = require('./models/picture');
 const Friendship = require('./models/friendship');
+const Post = require('./models/post');
 
 // Set up default mongoose connection
 const mongoDB = userArgs[0];
@@ -180,11 +181,71 @@ function createFriendships(cb) {
   );
 }
 
+function createPosts(cb) {
+  async function createPost(author, text, picture, cb) {
+    try {
+      const post = await Post.create({
+        author,
+        text,
+        picture,
+      });
+      picture.of = post._id;
+      await picture.save();
+      author.posts.push(post._id);
+      await author.save();
+      console.log('New Post: ' + post);
+      cb(null, post);
+    } catch (err) {
+      cb(err, null);
+    }
+  }
+
+  function createTasks() {
+    const tasks = [
+      (callback) => {
+        const picture = new Picture({
+          ofModel: 'Post',
+          filename: 'post.jpg',
+          isLocal: true,
+        });
+        createPost(users[0], faker.lorem.paragraph(), picture, callback);
+      },
+      (callback) => {
+        const picture = new Picture({
+          ofModel: 'Post',
+          filename: faker.image.image(),
+          isLocal: false,
+        });
+        createPost(users[1], faker.lorem.paragraph(), picture, callback);
+      },
+    ];
+    for (let i = nonMassCreatedUserCount; i < users.length; i++) {
+      tasks.push((callback) => {
+        const isIEven = i % 2 === 0;
+        const picture = new Picture({
+          ofModel: 'Post',
+          filename: isIEven ? 'post.jpg' : faker.image.image(),
+          isLocal: isIEven,
+        });
+        createPost(users[i], faker.lorem.paragraph(), picture, callback);
+      });
+    }
+    return tasks;
+  }
+
+  async.series(
+    createTasks(),
+    // Optional callback
+    cb
+  );
+}
+
 async.series(
   [
-    (cb) => emptyCollections([User, Picture, Friendship], cb),
+    (cb) => emptyCollections([User, Picture, Friendship, Post], cb),
     createUsers,
     createFriendships,
+    createPosts,
   ],
   // Optional callback
   (err) => {
