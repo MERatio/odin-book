@@ -25,6 +25,7 @@ const Picture = require('./models/picture');
 const Friendship = require('./models/friendship');
 const Post = require('./models/post');
 const Reaction = require('./models/reaction');
+const Comment = require('./models/comment');
 
 // Set up default mongoose connection
 const mongoDB = userArgs[0];
@@ -286,13 +287,61 @@ function createReactions(cb) {
   );
 }
 
+function createComments(cb) {
+  async function createComment(author, post, text, cb) {
+    try {
+      const comment = await Comment.create({
+        author,
+        post,
+        text,
+      });
+      author.comments.push(comment._id);
+      await author.save();
+      post.comments.push(comment._id);
+      await post.save();
+      console.log('New Comment: ' + comment);
+      cb(null, comment);
+    } catch (err) {
+      cb(err, null);
+    }
+  }
+
+  function createTasks() {
+    const tasks = [
+      (callback) => {
+        createComment(users[0], posts[1], faker.lorem.sentence(), callback);
+      },
+      (callback) => {
+        createComment(users[1], posts[0], faker.lorem.sentence(), callback);
+      },
+    ];
+    for (let i = nonMassCreatedUserCount; i < users.length; i++) {
+      tasks.push((callback) => {
+        createComment(users[i], posts[0], faker.lorem.sentence(), callback);
+      });
+    }
+    return tasks;
+  }
+
+  async.series(
+    createTasks(),
+    // Optional callback
+    cb
+  );
+}
+
 async.series(
   [
-    (cb) => emptyCollections([User, Picture, Friendship, Post, Reaction], cb),
+    (cb) =>
+      emptyCollections(
+        [User, Picture, Friendship, Post, Reaction, Comment],
+        cb
+      ),
     createUsers,
     createFriendships,
     createPosts,
     createReactions,
+    createComments,
   ],
   // Optional callback
   (err) => {
