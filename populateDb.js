@@ -24,6 +24,7 @@ const User = require('./models/user');
 const Picture = require('./models/picture');
 const Friendship = require('./models/friendship');
 const Post = require('./models/post');
+const Reaction = require('./models/reaction');
 
 // Set up default mongoose connection
 const mongoDB = userArgs[0];
@@ -34,6 +35,7 @@ db.on('error', console.error.bind(console, 'MongoDB connection error:'));
 
 let nonMassCreatedUserCount = 0;
 const users = [];
+const posts = [];
 
 async function emptyCollections(models, cb) {
   try {
@@ -194,6 +196,7 @@ function createPosts(cb) {
       author.posts.push(post._id);
       await author.save();
       console.log('New Post: ' + post);
+      posts.push(post);
       cb(null, post);
     } catch (err) {
       cb(err, null);
@@ -240,12 +243,56 @@ function createPosts(cb) {
   );
 }
 
+function createReactions(cb) {
+  async function createReaction(user, post, type, cb) {
+    try {
+      const reaction = await Reaction.create({
+        user,
+        post,
+        type,
+      });
+      user.reactions.push(reaction._id);
+      await user.save();
+      post.reactions.push(reaction._id);
+      await post.save();
+      console.log('New Reaction: ' + reaction);
+      cb(null, reaction);
+    } catch (err) {
+      cb(err, null);
+    }
+  }
+
+  function createTasks() {
+    const tasks = [
+      (callback) => {
+        createReaction(users[0], posts[1], 'like', callback);
+      },
+      (callback) => {
+        createReaction(users[1], posts[0], 'like', callback);
+      },
+    ];
+    for (let i = nonMassCreatedUserCount; i < users.length; i++) {
+      tasks.push((callback) => {
+        createReaction(users[i], posts[0], 'like', callback);
+      });
+    }
+    return tasks;
+  }
+
+  async.series(
+    createTasks(),
+    // Optional callback
+    cb
+  );
+}
+
 async.series(
   [
-    (cb) => emptyCollections([User, Picture, Friendship, Post], cb),
+    (cb) => emptyCollections([User, Picture, Friendship, Post, Reaction], cb),
     createUsers,
     createFriendships,
     createPosts,
+    createReactions,
   ],
   // Optional callback
   (err) => {
