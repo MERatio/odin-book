@@ -112,7 +112,7 @@ exports.create = [
 					await fsPromises.unlink(`public/images/${req.file.filename}`);
 				}
 				const multerErrInArray = req.multerErr
-					? [{ msg: req.multerErr.message }]
+					? [{ msg: req.multerErr.message, param: 'picture', location: 'body' }]
 					: [];
 				res.status(422).json({
 					errors: multerErrInArray.concat(errors.array()),

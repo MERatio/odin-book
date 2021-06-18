@@ -52,11 +52,15 @@ exports.update = [
 				if (req.multerErr) {
 					errors = errors.concat({
 						msg: req.multerErr.message,
+						param: 'picture',
+						location: 'body',
 					});
 				}
 				if (!req.file) {
 					errors = errors.concat({
 						msg: 'Upload a picture.',
+						param: 'picture',
+						location: 'body',
 					});
 				}
 				res.status(422).json({
