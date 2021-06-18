@@ -30,7 +30,7 @@ exports.index = [
 				.in(userIds)
 				.skip(req.skip)
 				.limit(req.query.limit)
-				.sort({ createdAt: -1 })
+				.sort({ updatedAt: -1 })
 				.populate('author picture reactions')
 				.exec();
 			const postsCount = await Post.countDocuments({
@@ -126,7 +126,7 @@ exports.show = [
 					path: 'comments',
 					populate: { path: 'author' },
 					options: {
-						sort: { createdAt: -1 },
+						sort: { updatedAt: -1 },
 					},
 				})
 				.exec();
