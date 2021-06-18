@@ -63,6 +63,7 @@ function createUsers(cb) {
   ) {
     try {
       const user = await User.create({
+        provider,
         firstName,
         lastName,
         email,
