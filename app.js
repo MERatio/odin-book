@@ -65,7 +65,7 @@ app.use(paginate.middleware(10, 50));
 	 This override paginate.middleware() first parameter.
 */
 app.get(['/users', '/posts'], (req, res, next) => {
-	if (req.query.limit < 9) {
+	if (req.query.limit < 10) {
 		req.query.limit = 10;
 	}
 	next();
