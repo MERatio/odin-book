@@ -25,7 +25,7 @@ exports.index = [
 			const friendsIds = friends.map((friend) => friend._id);
 			const userIds = [req.currentUser._id, ...friendsIds];
 			// currentUser and friends posts per page.
-			const posts = await Post.find({})
+			const currentPosts = await Post.find({})
 				.where('author')
 				.in(userIds)
 				.skip(req.skip)
@@ -33,10 +33,10 @@ exports.index = [
 				.sort({ updatedAt: -1 })
 				.populate('author picture reactions')
 				.exec();
-			const postsCount = await Post.countDocuments({
+			const totalPostsCount = await Post.countDocuments({
 				author: { $in: userIds },
 			}).exec();
-			res.json({ posts, postsCount });
+			res.json({ currentPosts, totalPostsCount });
 		} catch (err) {
 			next(err);
 		}
