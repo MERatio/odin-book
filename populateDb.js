@@ -224,6 +224,17 @@ function createPosts(cb) {
         createPost(users[1], faker.lorem.paragraph(), picture, callback);
       },
     ];
+    for (let i = 0; i < 10; i++) {
+      tasks.push((callback) => {
+        const isIEven = i % 2 === 0;
+        const picture = new Picture({
+          ofModel: 'Post',
+          filename: isIEven ? '' : faker.image.image(),
+          isLocal: isIEven,
+        });
+        createPost(users[0], faker.lorem.paragraph(), picture, callback);
+      });
+    }
     for (let i = nonMassCreatedUserCount; i < users.length; i++) {
       tasks.push((callback) => {
         const isIEven = i % 2 === 0;
