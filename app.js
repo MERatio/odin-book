@@ -6,7 +6,6 @@ const cors = require('cors');
 const helmet = require('helmet');
 const logger = require('morgan');
 const compression = require('compression');
-const paginate = require('express-paginate');
 const passportConfig = require('./configs/passportConfig');
 const setCurrentUser = require('./middlewares/setCurrentUser');
 
@@ -56,18 +55,29 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(compression()); // Compress all routes
 app.use(passportConfig.initialize({ userProperty: 'currentUser' }));
 app.use(setCurrentUser);
-/* First parameter is used if req.query.limit is not supplied. 
-	   Not a minimum value.
-	 Second parameter is max value of req.query.limit.
-*/
-app.use(paginate.middleware(10, 50));
-/* Set pagination default or minimum limit per page.
-	 This override paginate.middleware() first parameter.
-*/
-app.get(['/users', '/posts'], (req, res, next) => {
-	if (req.query.limit < 10) {
-		req.query.limit = 10;
+
+function setPaginationVariables(req, pageName, limitName, skipName) {
+	const page = parseInt(req.query[pageName], 10);
+	const limit = parseInt(req.query[limitName], 10);
+
+	if (isNaN(page) || page < 1) {
+		req.query[pageName] = 1;
+	} else {
+		req.query[pageName] = page;
 	}
+
+	if (isNaN(limit) || limit < 10) {
+		req.query[limitName] = 10;
+	} else if (limit > 50) {
+		req.query[limitName] = 50;
+	} else {
+		req.query[limitName] = limit;
+	}
+
+	req[skipName] = (req.query[pageName] - 1) * req.query[limitName];
+}
+app.get(['/users', '/posts'], (req, res, next) => {
+	setPaginationVariables(req, 'page', 'limit', 'skip');
 	next();
 });
 
