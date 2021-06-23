@@ -23,24 +23,4 @@ const ReactionSchema = new Schema(
 	}
 );
 
-// Remove the reaction._id from user's and post's reactions.
-ReactionSchema.pre('remove', async function (next) {
-	try {
-		const user = await mongoose
-			.model('User')
-			.findById(this.user._id || this.user)
-			.exec();
-		const post = await mongoose
-			.model('Post')
-			.findById(this.post._id || this.post)
-			.exec();
-		user.reactions.pull({ _id: this._id });
-		await user.save();
-		post.reactions.pull({ _id: this._id });
-		await post.save();
-	} catch (err) {
-		next(err);
-	}
-});
-
 module.exports = mongoose.model('Reaction', ReactionSchema);

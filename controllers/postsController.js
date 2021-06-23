@@ -31,7 +31,6 @@ exports.index = [
 				.skip(req.skip)
 				.limit(req.query.limit)
 				.sort({ updatedAt: -1 })
-				.populate('author picture reactions')
 				.exec();
 			const totalPostsCount = await Post.countDocuments({
 				author: { $in: userIds },
@@ -75,33 +74,21 @@ exports.create = [
 				});
 			} else {
 				// Data is valid.
-				// Create an Post object with escaped and trimmed data.
-				const post = new Post({
-					author: req.currentUser._id,
-					text: req.body.text,
-				});
 				const picture = new Picture({
 					ofModel: 'Post',
 					filename: req.file ? req.file.filename : '',
 					isLocal: true,
 				});
-				post.picture = picture._id;
-				picture.of = post._id;
-				await post.save();
-				await picture.save();
-				req.currentUser.posts.push(post._id);
-				req.currentUser.save((err) => {
-					if (err) {
-						post.remove((err) => {
-							if (err) {
-								throw err;
-							}
-						});
-						throw err;
-					} else {
-						res.status(201).json({ post });
-					}
+				// Create an Post object with escaped and trimmed data.
+				const post = new Post({
+					author: req.currentUser._id,
+					text: req.body.text,
 				});
+				picture.of = post._id;
+				post.picture = picture._id;
+				await picture.save();
+				await post.save();
+				res.status(201).json({ post });
 			}
 		} catch (err) {
 			// If there's an uploaded picture delete it.
@@ -120,16 +107,7 @@ exports.show = [
 	validMongoObjectIdRouteParams,
 	async (req, res, next) => {
 		try {
-			const post = await Post.findById(req.params.postId)
-				.populate('author picture reactions')
-				.populate({
-					path: 'comments',
-					populate: { path: 'author' },
-					options: {
-						sort: { updatedAt: -1 },
-					},
-				})
-				.exec();
+			const post = await Post.findById(req.params.postId).exec();
 			if (post === null) {
 				const err = new Error('Page not found');
 				err.status = 404;

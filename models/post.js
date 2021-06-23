@@ -4,40 +4,32 @@ const Schema = mongoose.Schema;
 
 const PostSchema = new Schema(
 	{
-		author: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+		author: {
+			type: Schema.Types.ObjectId,
+			ref: 'User',
+			required: true,
+			autopopulate: true,
+		},
 		text: { type: String, required: true, maxlength: 1000 },
 		picture: {
 			type: Schema.Types.ObjectId,
 			ref: 'Picture',
 			required: true,
+			autopopulate: true,
 		},
-		reactions: [{ type: Schema.Types.ObjectId, ref: 'Reaction' }],
-		comments: [{ type: Schema.Types.ObjectId, ref: 'Comment' }],
 	},
 	{
 		timestamps: true,
 	}
 );
 
+PostSchema.plugin(require('mongoose-autopopulate'));
+
 // Remove post's picture.
 PostSchema.pre('remove', async function (next) {
 	try {
 		const picture = await mongoose.model('Picture').findById(this.picture);
 		await picture.remove();
-	} catch (err) {
-		next(err);
-	}
-});
-
-// Remove the post._id from author.posts
-PostSchema.pre('remove', async function (next) {
-	try {
-		const author = await mongoose
-			.model('User')
-			.findById(this.author._id || this.author)
-			.exec();
-		author.posts.pull({ _id: this._id });
-		await author.save();
 	} catch (err) {
 		next(err);
 	}

@@ -19,7 +19,7 @@ exports.update = [
 			} else if (
 				!(
 					req.currentUser._id.equals(picture.of._id) ||
-					req.currentUser.equals(picture.of.author)
+					req.currentUser._id.equals(picture.of.author && picture.of.author._id)
 				)
 			) {
 				const err = new Error('Unauthorized');

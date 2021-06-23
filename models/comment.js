@@ -13,23 +13,4 @@ const CommentSchema = new Schema(
 	}
 );
 
-// Remove the comment._id from author's comments and post's comments.
-CommentSchema.pre('remove', async function (next) {
-	try {
-		const author = await mongoose
-			.model('User')
-			.findById(this.author._id || this.author);
-		const post = await mongoose
-			.model('Post')
-			.findById(this.post._id || this.post)
-			.exec();
-		author.comments.pull({ _id: this._id });
-		await author.save();
-		post.comments.pull({ _id: this._id });
-		await post.save();
-	} catch (err) {
-		next(err);
-	}
-});
-
 module.exports = mongoose.model('Comment', CommentSchema);

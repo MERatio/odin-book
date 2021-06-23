@@ -14,7 +14,7 @@ exports.create = [
 		.isIn(['like'])
 		.withMessage('Invalid reaction type.'),
 	// Process request after validation.
-	(req, res, next) => {
+	async (req, res, next) => {
 		// Extract the validation errors from a request.
 		const errors = validationResult(req);
 		if (!errors.isEmpty()) {
@@ -27,65 +27,30 @@ exports.create = [
 			// Data form is valid.
 			// If there is duplicate reaction.
 			const post = req.post;
-			Reaction.exists(
-				{
+			try {
+				const reactionExists = await Reaction.exists({
 					user: req.currentUser._id,
 					post: post._id,
 					reaction: req.body.reaction,
-				},
-				(err, reactionExists) => {
-					if (err) {
-						next(err);
-					} else if (reactionExists) {
-						const err = new Error(
-							'You already have the same reaction to this post.'
-						);
-						err.status = 422;
-						next(err);
-					} else {
-						// Create the new reaction
-						Reaction.create(
-							{
-								user: req.currentUser._id,
-								post: post._id,
-								type: req.body.type,
-							},
-							(err, reaction) => {
-								if (err) {
-									next(err);
-								} else {
-									req.currentUser.reactions.push(reaction._id);
-									req.currentUser.save((err) => {
-										if (err) {
-											reaction.remove((err) => {
-												if (err) {
-													return next(err);
-												}
-											});
-											next(err);
-										} else {
-											post.reactions.push(reaction._id);
-											post.save((err) => {
-												if (err) {
-													reaction.remove((err) => {
-														if (err) {
-															return next(err);
-														}
-													});
-													next(err);
-												} else {
-													// Success
-													res.status(201).json({ reaction });
-												}
-											});
-										}
-									});
-								}
-							}
-						);
-					}
+				});
+				if (reactionExists) {
+					const err = new Error(
+						'You already have the same reaction to this post.'
+					);
+					err.status = 422;
+					next(err);
+				} else {
+					// Create the new reaction
+					const reaction = await Reaction.create({
+						user: req.currentUser._id,
+						post: post._id,
+						type: req.body.type,
+					});
+					res.status(201).json({ reaction });
 				}
-			);
+			} catch (err) {
+				next(err);
+			}
 		}
 	},
 ];

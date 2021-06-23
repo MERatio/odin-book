@@ -11,7 +11,6 @@ const {
 	bodyHasCommentProperty,
 } = require('../assertionFunctions');
 
-let user1Id;
 let user1Jwt;
 let user2Jwt;
 let post1Id;
@@ -32,7 +31,6 @@ beforeEach(async () => {
 		.expect('Content-Type', /json/)
 		.expect(bodyHasUserProperty)
 		.expect(bodyHasJwtProperty)
-		.expect((res) => (user1Id = res.body.user._id))
 		.expect(201);
 	await request(app)
 		.post('/users')
@@ -198,41 +196,6 @@ describe('create', () => {
 			.expect('Content-Type', /json/)
 			.expect(bodyHasCommentProperty)
 			.expect(201, done);
-	});
-
-	test("comment should be included in user's comments when comment is created", (done) => {
-		request(app)
-			.get(`/users/${user1Id}`)
-			.set('Accept', 'application/json')
-			.set('Authorization', `Bearer ${user1Jwt}`)
-			.expect('Content-Type', /json/)
-			.expect(bodyHasUserProperty)
-			.expect((res) => {
-				const userCommentsIds = res.body.user.comments.map((comment) => {
-					return comment._id;
-				});
-				if (!userCommentsIds.includes(comment1Id)) {
-					throw new Error("Comment is not included in user's comments");
-				}
-			})
-			.expect(200, done);
-	});
-
-	test("comment should be included in post's comments when comment is created", (done) => {
-		request(app)
-			.get(`/posts/${post1Id}`)
-			.set('Accept', 'application/json')
-			.set('Authorization', `Bearer ${user1Jwt}`)
-			.expect('Content-Type', /json/)
-			.expect((res) => {
-				const postCommentsIds = res.body.post.comments.map((comment) => {
-					return comment._id;
-				});
-				if (!postCommentsIds.includes(comment1Id)) {
-					throw new Error("Comment is not included in post's comments");
-				}
-			})
-			.expect(200, done);
 	});
 });
 
@@ -461,46 +424,12 @@ describe('destroy', () => {
 	});
 
 	it('should remove the comment. And body should have a comment property', async (done) => {
-		await request(app)
+		request(app)
 			.del(`/posts/${post1Id}/comments/${comment1Id}`)
 			.set('Accept', 'application/json')
 			.set('Authorization', `Bearer ${user1Jwt}`)
 			.expect('Content-Type', /json/)
 			.expect(bodyHasCommentProperty)
-			.expect(200);
-
-		// Test that comment is deleted in user's comments when comment is deleted.
-		await request(app)
-			.get(`/users/${user1Id}`)
-			.set('Accept', 'application/json')
-			.set('Authorization', `Bearer ${user1Jwt}`)
-			.expect('Content-Type', /json/)
-			.expect(bodyHasUserProperty)
-			.expect((res) => {
-				const userCommentsIds = res.body.user.comments.map((comment) => {
-					return comment._id;
-				});
-				if (userCommentsIds.includes(comment1Id)) {
-					throw new Error("Comment is still included in user's comments.");
-				}
-			})
-			.expect(200);
-
-		// Test that comment is deleted in post's comments when comment is deleted.
-		request(app)
-			.get(`/posts/${post1Id}`)
-			.set('Accept', 'application/json')
-			.set('Authorization', `Bearer ${user1Jwt}`)
-			.expect('Content-Type', /json/)
-			.expect(bodyHasPostProperty)
-			.expect((res) => {
-				const postCommentsIds = res.body.post.comments.map((comment) => {
-					return comment._id;
-				});
-				if (postCommentsIds.includes(comment1Id)) {
-					throw new Error("Comment is still included in post's comments.");
-				}
-			})
 			.expect(200, done);
 	});
 });

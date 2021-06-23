@@ -27,7 +27,6 @@ const {
 	bodyHasCommentProperty,
 } = require('../assertionFunctions');
 
-let user1Id;
 let user2Id;
 let user1Jwt;
 let user2Jwt;
@@ -59,7 +58,6 @@ beforeEach(async () => {
 		.expect('Content-Type', /json/)
 		.expect(bodyHasUserProperty)
 		.expect(bodyHasJwtProperty)
-		.expect((res) => (user1Id = res.body.user._id))
 		.expect(201);
 	await request(app)
 		.post('/users')
@@ -149,7 +147,7 @@ beforeEach(async () => {
 		.expect((res) => {
 			user2Post1Id = res.body.post._id;
 			indexTotalPostsCount += 1;
-			user2Post1Picture1Id = res.body.post.picture;
+			user2Post1Picture1Id = res.body.post.picture._id;
 		})
 		.expect(201);
 	await request(app)
@@ -333,23 +331,6 @@ describe('index', () => {
 						.expect((res) => {
 							if (!res.body.currentPosts[0].author._id) {
 								throw new Error('individual post author is not populated');
-							}
-						})
-						.expect(200, done);
-				});
-			});
-
-			describe('reactions', () => {
-				test('should be populated', (done) => {
-					request(app)
-						.get('/posts')
-						.set('Accept', 'application/json')
-						.set('Authorization', `Bearer ${user1Jwt}`)
-						.expect('Content-Type', /json/)
-						.expect(bodyHasCurrentPostsProperty)
-						.expect((res) => {
-							if (!res.body.currentPosts[0].reactions[0]._id) {
-								throw new Error('individual post reactions is not populated');
 							}
 						})
 						.expect(200, done);
@@ -615,22 +596,6 @@ describe('create', () => {
 				.expect(201, done);
 		});
 	});
-
-	test("post should be included in user's posts when post is created", (done) => {
-		request(app)
-			.get(`/users/${user1Id}`)
-			.set('Accept', 'application/json')
-			.set('Authorization', `Bearer ${user1Jwt}`)
-			.expect('Content-Type', /json/)
-			.expect(bodyHasUserProperty)
-			.expect((res) => {
-				const userPostsIds = res.body.user.posts.map((post) => post._id);
-				if (!userPostsIds.includes(user1Post1Id)) {
-					throw new Error("Post is not included in user's posts");
-				}
-			})
-			.expect(200, done);
-	});
 });
 
 describe('show', () => {
@@ -689,55 +654,6 @@ describe('show', () => {
 					.expect((res) => {
 						if (!res.body.post.author._id) {
 							throw new Error("post's author is not populated");
-						}
-					})
-					.expect(200, done);
-			});
-		});
-
-		describe('reactions', () => {
-			test('should be populated', (done) => {
-				request(app)
-					.get(`/posts/${user2Post1Id}`)
-					.set('Accept', 'application/json')
-					.set('Authorization', `Bearer ${user1Jwt}`)
-					.expect('Content-Type', /json/)
-					.expect(bodyHasPostProperty)
-					.expect((res) => {
-						if (!res.body.post.reactions[0]._id) {
-							throw new Error("post's reactions is not populated");
-						}
-					})
-					.expect(200, done);
-			});
-		});
-
-		describe('comments', () => {
-			test('should be populated', (done) => {
-				request(app)
-					.get(`/posts/${user2Post1Id}`)
-					.set('Accept', 'application/json')
-					.set('Authorization', `Bearer ${user1Jwt}`)
-					.expect('Content-Type', /json/)
-					.expect(bodyHasPostProperty)
-					.expect((res) => {
-						if (!res.body.post.comments[0]._id) {
-							throw new Error("post's comments is not populated");
-						}
-					})
-					.expect(200, done);
-			});
-
-			test('should be recent', (done) => {
-				request(app)
-					.get(`/posts/${user2Post1Id}`)
-					.set('Accept', 'application/json')
-					.set('Authorization', `Bearer ${user1Jwt}`)
-					.expect('Content-Type', /json/)
-					.expect(bodyHasPostProperty)
-					.expect((res) => {
-						if (res.body.post.comments[0]._id !== user2Post1Comment4Id) {
-							throw new Error("post's comments are not recent");
 						}
 					})
 					.expect(200, done);
@@ -958,22 +874,6 @@ describe('destroy', () => {
 		// Test to see if post's reactions and comments are deleted.
 		expect(await Reaction.exists({ _id: user2Post1Reaction1Id })).toBe(false);
 		expect(await Comment.exists({ _id: user2Post1Comment4Id })).toBe(false);
-
-		// Test that post is deleted in user's posts when post is deleted.
-		request(app)
-			.get(`/users/${user2Id}`)
-			.set('Accept', 'application/json')
-			.set('Authorization', `Bearer ${user2Jwt}`)
-			.expect('Content-Type', /json/)
-			.expect(bodyHasUserProperty)
-			.expect((res) => {
-				const userPostsIds = res.body.user.posts.map((post) => {
-					return post._id;
-				});
-				if (userPostsIds.includes(user2Post1Id)) {
-					throw new Error("Post is still included in user's posts.");
-				}
-			})
-			.expect(200, done);
+		done();
 	});
 });

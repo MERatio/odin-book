@@ -23,7 +23,7 @@ exports.create = [
 	...commentSanitationAndValidation,
 	// Validate and sanitise fields.
 	// Process request after validation and sanitization.
-	(req, res, next) => {
+	async (req, res, next) => {
 		// Extract the validation errors from a request.
 		const errors = validationResult(req);
 		if (!errors.isEmpty()) {
@@ -34,45 +34,18 @@ exports.create = [
 			});
 		} else {
 			// Data is valid.
-			const post = req.post;
-			// Create a Comment object with escaped and trimmed data.
-			const comment = new Comment({
-				author: req.currentUser._id,
-				post: post._id,
-				text: req.body.text,
-			});
-			comment.save((err, comment) => {
-				if (err) {
-					next(err);
-				} else {
-					req.currentUser.comments.push(comment._id);
-					req.currentUser.save((err) => {
-						if (err) {
-							comment.remove((err) => {
-								if (err) {
-									return next(err);
-								}
-							});
-							next(err);
-						} else {
-							post.comments.push(comment._id);
-							post.save((err) => {
-								if (err) {
-									comment.remove((err) => {
-										if (err) {
-											return next(err);
-										}
-									});
-									next(err);
-								} else {
-									// Successful
-									res.status(201).json({ comment });
-								}
-							});
-						}
-					});
-				}
-			});
+			try {
+				const post = req.post;
+				// Create a Comment object with escaped and trimmed data.
+				const comment = await Comment.create({
+					author: req.currentUser._id,
+					post: post._id,
+					text: req.body.text,
+				});
+				res.status(201).json({ comment });
+			} catch (err) {
+				next(err);
+			}
 		}
 	},
 ];

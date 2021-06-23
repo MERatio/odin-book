@@ -33,10 +33,7 @@ exports.local = [
 								with object containing the currentUser._id as its payload.
 							*/
 							const jwt = createJwt(currentUser);
-							res.json({
-								jwt,
-								currentUser: await currentUser.populateAllFields(),
-							});
+							res.json({ jwt, currentUser });
 						}
 					});
 				}
@@ -81,9 +78,14 @@ exports.facebook = [
 					} else {
 						// Sign in
 						const jwt = createJwt(user);
-						res.json({ jwt, currentUser: await user.populateAllFields() });
+						res.json({ jwt, currentUser: user });
 					}
 				} else {
+					const picture = new Picture({
+						ofModel: 'User',
+						filename: meData.picture.data.url,
+						isLocal: false,
+					});
 					// Create user
 					const randomString = nanoid() + process.env.JWT_SECRET;
 					const hashedPassword = await bcrypt.hash(randomString, 10);
@@ -94,22 +96,15 @@ exports.facebook = [
 						email: meData.email,
 						password: hashedPassword,
 					});
-					const picture = new Picture({
-						ofModel: 'User',
-						filename: meData.picture.data.url,
-						isLocal: false,
-					});
-					currentUser.picture = picture._id;
 					picture.of = currentUser._id;
-					await currentUser.save();
+					currentUser.picture = picture._id;
 					await picture.save();
+					await currentUser.save();
 					const jwt = createJwt(currentUser);
 					/* Initialized (doc = new Model()) and saved documents (savedDoc = await doc.save()) 
 						 have the same reference and properties.
 					*/
-					res
-						.status(201)
-						.json({ jwt, currentUser: await currentUser.populateAllFields() });
+					res.status(201).json({ jwt, currentUser });
 				}
 			}
 		} catch (err) {

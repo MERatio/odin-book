@@ -2,7 +2,6 @@ const { body, validationResult } = require('express-validator');
 const authenticated = require('../middlewares/authenticated');
 const validMongoObjectIdRouteParams = require('../middlewares/validMongoObjectIdRouteParams');
 const getResourceFromParams = require('../middlewares/getResourceFromParams');
-const User = require('../models/user');
 // eslint-disable-next-line no-unused-vars
 const Friendship = require('../models/friendship');
 
@@ -12,8 +11,8 @@ exports.create = [
 	body('requesteeId')
 		.isMongoId()
 		.withMessage('requesteeId is not a valid Mongo ID'),
-	// Process request after validation.
-	(req, res, next) => {
+	// Validation.
+	async (req, res, next) => {
 		// Extract the validation errors from a request.
 		const errors = validationResult(req);
 		if (!errors.isEmpty()) {
@@ -28,77 +27,40 @@ exports.create = [
 			err.status = 422;
 			next(err);
 		} else {
-			// Finds the relationship between currentUser and the requestee.
-			req.currentUser.findRelationshipWith(
-				req.body.requesteeId,
-				(err, friendship) => {
-					if (err) {
-						next(err);
-					} else if (friendship) {
-						let err;
-						switch (friendship.status) {
-							case 'pending':
-								err = new Error('You already sent a friend request to them.');
-								break;
-							case 'friends':
-								err = new Error("You're already friends with them.");
-								break;
-						}
-						err.status = 422;
-						next(err);
-					} else {
-						// Create the new friendship
-						req.currentUser.sendFriendRequest(
-							req.body.requesteeId,
-							(err, friendship) => {
-								if (err) {
-									next(err);
-								} else {
-									req.currentUser.friendships.push(friendship._id);
-									req.currentUser.save((err) => {
-										if (err) {
-											friendship.remove((err) => {
-												if (err) {
-													return next(err);
-												}
-											});
-											next(err);
-										} else {
-											User.findById(req.body.requesteeId).exec(
-												(err, requestee) => {
-													if (err) {
-														friendship.remove((err) => {
-															if (err) {
-																return next(err);
-															}
-														});
-														next(err);
-													} else {
-														requestee.friendships.push(friendship._id);
-														requestee.save((err) => {
-															if (err) {
-																friendship.remove((err) => {
-																	if (err) {
-																		return next(err);
-																	}
-																});
-																next(err);
-															} else {
-																// Successful
-																res.status(201).json({ friendship });
-															}
-														});
-													}
-												}
-											);
-										}
-									});
-								}
-							}
-						);
+			try {
+				// Finds the relationship between currentUser and the requestee.
+				const friendship = await req.currentUser.findRelationshipWith(
+					req.body.requesteeId
+				);
+				if (friendship) {
+					let err;
+					switch (friendship.status) {
+						case 'pending':
+							err = new Error('You already sent a friend request to them.');
+							break;
+						case 'friends':
+							err = new Error("You're already friends with them.");
+							break;
 					}
+					err.status = 422;
+					next(err);
+				} else {
+					next();
 				}
+			} catch (err) {
+				next(err);
+			}
+		}
+	},
+	async (req, res, next) => {
+		try {
+			// Create the new friendship
+			const friendship = await req.currentUser.sendFriendRequest(
+				req.body.requesteeId
 			);
+			res.status(201).json({ friendship });
+		} catch (err) {
+			next(err);
 		}
 	},
 ];

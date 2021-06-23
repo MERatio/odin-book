@@ -14,48 +14,17 @@ const UserSchema = new Schema(
 			type: Schema.Types.ObjectId,
 			ref: 'Picture',
 			required: true,
+			// The below option tells this plugin to always call `populate()` on
+			// `picture`.
+			autopopulate: true,
 		},
-		friendships: [{ type: Schema.Types.ObjectId, ref: 'Friendship' }],
-		posts: [{ type: Schema.Types.ObjectId, ref: 'Post' }],
-		reactions: [{ type: Schema.Types.ObjectId, ref: 'Reaction' }],
-		comments: [{ type: Schema.Types.ObjectId, ref: 'Comment' }],
 	},
 	{
 		timestamps: true,
 	}
 );
 
-UserSchema.methods.populateAllFields = async function () {
-	return this.populate('picture')
-		.populate({
-			path: 'friendships',
-			populate: { path: 'requestor requestee' },
-			options: {
-				sort: { updatedAt: -1 },
-			},
-		})
-		.populate({
-			path: 'posts',
-			options: {
-				sort: { updatedAt: -1 },
-			},
-		})
-		.populate({
-			path: 'reactions',
-			populate: { path: 'post' },
-			options: {
-				sort: { updatedAt: -1 },
-			},
-		})
-		.populate({
-			path: 'comments',
-			populate: { path: 'post' },
-			options: {
-				sort: { updatedAt: -1 },
-			},
-		})
-		.execPopulate();
-};
+UserSchema.plugin(require('mongoose-autopopulate'));
 
 // UserSchema.methods methods still works even if cb parameter is supplied or not (except getFriends()).
 UserSchema.methods.sendFriendRequest = function (requesteeId, cb) {

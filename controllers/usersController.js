@@ -72,7 +72,6 @@ exports.index = [
 				.nin(userIds)
 				.skip(req.skip)
 				.limit(req.query.limit)
-				.populate('picture')
 				.exec();
 			// Total count of users with no friendship with currentUser.
 			const usersCount = await User.countDocuments({
@@ -120,6 +119,11 @@ exports.create = [
 				});
 			} else {
 				// Data form is valid.
+				const picture = new Picture({
+					ofModel: 'User',
+					filename: req.file ? req.file.filename : '',
+					isLocal: true,
+				});
 				// Create the new user with hashed password
 				const hashedPassword = await bcrypt.hash(req.body.password, 10);
 				const user = new User({
@@ -128,18 +132,13 @@ exports.create = [
 					email: req.body.email,
 					password: hashedPassword,
 				});
-				const picture = new Picture({
-					ofModel: 'User',
-					filename: req.file ? req.file.filename : '',
-					isLocal: true,
-				});
-				user.picture = picture._id;
 				picture.of = user._id;
-				await user.save();
+				user.picture = picture._id;
 				await picture.save();
+				await user.save();
 				const jwt = createJwt(user);
 				// Successful
-				res.status(201).json({ user: await user.populateAllFields(), jwt });
+				res.status(201).json({ user, jwt });
 			}
 		} catch (err) {
 			// If there's an uploaded picture delete it.
@@ -154,10 +153,7 @@ exports.create = [
 ];
 
 exports.getCurrentUser = async (req, res, next) => {
-	const currentUser = req.currentUser
-		? await req.currentUser.populateAllFields()
-		: false;
-	res.json({ currentUser });
+	res.json({ currentUser: req.currentUser });
 };
 
 // Get user's profile information except password.
@@ -172,7 +168,7 @@ exports.show = [
 				err.status = 404;
 				next(err);
 			} else {
-				res.json({ user: await user.populateAllFields() });
+				res.json({ user });
 			}
 		} catch (err) {
 			next(err);
@@ -268,7 +264,7 @@ exports.updateInfo = [
 				user.password = hashedPassword;
 				const updatedUser = await user.save();
 				// Successful
-				res.json({ user: await updatedUser.populateAllFields() });
+				res.json({ user: updatedUser });
 			}
 		} catch (err) {
 			next(err);
