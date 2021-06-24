@@ -1,5 +1,6 @@
 const request = require('supertest');
 const app = require('../../app');
+const Reaction = require('../../models/reaction');
 const mongoConfigTesting = require('../../configs/mongoConfigTesting');
 const {
 	bodyHasErrProperty,
@@ -204,7 +205,7 @@ describe('destroy', () => {
 	});
 
 	it('should remove the reaction', async (done) => {
-		request(app)
+		await request(app)
 			.del(`/posts/${post2Id}/reactions/${post1Reaction1}`)
 			.set('Accept', 'application/json')
 			.set('Authorization', `Bearer ${user1Jwt}`)
@@ -215,6 +216,14 @@ describe('destroy', () => {
 					throw new Error('Reaction type should not change.');
 				}
 			})
-			.expect(200, done);
+			.expect(200);
+
+		try {
+			// Test to see if the reaction is removed.
+			expect(await Reaction.exists({ _id: post1Reaction1 })).toBe(false);
+			done();
+		} catch (err) {
+			done(err);
+		}
 	});
 });

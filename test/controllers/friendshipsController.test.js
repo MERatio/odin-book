@@ -1,5 +1,6 @@
 const request = require('supertest');
 const app = require('../../app');
+const Friendship = require('../../models/friendship');
 const mongoConfigTesting = require('../../configs/mongoConfigTesting');
 const {
 	bodyHasErrProperty,
@@ -325,7 +326,7 @@ describe('destroy', () => {
 	});
 
 	it('should remove the friendship', async (done) => {
-		request(app)
+		await request(app)
 			.del(`/friendships/${user1AndUser2FriendshipId}`)
 			.set('Accept', 'application/json')
 			.set('Authorization', `Bearer ${user2Jwt}`)
@@ -336,6 +337,16 @@ describe('destroy', () => {
 					throw new Error('Friendship status should not change.');
 				}
 			})
-			.expect(200, done);
+			.expect(200);
+
+		try {
+			// Test to see if the friendship is removed.
+			expect(await Friendship.exists({ _id: user1AndUser2FriendshipId })).toBe(
+				false
+			);
+			done();
+		} catch (err) {
+			done(err);
+		}
 	});
 });

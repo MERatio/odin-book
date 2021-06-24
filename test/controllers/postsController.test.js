@@ -1,6 +1,7 @@
 const fsPromises = require('fs/promises');
 const request = require('supertest');
 const app = require('../../app');
+const Post = require('../../models/post');
 const Reaction = require('../../models/reaction');
 const Comment = require('../../models/comment');
 const mongoConfigTesting = require('../../configs/mongoConfigTesting');
@@ -876,7 +877,8 @@ describe('destroy', () => {
 		}
 
 		try {
-			// Test to see if post's reactions and comments are deleted.
+			// Test to see if post, post's reactions, and comments are removed.
+			expect(await Post.exists({ _id: user2Post1Id })).toBe(false);
 			expect(await Reaction.exists({ _id: user2Post1Reaction1Id })).toBe(false);
 			expect(await Comment.exists({ _id: user2Post1Comment4Id })).toBe(false);
 			done();

@@ -1,5 +1,6 @@
 const request = require('supertest');
 const app = require('../../app');
+const Comment = require('../../models/comment');
 const mongoConfigTesting = require('../../configs/mongoConfigTesting');
 const {
 	bodyHasErrProperty,
@@ -424,12 +425,20 @@ describe('destroy', () => {
 	});
 
 	it('should remove the comment. And body should have a comment property', async (done) => {
-		request(app)
+		await request(app)
 			.del(`/posts/${post1Id}/comments/${comment1Id}`)
 			.set('Accept', 'application/json')
 			.set('Authorization', `Bearer ${user1Jwt}`)
 			.expect('Content-Type', /json/)
 			.expect(bodyHasCommentProperty)
-			.expect(200, done);
+			.expect(200);
+
+		try {
+			// Test to see if the comment is removed.
+			expect(await Comment.exists({ _id: comment1Id })).toBe(false);
+			done();
+		} catch (err) {
+			done(err);
+		}
 	});
 });
