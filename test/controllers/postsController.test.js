@@ -337,6 +337,23 @@ describe('index', () => {
 						.expect(200, done);
 				});
 			});
+
+			describe('picture', () => {
+				test('should be populated', (done) => {
+					request(app)
+						.get('/posts')
+						.set('Accept', 'application/json')
+						.set('Authorization', `Bearer ${user1Jwt}`)
+						.expect('Content-Type', /json/)
+						.expect(bodyHasCurrentPostsProperty)
+						.expect((res) => {
+							if (!res.body.currentPosts[0].picture._id) {
+								throw new Error('individual post picture is not populated');
+							}
+						})
+						.expect(200, done);
+				});
+			});
 		});
 	});
 
@@ -655,6 +672,23 @@ describe('show', () => {
 					.expect((res) => {
 						if (!res.body.post.author._id) {
 							throw new Error("post's author is not populated");
+						}
+					})
+					.expect(200, done);
+			});
+		});
+
+		describe('picture ', () => {
+			test('should be populated', (done) => {
+				request(app)
+					.get(`/posts/${user2Post1Id}`)
+					.set('Accept', 'application/json')
+					.set('Authorization', `Bearer ${user1Jwt}`)
+					.expect('Content-Type', /json/)
+					.expect(bodyHasPostProperty)
+					.expect((res) => {
+						if (!res.body.post.picture._id) {
+							throw new Error("post's picture is not populated");
 						}
 					})
 					.expect(200, done);

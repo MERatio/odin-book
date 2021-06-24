@@ -252,6 +252,42 @@ describe('index', () => {
 			.expect(200, done);
 	});
 
+	describe('individual user', () => {
+		beforeEach(async () => {
+			await request(app)
+				.post('/users')
+				.send({
+					firstName: `user`,
+					lastName: `user`,
+					email: `user@example.com`,
+					password: 'password123',
+					passwordConfirmation: 'password123',
+				})
+				.set('Accept', 'application/json')
+				.expect('Content-Type', /json/)
+				.expect(bodyHasUserProperty)
+				.expect(bodyHasJwtProperty)
+				.expect(201);
+		});
+
+		describe('picture', () => {
+			test('should be populated', (done) => {
+				request(app)
+					.get('/users')
+					.set('Accept', 'application/json')
+					.set('Authorization', `Bearer ${user1Jwt}`)
+					.expect('Content-Type', /json/)
+					.expect(bodyHasUsersProperty)
+					.expect((res) => {
+						if (!res.body.users[0].picture._id) {
+							throw new Error('individual user picture is not populated');
+						}
+					})
+					.expect(200, done);
+			});
+		});
+	});
+
 	describe('pagination', () => {
 		let indexUsersCount = 0;
 
@@ -820,6 +856,25 @@ describe('show', () => {
 				}
 			})
 			.expect(200, done);
+	});
+
+	describe("user's", () => {
+		describe('picture ', () => {
+			test('should be populated', (done) => {
+				request(app)
+					.get(`/users/${user1Id}`)
+					.set('Accept', 'application/json')
+					.set('Authorization', `Bearer ${user1Jwt}`)
+					.expect('Content-Type', /json/)
+					.expect(bodyHasUserProperty)
+					.expect((res) => {
+						if (!res.body.user.picture._id) {
+							throw new Error("user's picture is not populated");
+						}
+					})
+					.expect(200, done);
+			});
+		});
 	});
 });
 
