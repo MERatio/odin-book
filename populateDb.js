@@ -62,16 +62,17 @@ function createUsers(cb) {
     cb
   ) {
     try {
-      const user = await User.create({
+      const user = new User({
         provider,
         firstName,
         lastName,
         email,
         password,
-        picture,
       });
       picture.of = user._id;
+      user.picture = picture._id;
       await picture.save();
+      await user.save();
       console.log('New User: ' + user);
       users.push(user);
       cb(null, user);
@@ -157,10 +158,6 @@ function createFriendships(cb) {
         requestee,
         status,
       });
-      requestor.friendships.push(friendship._id);
-      requestee.friendships.push(friendship._id);
-      await requestor.save();
-      await requestee.save();
       console.log('New Friendship: ' + friendship);
       cb(null, friendship);
     } catch (err) {
@@ -188,15 +185,14 @@ function createFriendships(cb) {
 function createPosts(cb) {
   async function createPost(author, text, picture, cb) {
     try {
-      const post = await Post.create({
+      const post = new Post({
         author,
         text,
-        picture,
       });
       picture.of = post._id;
+      post.picture = picture._id;
       await picture.save();
-      author.posts.push(post._id);
-      await author.save();
+      await post.save();
       console.log('New Post: ' + post);
       posts.push(post);
       cb(null, post);
@@ -264,10 +260,6 @@ function createReactions(cb) {
         post,
         type,
       });
-      user.reactions.push(reaction._id);
-      await user.save();
-      post.reactions.push(reaction._id);
-      await post.save();
       console.log('New Reaction: ' + reaction);
       cb(null, reaction);
     } catch (err) {
@@ -307,10 +299,6 @@ function createComments(cb) {
         post,
         text,
       });
-      author.comments.push(comment._id);
-      await author.save();
-      post.comments.push(comment._id);
-      await post.save();
       console.log('New Comment: ' + comment);
       cb(null, comment);
     } catch (err) {
