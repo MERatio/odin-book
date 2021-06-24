@@ -848,9 +848,13 @@ describe('destroy', () => {
 			done(err);
 		}
 
-		// Test to see if post's reactions and comments exists.
-		expect(await Reaction.exists({ _id: user2Post1Reaction1Id })).toBe(true);
-		expect(await Comment.exists({ _id: user2Post1Comment4Id })).toBe(true);
+		try {
+			// Test to see if post's reactions and comments exists.
+			expect(await Reaction.exists({ _id: user2Post1Reaction1Id })).toBe(true);
+			expect(await Comment.exists({ _id: user2Post1Comment4Id })).toBe(true);
+		} catch (err) {
+			done(err);
+		}
 
 		// Delete the post.
 		await request(app)
@@ -871,9 +875,13 @@ describe('destroy', () => {
 			done(err);
 		}
 
-		// Test to see if post's reactions and comments are deleted.
-		expect(await Reaction.exists({ _id: user2Post1Reaction1Id })).toBe(false);
-		expect(await Comment.exists({ _id: user2Post1Comment4Id })).toBe(false);
-		done();
+		try {
+			// Test to see if post's reactions and comments are deleted.
+			expect(await Reaction.exists({ _id: user2Post1Reaction1Id })).toBe(false);
+			expect(await Comment.exists({ _id: user2Post1Comment4Id })).toBe(false);
+			done();
+		} catch (err) {
+			done(err);
+		}
 	});
 });
