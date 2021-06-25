@@ -74,6 +74,18 @@ exports.bodyHasPostProperty = (res) => {
 	}
 };
 
+exports.bodyHasReactionsProperty = (res) => {
+	if (!Object.prototype.hasOwnProperty.call(res.body, 'reactions')) {
+		throw new Error('missing reactions property');
+	}
+};
+
+exports.bodyHasTotalReactionsProperty = (res) => {
+	if (!Object.prototype.hasOwnProperty.call(res.body, 'totalReactions')) {
+		throw new Error('missing totalReactions property');
+	}
+};
+
 exports.bodyHasReactionProperty = (res) => {
 	if (!Object.prototype.hasOwnProperty.call(res.body, 'reaction')) {
 		throw new Error('missing reaction property');

@@ -3,6 +3,45 @@ const authenticated = require('../middlewares/authenticated');
 const validMongoObjectIdRouteParams = require('../middlewares/validMongoObjectIdRouteParams');
 const getResourceFromParams = require('../middlewares/getResourceFromParams');
 const Reaction = require('../models/reaction');
+const Post = require('../models/post');
+
+exports.index = [
+	authenticated,
+	validMongoObjectIdRouteParams,
+	// Check if post exists.
+	async (req, res, next) => {
+		try {
+			const postExists = await Post.exists({ _id: req.params.postId });
+			if (!postExists) {
+				const err = new Error('Post not found');
+				err.status = 404;
+				next(err);
+			} else {
+				next();
+			}
+		} catch (err) {
+			next(err);
+		}
+	},
+	async (req, res, next) => {
+		try {
+			const reactions = await Reaction.find({
+				post: req.params.postId,
+			})
+				.skip(req.skip)
+				.limit(req.query.limit)
+				.sort({ updatedAt: -1 })
+				.populate('user')
+				.exec();
+			const totalReactions = await Reaction.countDocuments({
+				post: req.params.postId,
+			}).exec();
+			res.json({ reactions, totalReactions });
+		} catch (err) {
+			next(err);
+		}
+	},
+];
 
 exports.create = [
 	authenticated,
