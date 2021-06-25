@@ -385,6 +385,28 @@ describe('destroy', () => {
 				.expect(401, done);
 		});
 
+		test('if postId route parameter is not valid', (done) => {
+			request(app)
+				.post(`/posts/${post2Id + '123'}/reactions`)
+				.set('Accept', 'application/json')
+				.set('Authorization', `Bearer ${user1Jwt}`)
+				.expect('Content-Type', /json/)
+				.expect(bodyHasErrProperty)
+				.expect(404, done);
+		});
+
+		test('if post does not exists', (done) => {
+			request(app)
+				.post(
+					`/posts/${post2Id.substring(0, post2Id.length - 3) + '123'}/reactions`
+				)
+				.set('Accept', 'application/json')
+				.set('Authorization', `Bearer ${user1Jwt}`)
+				.expect('Content-Type', /json/)
+				.expect(bodyHasErrProperty)
+				.expect(404, done);
+		});
+
 		test('if reactionId route parameter is not valid', (done) => {
 			request(app)
 				.del(`/posts/${post2Id}/reactions/${post1Reaction1 + '123'}`)
