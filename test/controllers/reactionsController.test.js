@@ -397,7 +397,11 @@ describe('destroy', () => {
 
 		test('if reaction does not exists', (done) => {
 			request(app)
-				.del(`/posts/${post2Id.substring(0, post2Id.length - 3) + '123'}`)
+				.del(
+					`/posts/${post2Id}/reactions/${
+						post1Reaction1.substring(0, post1Reaction1.length - 3) + '123'
+					}`
+				)
 				.set('Accept', 'application/json')
 				.set('Authorization', `Bearer ${user1Jwt}`)
 				.expect('Content-Type', /json/)
