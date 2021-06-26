@@ -20,8 +20,8 @@ const {
 	bodyHasJwtProperty,
 	bodyHasCurrentUserProperty,
 	bodyHasFriendshipProperty,
-	bodyHasCurrentPostsProperty,
-	bodyHasTotalPostsCountProperty,
+	bodyHasPostsProperty,
+	bodyHasTotalPostsProperty,
 	bodyHasPostProperty,
 	bodyHasPictureProperty,
 	bodyHasReactionProperty,
@@ -37,7 +37,7 @@ let user2Post1Id;
 let user2Post1Picture1Id;
 let user2Post1Reaction1Id;
 let user2Post1Comment4Id;
-let indexTotalPostsCount = 0;
+let indexTotalPosts = 0;
 const updatedUser1PostText = 'updatedUser1Post1Text';
 let imagesDirFileInitialCount = 0;
 
@@ -110,7 +110,7 @@ beforeEach(async () => {
 		.expect(bodyHasPostProperty)
 		.expect((res) => {
 			user1Post1Id = res.body.post._id;
-			indexTotalPostsCount += 1;
+			indexTotalPosts += 1;
 		})
 		.expect(201);
 	await request(app)
@@ -147,7 +147,7 @@ beforeEach(async () => {
 		.expect(bodyHasPostProperty)
 		.expect((res) => {
 			user2Post1Id = res.body.post._id;
-			indexTotalPostsCount += 1;
+			indexTotalPosts += 1;
 			user2Post1Picture1Id = res.body.post.picture._id;
 		})
 		.expect(201);
@@ -202,7 +202,7 @@ beforeEach(async () => {
 		.expect(201);
 });
 afterEach(async () => {
-	indexTotalPostsCount = 0;
+	indexTotalPosts = 0;
 	await emptyDir(imagesPath, ['user.jpg', 'post.jpg']);
 	await mongoConfigTesting.clear();
 });
@@ -270,11 +270,11 @@ describe('index', () => {
 				.set('Accept', 'application/json')
 				.set('Authorization', `Bearer ${user1Jwt}`)
 				.expect('Content-Type', /json/)
-				.expect(bodyHasCurrentPostsProperty)
+				.expect(bodyHasPostsProperty)
 				.expect((res) => {
 					let isCurrentUserPostIncluded = false;
 					let isFriendPostIncluded = false;
-					const postsIds = res.body.currentPosts.map((post) => post._id);
+					const postsIds = res.body.posts.map((post) => post._id);
 					postsIds.forEach((postId) => {
 						if (postId.toString() === user1Post1Id) {
 							isCurrentUserPostIncluded = true;
@@ -305,13 +305,12 @@ describe('index', () => {
 				.set('Accept', 'application/json')
 				.set('Authorization', `Bearer ${user1Jwt}`)
 				.expect('Content-Type', /json/)
-				.expect(bodyHasCurrentPostsProperty)
+				.expect(bodyHasPostsProperty)
 				.expect((res) => {
 					if (
 						!(
-							res.body.currentPosts[0]._id === user2Post1Id &&
-							res.body.currentPosts[res.body.currentPosts.length - 1]._id ===
-								user1Post1Id
+							res.body.posts[0]._id === user2Post1Id &&
+							res.body.posts[res.body.posts.length - 1]._id === user1Post1Id
 						)
 					) {
 						throw new Error('posts are not recent');
@@ -328,9 +327,9 @@ describe('index', () => {
 						.set('Accept', 'application/json')
 						.set('Authorization', `Bearer ${user1Jwt}`)
 						.expect('Content-Type', /json/)
-						.expect(bodyHasCurrentPostsProperty)
+						.expect(bodyHasPostsProperty)
 						.expect((res) => {
-							if (!res.body.currentPosts[0].author._id) {
+							if (!res.body.posts[0].author._id) {
 								throw new Error('individual post author is not populated');
 							}
 						})
@@ -345,9 +344,9 @@ describe('index', () => {
 						.set('Accept', 'application/json')
 						.set('Authorization', `Bearer ${user1Jwt}`)
 						.expect('Content-Type', /json/)
-						.expect(bodyHasCurrentPostsProperty)
+						.expect(bodyHasPostsProperty)
 						.expect((res) => {
-							if (!res.body.currentPosts[0].picture._id) {
+							if (!res.body.posts[0].picture._id) {
 								throw new Error('individual post picture is not populated');
 							}
 						})
@@ -369,7 +368,7 @@ describe('index', () => {
 					.set('Authorization', `Bearer ${user2Jwt}`)
 					.expect('Content-Type', /json/)
 					.expect(bodyHasPostProperty)
-					.expect(() => (indexTotalPostsCount += 1))
+					.expect(() => (indexTotalPosts += 1))
 					.expect(201);
 			}
 		});
@@ -380,26 +379,24 @@ describe('index', () => {
 				.set('Accept', 'application/json')
 				.set('Authorization', `Bearer ${user1Jwt}`)
 				.expect('Content-Type', /json/)
-				.expect(bodyHasCurrentPostsProperty)
-				.expect(bodyHasTotalPostsCountProperty)
+				.expect(bodyHasPostsProperty)
+				.expect(bodyHasTotalPostsProperty)
 				.expect((res) => {
-					const { currentPosts, totalPostsCount } = res.body;
-					if (currentPosts.length !== 10) {
+					const { posts, totalPosts } = res.body;
+					if (posts.length !== 10) {
 						throw new Error(
 							'posts#index pagination - posts body property length error.'
 						);
 					}
-					if (totalPostsCount !== indexTotalPostsCount) {
+					if (totalPosts !== indexTotalPosts) {
 						throw new Error(
-							'posts#index pagination - totalPostsCount body property error.'
+							'posts#index pagination - totalPosts body property error.'
 						);
 					}
-					if (currentPosts[0].text !== 'postPagination30') {
+					if (posts[0].text !== 'postPagination30') {
 						throw new Error('posts#index pagination - incorrect first post.');
 					}
-					if (
-						currentPosts[currentPosts.length - 1].text !== 'postPagination21'
-					) {
+					if (posts[posts.length - 1].text !== 'postPagination21') {
 						throw new Error('posts#index pagination - incorrect last post.');
 					}
 				})
@@ -410,26 +407,24 @@ describe('index', () => {
 				.set('Accept', 'application/json')
 				.set('Authorization', `Bearer ${user1Jwt}`)
 				.expect('Content-Type', /json/)
-				.expect(bodyHasCurrentPostsProperty)
-				.expect(bodyHasTotalPostsCountProperty)
+				.expect(bodyHasPostsProperty)
+				.expect(bodyHasTotalPostsProperty)
 				.expect((res) => {
-					const { currentPosts, totalPostsCount } = res.body;
-					if (currentPosts.length !== 15) {
+					const { posts, totalPosts } = res.body;
+					if (posts.length !== 15) {
 						throw new Error(
 							'posts#index pagination - posts body property length error.'
 						);
 					}
-					if (totalPostsCount !== indexTotalPostsCount) {
+					if (totalPosts !== indexTotalPosts) {
 						throw new Error(
-							'posts#index pagination - totalPostsCount body property error.'
+							'posts#index pagination - totalPosts body property error.'
 						);
 					}
-					if (currentPosts[0].text !== 'postPagination15') {
+					if (posts[0].text !== 'postPagination15') {
 						throw new Error('posts#index pagination - incorrect first post.');
 					}
-					if (
-						currentPosts[currentPosts.length - 1].text !== 'postPagination1'
-					) {
+					if (posts[posts.length - 1].text !== 'postPagination1') {
 						throw new Error('posts#index pagination - incorrect last post.');
 					}
 				})
