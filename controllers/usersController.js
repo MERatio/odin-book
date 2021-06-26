@@ -72,6 +72,7 @@ exports.index = [
 				.nin(userIds)
 				.skip(req.skip)
 				.limit(req.query.limit)
+				.sort({ updatedAt: -1 })
 				.exec();
 			// Total count of users with no friendship with currentUser.
 			const totalUsers = await User.countDocuments({

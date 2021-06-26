@@ -252,6 +252,53 @@ describe('index', () => {
 			.expect(200, done);
 	});
 
+	test('should be recent', async (done) => {
+		let stranger1Id;
+		let stranger2Id;
+
+		for (let i = 1; i < 3; i++) {
+			await request(app)
+				.post('/users')
+				.send({
+					firstName: `stranger${i}`,
+					lastName: `stranger${i}`,
+					email: `stranger${i}@example.com`,
+					password: 'password123',
+					passwordConfirmation: 'password123',
+				})
+				.set('Accept', 'application/json')
+				.expect('Content-Type', /json/)
+				.expect(bodyHasUserProperty)
+				.expect(bodyHasJwtProperty)
+				.expect((res) => {
+					if (i === 1) {
+						stranger1Id = res.body.user._id;
+					} else if (i === 2) {
+						stranger2Id = res.body.user._id;
+					}
+				})
+				.expect(201);
+		}
+
+		request(app)
+			.get('/users')
+			.set('Accept', 'application/json')
+			.set('Authorization', `Bearer ${user1Jwt}`)
+			.expect('Content-Type', /json/)
+			.expect(bodyHasUsersProperty)
+			.expect((res) => {
+				if (
+					!(
+						res.body.users[0]._id === stranger2Id &&
+						res.body.users[res.body.users.length - 1]._id === stranger1Id
+					)
+				) {
+					throw new Error('users are not recent');
+				}
+			})
+			.expect(200, done);
+	});
+
 	describe('individual user', () => {
 		beforeEach(async () => {
 			await request(app)
@@ -290,6 +337,10 @@ describe('index', () => {
 
 	describe('pagination', () => {
 		let indexTotalUsers = 0;
+		let firstUserId;
+		let fifteenthUserId;
+		let twentyFirstUserId;
+		let thirtiethUserId;
 
 		beforeEach(async () => {
 			for (let i = 1; i < 31; i++) {
@@ -306,7 +357,19 @@ describe('index', () => {
 					.expect('Content-Type', /json/)
 					.expect(bodyHasUserProperty)
 					.expect(bodyHasJwtProperty)
-					.expect(() => (indexTotalUsers += 1))
+					.expect((res) => {
+						const user = res.body.user;
+						indexTotalUsers += 1;
+						if (i === 1) {
+							firstUserId = user._id;
+						} else if (i === 15) {
+							fifteenthUserId = user._id;
+						} else if (i === 21) {
+							twentyFirstUserId = user._id;
+						} else if (i === 30) {
+							thirtiethUserId = user._id;
+						}
+					})
 					.expect(201);
 			}
 		});
@@ -331,10 +394,10 @@ describe('index', () => {
 							'users#index pagination - totalUsers body property error.'
 						);
 					}
-					if (users[0].firstName !== 'userPagination1') {
+					if (users[0]._id !== thirtiethUserId) {
 						throw new Error('users#index pagination - incorrect first user.');
 					}
-					if (users[users.length - 1].firstName !== 'userPagination10') {
+					if (users[users.length - 1]._id !== twentyFirstUserId) {
 						throw new Error('users#index pagination - incorrect last user.');
 					}
 				})
@@ -359,10 +422,10 @@ describe('index', () => {
 							'users#index pagination - totalUsers body property error.'
 						);
 					}
-					if (users[0].firstName !== 'userPagination16') {
+					if (users[0]._id !== fifteenthUserId) {
 						throw new Error('users#index pagination - incorrect first user.');
 					}
-					if (users[users.length - 1].firstName !== 'userPagination30') {
+					if (users[users.length - 1]._id !== firstUserId) {
 						throw new Error('users#index pagination - incorrect last user.');
 					}
 				})
