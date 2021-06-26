@@ -357,6 +357,11 @@ describe('index', () => {
 	});
 
 	describe('pagination', () => {
+		let firstPostId;
+		let fifteenthPostId;
+		let twentyFirstPostId;
+		let thirtiethPostId;
+
 		beforeEach(async () => {
 			for (let i = 1; i < 31; i++) {
 				await request(app)
@@ -368,7 +373,19 @@ describe('index', () => {
 					.set('Authorization', `Bearer ${user2Jwt}`)
 					.expect('Content-Type', /json/)
 					.expect(bodyHasPostProperty)
-					.expect(() => (indexTotalPosts += 1))
+					.expect((res) => {
+						const post = res.body.post;
+						indexTotalPosts += 1;
+						if (i === 1) {
+							firstPostId = post._id;
+						} else if (i === 15) {
+							fifteenthPostId = post._id;
+						} else if (i === 21) {
+							twentyFirstPostId = post._id;
+						} else if (i === 30) {
+							thirtiethPostId = post._id;
+						}
+					})
 					.expect(201);
 			}
 		});
@@ -393,10 +410,10 @@ describe('index', () => {
 							'posts#index pagination - totalPosts body property error.'
 						);
 					}
-					if (posts[0].text !== 'postPagination30') {
+					if (posts[0]._id !== thirtiethPostId) {
 						throw new Error('posts#index pagination - incorrect first post.');
 					}
-					if (posts[posts.length - 1].text !== 'postPagination21') {
+					if (posts[posts.length - 1]._id !== twentyFirstPostId) {
 						throw new Error('posts#index pagination - incorrect last post.');
 					}
 				})
@@ -421,10 +438,10 @@ describe('index', () => {
 							'posts#index pagination - totalPosts body property error.'
 						);
 					}
-					if (posts[0].text !== 'postPagination15') {
+					if (posts[0]._id !== fifteenthPostId) {
 						throw new Error('posts#index pagination - incorrect first post.');
 					}
-					if (posts[posts.length - 1].text !== 'postPagination1') {
+					if (posts[posts.length - 1]._id !== firstPostId) {
 						throw new Error('posts#index pagination - incorrect last post.');
 					}
 				})
