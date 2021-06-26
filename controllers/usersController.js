@@ -74,12 +74,12 @@ exports.index = [
 				.limit(req.query.limit)
 				.exec();
 			// Total count of users with no friendship with currentUser.
-			const usersCount = await User.countDocuments({
+			const totalUsers = await User.countDocuments({
 				_id: { $nin: userIds },
 			}).exec();
 			res.json({
 				users,
-				usersCount,
+				totalUsers,
 			});
 		} catch (err) {
 			next(err);

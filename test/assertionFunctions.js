@@ -20,9 +20,9 @@ exports.bodyHasUsersProperty = (res) => {
 	}
 };
 
-exports.bodyHasUsersCountProperty = (res) => {
-	if (!Object.prototype.hasOwnProperty.call(res.body, 'usersCount')) {
-		throw new Error('missing usersCount property');
+exports.bodyHasTotalUsersProperty = (res) => {
+	if (!Object.prototype.hasOwnProperty.call(res.body, 'totalUsers')) {
+		throw new Error('missing totalUsers property');
 	}
 };
 

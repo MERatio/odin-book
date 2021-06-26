@@ -14,7 +14,7 @@ const {
 	bodyHasErrProperty,
 	bodyHasErrorsProperty,
 	bodyHasUsersProperty,
-	bodyHasUsersCountProperty,
+	bodyHasTotalUsersProperty,
 	bodyHasUserProperty,
 	bodyHasJwtProperty,
 	bodyHasCurrentUserProperty,
@@ -289,7 +289,7 @@ describe('index', () => {
 	});
 
 	describe('pagination', () => {
-		let indexUsersCount = 0;
+		let indexTotalUsers = 0;
 
 		beforeEach(async () => {
 			for (let i = 1; i < 31; i++) {
@@ -306,7 +306,7 @@ describe('index', () => {
 					.expect('Content-Type', /json/)
 					.expect(bodyHasUserProperty)
 					.expect(bodyHasJwtProperty)
-					.expect(() => (indexUsersCount += 1))
+					.expect(() => (indexTotalUsers += 1))
 					.expect(201);
 			}
 		});
@@ -318,17 +318,17 @@ describe('index', () => {
 				.set('Authorization', `Bearer ${user1Jwt}`)
 				.expect('Content-Type', /json/)
 				.expect(bodyHasUsersProperty)
-				.expect(bodyHasUsersCountProperty)
+				.expect(bodyHasTotalUsersProperty)
 				.expect((res) => {
-					const { users, usersCount } = res.body;
+					const { users, totalUsers } = res.body;
 					if (users.length !== 10) {
 						throw new Error(
 							'users#index pagination - users body property length error.'
 						);
 					}
-					if (usersCount !== indexUsersCount) {
+					if (totalUsers !== indexTotalUsers) {
 						throw new Error(
-							'users#index pagination - usersCount body property error.'
+							'users#index pagination - totalUsers body property error.'
 						);
 					}
 					if (users[0].firstName !== 'userPagination1') {
@@ -346,17 +346,17 @@ describe('index', () => {
 				.set('Authorization', `Bearer ${user1Jwt}`)
 				.expect('Content-Type', /json/)
 				.expect(bodyHasUsersProperty)
-				.expect(bodyHasUsersCountProperty)
+				.expect(bodyHasTotalUsersProperty)
 				.expect((res) => {
-					const { users, usersCount } = res.body;
+					const { users, totalUsers } = res.body;
 					if (users.length !== 15) {
 						throw new Error(
 							'users#index pagination - users body property length error.'
 						);
 					}
-					if (usersCount !== indexUsersCount) {
+					if (totalUsers !== indexTotalUsers) {
 						throw new Error(
-							'users#index pagination - usersCount body property error.'
+							'users#index pagination - totalUsers body property error.'
 						);
 					}
 					if (users[0].firstName !== 'userPagination16') {
