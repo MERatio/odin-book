@@ -76,10 +76,13 @@ function setPaginationVariables(req, pageName, limitName, skipName) {
 
 	req[skipName] = (req.query[pageName] - 1) * req.query[limitName];
 }
-app.get(['/users', '/posts', '/posts/:postId/reactions'], (req, res, next) => {
-	setPaginationVariables(req, 'page', 'limit', 'skip');
-	next();
-});
+app.get(
+	['/users', '/posts', '/posts/:postId/reactions', '/posts/:postId/comments'],
+	(req, res, next) => {
+		setPaginationVariables(req, 'page', 'limit', 'skip');
+		next();
+	}
+);
 
 // Use routers
 app.use('/auth', authRouter);

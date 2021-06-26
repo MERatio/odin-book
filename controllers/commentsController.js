@@ -3,8 +3,8 @@ const authenticated = require('../middlewares/authenticated');
 const validMongoObjectIdRouteParams = require('../middlewares/validMongoObjectIdRouteParams');
 const getResourceFromParams = require('../middlewares/getResourceFromParams');
 const getResourceFromParamsAndCurrentUserIsTheAuthor = require('../middlewares/getResourceFromParamsAndCurrentUserIsTheAuthor');
-
 const Comment = require('../models/comment');
+const Post = require('../models/post');
 
 const commentSanitationAndValidation = [
 	body('text')
@@ -14,6 +14,44 @@ const commentSanitationAndValidation = [
 		.isLength({ max: 200 })
 		.withMessage('Text is too long (maximum is 200 characters)')
 		.escape(),
+];
+
+exports.index = [
+	authenticated,
+	validMongoObjectIdRouteParams,
+	// Check if post exists.
+	async (req, res, next) => {
+		try {
+			const postExists = await Post.exists({ _id: req.params.postId });
+			if (!postExists) {
+				const err = new Error('Post not found');
+				err.status = 404;
+				next(err);
+			} else {
+				next();
+			}
+		} catch (err) {
+			next(err);
+		}
+	},
+	async (req, res, next) => {
+		try {
+			const comments = await Comment.find({
+				post: req.params.postId,
+			})
+				.skip(req.skip)
+				.limit(req.query.limit)
+				.sort({ updatedAt: -1 })
+				.populate('author')
+				.exec();
+			const totalComments = await Comment.countDocuments({
+				post: req.params.postId,
+			}).exec();
+			res.json({ comments, totalComments });
+		} catch (err) {
+			next(err);
+		}
+	},
 ];
 
 exports.create = [

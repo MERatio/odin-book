@@ -92,6 +92,18 @@ exports.bodyHasReactionProperty = (res) => {
 	}
 };
 
+exports.bodyHasCommentsProperty = (res) => {
+	if (!Object.prototype.hasOwnProperty.call(res.body, 'comments')) {
+		throw new Error('missing comments property');
+	}
+};
+
+exports.bodyHasTotalCommentsProperty = (res) => {
+	if (!Object.prototype.hasOwnProperty.call(res.body, 'totalComments')) {
+		throw new Error('missing totalComments property');
+	}
+};
+
 exports.bodyHasCommentProperty = (res) => {
 	if (!Object.prototype.hasOwnProperty.call(res.body, 'comment')) {
 		throw new Error('missing comment property');

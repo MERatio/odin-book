@@ -3,6 +3,8 @@ const router = express.Router({ mergeParams: true });
 
 const commentsController = require('../controllers/commentsController');
 
+router.get('/', commentsController.index);
+
 router.post('/', commentsController.create);
 
 router.put('/:commentId', commentsController.update);
