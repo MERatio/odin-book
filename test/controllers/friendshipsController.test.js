@@ -8,15 +8,19 @@ const {
 	bodyHasUserProperty,
 	bodyHasJwtProperty,
 	bodyHasCurrentUserProperty,
+	bodyHasFriendshipsProperty,
+	bodyHasTotalFriendshipsProperty,
 	bodyHasFriendshipProperty,
 } = require('../assertionFunctions');
 
+let user1Id;
 let user2Id;
 let user3Id;
 let user1Jwt;
 let user2Jwt;
 let user3Jwt;
 let user1AndUser2FriendshipId;
+let user1TotalFriendRequests = 0;
 
 beforeAll(async () => await mongoConfigTesting.connect());
 beforeEach(async () => {
@@ -33,6 +37,7 @@ beforeEach(async () => {
 		.expect('Content-Type', /json/)
 		.expect(bodyHasUserProperty)
 		.expect(bodyHasJwtProperty)
+		.expect((res) => (user1Id = res.body.user._id))
 		.expect(201);
 	await request(app)
 		.post('/users')
@@ -113,8 +118,265 @@ beforeEach(async () => {
 		.expect((res) => (user1AndUser2FriendshipId = res.body.friendship._id))
 		.expect(201);
 });
-afterEach(async () => await mongoConfigTesting.clear());
+afterEach(async () => {
+	user1TotalFriendRequests = 0;
+	await mongoConfigTesting.clear();
+});
 afterAll(async () => await mongoConfigTesting.close());
+
+describe('friendRequests', () => {
+	describe('body has err property', () => {
+		test('if JWT is not valid or not supplied', (done) => {
+			request(app)
+				.get(`/users/${user1Id}/friend-requests`)
+				.set('Accept', 'application/json')
+				.expect('Content-Type', /json/)
+				.expect(bodyHasErrProperty)
+				.expect(401, done);
+		});
+
+		test('if userId route parameter is not valid', (done) => {
+			request(app)
+				.get(`/users/${user1Id + '123'}/friend-requests`)
+				.set('Accept', 'application/json')
+				.set('Authorization', `Bearer ${user1Jwt}`)
+				.expect('Content-Type', /json/)
+				.expect(bodyHasErrProperty)
+				.expect(404, done);
+		});
+
+		test('if user does not exists', (done) => {
+			request(app)
+				.get(
+					`/users/${
+						user1Id.substring(0, user1Id.length - 3) + '123'
+					}/friend-requests`
+				)
+				.set('Accept', 'application/json')
+				.set('Authorization', `Bearer ${user1Jwt}`)
+				.expect('Content-Type', /json/)
+				.expect(bodyHasErrProperty)
+				.expect(404, done);
+		});
+
+		test("if userId is not the currentUser's id", (done) => {
+			request(app)
+				.get(`/users/${user1Id}/friend-requests`)
+				.set('Accept', 'application/json')
+				.set('Authorization', `Bearer ${user2Jwt}`)
+				.expect('Content-Type', /json/)
+				.expect(bodyHasErrProperty)
+				.expect(401, done);
+		});
+	});
+
+	describe('friendships', () => {
+		let friendship1Id;
+		let friendship2Id;
+
+		beforeEach(async () => {
+			for (let i = 1; i < 3; i++) {
+				let jwt;
+
+				await request(app)
+					.post('/users')
+					.send({
+						firstName: `requestor${i}`,
+						lastName: `requestor${i}`,
+						email: `requestor${i}@example.com`,
+						password: 'password123',
+						passwordConfirmation: 'password123',
+					})
+					.set('Accept', 'application/json')
+					.expect('Content-Type', /json/)
+					.expect(bodyHasUserProperty)
+					.expect(bodyHasJwtProperty)
+					.expect((res) => {
+						jwt = res.body.jwt;
+					})
+					.expect(201);
+
+				await request(app)
+					.post('/friendships')
+					.send({ requesteeId: user1Id })
+					.set('Accept', 'application/json')
+					.set('Authorization', `Bearer ${jwt}`)
+					.expect('Content-Type', /json/)
+					.expect((res) => {
+						if (i === 1) {
+							friendship1Id = res.body.friendship._id;
+						} else if (i === 2) {
+							friendship2Id = res.body.friendship._id;
+						}
+					})
+					.expect(201);
+			}
+		});
+
+		test('should be recent', (done) => {
+			request(app)
+				.get(`/users/${user1Id}/friend-requests`)
+				.set('Accept', 'application/json')
+				.set('Authorization', `Bearer ${user1Jwt}`)
+				.expect('Content-Type', /json/)
+				.expect(bodyHasFriendshipsProperty)
+				.expect((res) => {
+					if (
+						!(
+							res.body.friendships[0]._id === friendship2Id &&
+							res.body.friendships[1]._id === friendship1Id
+						)
+					) {
+						throw new Error('friendships are not recent');
+					}
+				})
+				.expect(200, done);
+		});
+
+		describe('individual friendship', () => {
+			describe('requestor', () => {
+				test('should be populated', (done) => {
+					request(app)
+						.get(`/users/${user1Id}/friend-requests`)
+						.set('Accept', 'application/json')
+						.set('Authorization', `Bearer ${user1Jwt}`)
+						.expect('Content-Type', /json/)
+						.expect(bodyHasFriendshipsProperty)
+						.expect(bodyHasTotalFriendshipsProperty)
+						.expect((res) => {
+							if (!res.body.friendships[0].requestor._id) {
+								throw new Error(
+									'individual friendship requestor is not populated'
+								);
+							}
+						})
+						.expect(200, done);
+				});
+			});
+		});
+	});
+
+	describe('pagination', () => {
+		let firstFriendshipId;
+		let fifteenthFriendshipId;
+		let twentyFirstFriendshipId;
+		let thirtiethFriendshipId;
+
+		beforeEach(async () => {
+			for (let i = 1; i < 31; i++) {
+				let jwt;
+
+				await request(app)
+					.post('/users')
+					.send({
+						firstName: `requestor${i}`,
+						lastName: `requestor${i}`,
+						email: `requestor${i}@example.com`,
+						password: 'password123',
+						passwordConfirmation: 'password123',
+					})
+					.set('Accept', 'application/json')
+					.expect('Content-Type', /json/)
+					.expect(bodyHasUserProperty)
+					.expect(bodyHasJwtProperty)
+					.expect((res) => {
+						jwt = res.body.jwt;
+					})
+					.expect(201);
+
+				await request(app)
+					.post('/friendships')
+					.send({ requesteeId: user1Id })
+					.set('Accept', 'application/json')
+					.set('Authorization', `Bearer ${jwt}`)
+					.expect('Content-Type', /json/)
+					.expect(bodyHasFriendshipProperty)
+					.expect((res) => {
+						const friendship = res.body.friendship;
+						user1TotalFriendRequests += 1;
+						if (i === 1) {
+							firstFriendshipId = friendship._id;
+						} else if (i === 15) {
+							fifteenthFriendshipId = friendship._id;
+						} else if (i === 21) {
+							twentyFirstFriendshipId = friendship._id;
+						} else if (i === 30) {
+							thirtiethFriendshipId = friendship._id;
+						}
+					})
+					.expect(201);
+			}
+		});
+
+		test('works with or without query parameters', async (done) => {
+			await request(app)
+				.get(`/users/${user1Id}/friend-requests`)
+				.set('Accept', 'application/json')
+				.set('Authorization', `Bearer ${user1Jwt}`)
+				.expect('Content-Type', /json/)
+				.expect(bodyHasFriendshipsProperty)
+				.expect(bodyHasTotalFriendshipsProperty)
+				.expect((res) => {
+					const { friendships, totalFriendships } = res.body;
+					if (friendships.length !== 10) {
+						throw new Error(
+							'friendships#friendRequests pagination - friendships body property length error.'
+						);
+					}
+					if (totalFriendships !== user1TotalFriendRequests) {
+						throw new Error(
+							'friendships#friendRequests pagination - totalFriendships body property error.'
+						);
+					}
+					if (friendships[0]._id !== thirtiethFriendshipId) {
+						throw new Error(
+							'friendships#friendRequests pagination - incorrect first friendship.'
+						);
+					}
+					if (
+						friendships[friendships.length - 1]._id !== twentyFirstFriendshipId
+					) {
+						throw new Error(
+							'friendships#friendRequests pagination - incorrect last friendship.'
+						);
+					}
+				})
+				.expect(200);
+
+			request(app)
+				.get(`/users/${user1Id}/friend-requests?page=2&limit=15`)
+				.set('Accept', 'application/json')
+				.set('Authorization', `Bearer ${user1Jwt}`)
+				.expect('Content-Type', /json/)
+				.expect(bodyHasFriendshipsProperty)
+				.expect(bodyHasTotalFriendshipsProperty)
+				.expect((res) => {
+					const { friendships, totalFriendships } = res.body;
+					if (friendships.length !== 15) {
+						throw new Error(
+							'friendships#friendRequests pagination - friendships body property length error.'
+						);
+					}
+					if (totalFriendships !== user1TotalFriendRequests) {
+						throw new Error(
+							'friendships#friendRequests pagination - totalFriendships body property error.'
+						);
+					}
+					if (friendships[0]._id !== fifteenthFriendshipId) {
+						throw new Error(
+							'friendships#friendRequests pagination - incorrect first friendship.'
+						);
+					}
+					if (friendships[friendships.length - 1]._id !== firstFriendshipId) {
+						throw new Error(
+							'friendships#friendRequests pagination - incorrect last friendship.'
+						);
+					}
+				})
+				.expect(200, done);
+		});
+	});
+});
 
 describe('create', () => {
 	describe('body has err property', () => {

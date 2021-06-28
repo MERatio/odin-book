@@ -50,6 +50,18 @@ exports.bodyHasCurrentUserProperty = (res) => {
 	}
 };
 
+exports.bodyHasFriendshipsProperty = (res) => {
+	if (!Object.prototype.hasOwnProperty.call(res.body, 'friendships')) {
+		throw new Error('missing friendships property');
+	}
+};
+
+exports.bodyHasTotalFriendshipsProperty = (res) => {
+	if (!Object.prototype.hasOwnProperty.call(res.body, 'totalFriendships')) {
+		throw new Error('missing totalFriendships property');
+	}
+};
+
 exports.bodyHasFriendshipProperty = (res) => {
 	if (!Object.prototype.hasOwnProperty.call(res.body, 'friendship')) {
 		throw new Error('missing friendship property');
