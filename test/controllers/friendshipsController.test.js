@@ -117,31 +117,19 @@ afterEach(async () => await mongoConfigTesting.clear());
 afterAll(async () => await mongoConfigTesting.close());
 
 describe('create', () => {
-	test('should require a valid JWT', (done) => {
-		request(app)
-			.post('/friendships')
-			.send({
-				requesteeId: user3Id,
-			})
-			.set('Accept', 'application/json')
-			.expect('Content-Type', /json/)
-			.expect(bodyHasErrProperty)
-			.expect(401, done);
-	});
+	describe('body has err property', () => {
+		test('if JWT is not valid or not supplied', (done) => {
+			request(app)
+				.post('/friendships')
+				.send({
+					requesteeId: user3Id,
+				})
+				.set('Accept', 'application/json')
+				.expect('Content-Type', /json/)
+				.expect(bodyHasErrProperty)
+				.expect(401, done);
+		});
 
-	test('should require a valid requesteeId', (done) => {
-		request(app)
-			.post('/friendships')
-			.send({ requesteeId: 'notAMongoId123' })
-			.set('Accept', 'application/json')
-			.set('Authorization', `Bearer ${user2Jwt}`)
-			.expect('Content-Type', /json/)
-			.expect(bodyHasErrorsProperty)
-			.expect(bodyHasFriendshipProperty)
-			.expect(422, done);
-	});
-
-	describe('body has friendship and errors', () => {
 		test('if user send a friend request to themselves', (done) => {
 			request(app)
 				.post('/friendships')
@@ -153,29 +141,43 @@ describe('create', () => {
 				.expect(bodyHasErrProperty)
 				.expect(422, done);
 		});
+
+		test('if friendship between user already exists', async (done) => {
+			await request(app)
+				.post('/friendships')
+				.send({
+					requesteeId: user3Id,
+				})
+				.set('Accept', 'application/json')
+				.set('Authorization', `Bearer ${user2Jwt}`)
+				.expect('Content-Type', /json/)
+				.expect(bodyHasFriendshipProperty)
+				.expect(201);
+
+			request(app)
+				.post('/friendships')
+				.send({
+					requesteeId: user3Id,
+				})
+				.set('Accept', 'application/json')
+				.set('Authorization', `Bearer ${user2Jwt}`)
+				.expect(bodyHasErrProperty)
+				.expect(422, done);
+		});
 	});
 
-	test('body has friendship and errors if friendship between user already exists', async (done) => {
-		await request(app)
-			.post('/friendships')
-			.send({
-				requesteeId: user3Id,
-			})
-			.set('Accept', 'application/json')
-			.set('Authorization', `Bearer ${user2Jwt}`)
-			.expect('Content-Type', /json/)
-			.expect(bodyHasFriendshipProperty)
-			.expect(201);
-
-		request(app)
-			.post('/friendships')
-			.send({
-				requesteeId: user3Id,
-			})
-			.set('Accept', 'application/json')
-			.set('Authorization', `Bearer ${user2Jwt}`)
-			.expect(bodyHasErrProperty)
-			.expect(422, done);
+	describe('body has friendship and errors', () => {
+		test('if requesteeId is not valid', (done) => {
+			request(app)
+				.post('/friendships')
+				.send({ requesteeId: 'notAMongoId123' })
+				.set('Accept', 'application/json')
+				.set('Authorization', `Bearer ${user2Jwt}`)
+				.expect('Content-Type', /json/)
+				.expect(bodyHasErrorsProperty)
+				.expect(bodyHasFriendshipProperty)
+				.expect(422, done);
+		});
 	});
 
 	it('should send a friend request to other user', async (done) => {
