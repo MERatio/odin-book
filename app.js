@@ -80,6 +80,7 @@ app.get(
 	[
 		'/users',
 		'/users/:userId/friend-requests',
+		'/users/:userId/friends',
 		'/posts',
 		'/posts/:postId/reactions',
 		'/posts/:postId/comments',

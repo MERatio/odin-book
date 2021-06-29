@@ -177,6 +177,43 @@ exports.show = [
 	},
 ];
 
+exports.friends = [
+	authenticated,
+	validMongoObjectIdRouteParams,
+	// Check if user exists.
+	async (req, res, next) => {
+		try {
+			const user = await User.findById(req.params.userId).exec();
+			if (user === null) {
+				const err = new Error('User not found.');
+				err.status = 404;
+				next(err);
+			} else {
+				req.user = user;
+				next();
+			}
+		} catch (err) {
+			next(err);
+		}
+	},
+	async (req, res, next) => {
+		try {
+			const friendsIds = await req.user.getFriendsIds();
+			const users = await User.find({})
+				.where('_id')
+				.in(friendsIds)
+				.skip(req.skip)
+				.limit(req.query.limit)
+				.sort({ updatedAt: -1 })
+				.populate('author')
+				.exec();
+			res.json({ users, totalUsers: friendsIds.length });
+		} catch (err) {
+			next(err);
+		}
+	},
+];
+
 // Get all currentUser's properties except password.
 exports.edit = [
 	authenticated,
