@@ -21,8 +21,7 @@ exports.index = [
 	authenticated,
 	async (req, res, next) => {
 		try {
-			const friends = await req.currentUser.getFriends();
-			const friendsIds = friends.map((friend) => friend._id);
+			const friendsIds = await req.currentUser.getFriendsIds();
 			const userIds = [req.currentUser._id, ...friendsIds];
 			// currentUser and friends posts per page.
 			const posts = await Post.find({})

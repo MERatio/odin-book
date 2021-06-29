@@ -50,7 +50,7 @@ UserSchema.methods.findRelationshipWith = function (otherUserId, cb) {
 	);
 };
 
-UserSchema.methods.getFriends = async function () {
+UserSchema.methods.getFriendsIds = async function () {
 	let friendsIds = [];
 	const requesteesIds = await mongoose
 		.model('Friendship')
@@ -69,7 +69,7 @@ UserSchema.methods.getFriends = async function () {
 		.distinct('requestor')
 		.exec();
 	friendsIds = [...requesteesIds, ...requestorsIds];
-	return mongoose.model('User').find({}).where('_id').in(friendsIds);
+	return friendsIds;
 };
 
 UserSchema.set('toJSON', {
