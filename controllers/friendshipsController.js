@@ -6,58 +6,6 @@ const getResourceFromParams = require('../middlewares/getResourceFromParams');
 const Friendship = require('../models/friendship');
 const User = require('../models/user');
 
-exports.friendRequests = [
-	authenticated,
-	validMongoObjectIdRouteParams,
-	// Check if user exists.
-	async (req, res, next) => {
-		try {
-			const user = await User.findById(req.params.userId);
-			if (user === null) {
-				const err = new Error('User not found');
-				err.status = 404;
-				next(err);
-			} else {
-				req.user = user;
-				next();
-			}
-		} catch (err) {
-			next(err);
-		}
-	},
-	// Check if user is the currentUser
-	(req, res, next) => {
-		if (!req.user._id.equals(req.currentUser._id)) {
-			const err = new Error('Invalid JWT');
-			err.status = 401;
-			next(err);
-		} else {
-			req.user = undefined;
-			next();
-		}
-	},
-	async (req, res, next) => {
-		try {
-			const friendships = await Friendship.find({
-				requestee: req.currentUser._id,
-				status: 'pending',
-			})
-				.skip(req.skip)
-				.limit(req.query.limit)
-				.sort({ updatedAt: -1 })
-				.populate('requestor')
-				.exec();
-			const totalFriendships = await Friendship.countDocuments({
-				requestee: req.currentUser._id,
-				status: 'pending',
-			}).exec();
-			res.json({ friendships, totalFriendships });
-		} catch (err) {
-			next(err);
-		}
-	},
-];
-
 exports.create = [
 	authenticated,
 	// Validate field.
@@ -170,6 +118,58 @@ exports.destroy = [
 				const removedFriendship = await friendship.remove();
 				res.json({ friendship: removedFriendship });
 			}
+		} catch (err) {
+			next(err);
+		}
+	},
+];
+
+exports.friendRequests = [
+	authenticated,
+	validMongoObjectIdRouteParams,
+	// Check if user exists.
+	async (req, res, next) => {
+		try {
+			const user = await User.findById(req.params.userId);
+			if (user === null) {
+				const err = new Error('User not found');
+				err.status = 404;
+				next(err);
+			} else {
+				req.user = user;
+				next();
+			}
+		} catch (err) {
+			next(err);
+		}
+	},
+	// Check if user is the currentUser
+	(req, res, next) => {
+		if (!req.user._id.equals(req.currentUser._id)) {
+			const err = new Error('Invalid JWT');
+			err.status = 401;
+			next(err);
+		} else {
+			req.user = undefined;
+			next();
+		}
+	},
+	async (req, res, next) => {
+		try {
+			const friendships = await Friendship.find({
+				requestee: req.currentUser._id,
+				status: 'pending',
+			})
+				.skip(req.skip)
+				.limit(req.query.limit)
+				.sort({ updatedAt: -1 })
+				.populate('requestor')
+				.exec();
+			const totalFriendships = await Friendship.countDocuments({
+				requestee: req.currentUser._id,
+				status: 'pending',
+			}).exec();
+			res.json({ friendships, totalFriendships });
 		} catch (err) {
 			next(err);
 		}
