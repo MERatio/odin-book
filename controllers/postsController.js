@@ -6,6 +6,7 @@ const validMongoObjectIdRouteParams = require('../middlewares/validMongoObjectId
 const getResourceFromParamsAndCurrentUserIsTheAuthor = require('../middlewares/getResourceFromParamsAndCurrentUserIsTheAuthor');
 const Post = require('../models/post');
 const Picture = require('../models/picture');
+const User = require('../models/user');
 
 const postValidationAndSanitation = [
 	body('text')
@@ -163,6 +164,40 @@ exports.destroy = [
 			// Remove post.
 			const removedPost = await post.remove();
 			res.json({ post: removedPost });
+		} catch (err) {
+			next(err);
+		}
+	},
+];
+
+exports.usersPostsIndex = [
+	authenticated,
+	// Check if user exists.
+	async (req, res, next) => {
+		try {
+			const userExists = await User.exists({ _id: req.params.userId });
+			if (!userExists) {
+				const err = new Error('User not found.');
+				err.status = 404;
+				next(err);
+			} else {
+				next();
+			}
+		} catch (err) {
+			next(err);
+		}
+	},
+	async (req, res, next) => {
+		try {
+			const posts = await Post.find({ author: req.params.userId })
+				.skip(req.skip)
+				.limit(req.query.limit)
+				.sort({ updatedAt: -1 })
+				.exec();
+			const totalPosts = await Post.countDocuments({
+				author: req.params.userId,
+			}).exec();
+			res.json({ posts, totalPosts });
 		} catch (err) {
 			next(err);
 		}

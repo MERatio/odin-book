@@ -28,6 +28,7 @@ const {
 	bodyHasCommentProperty,
 } = require('../assertionFunctions');
 
+let user1Id;
 let user2Id;
 let user1Jwt;
 let user2Jwt;
@@ -38,6 +39,7 @@ let user2Post1Picture1Id;
 let user2Post1Reaction1Id;
 let user2Post1Comment4Id;
 let indexTotalPosts = 0;
+let usersPostsIndexTotalPosts = 0;
 const updatedUser1PostText = 'updatedUser1Post1Text';
 let imagesDirFileInitialCount = 0;
 
@@ -59,6 +61,7 @@ beforeEach(async () => {
 		.expect('Content-Type', /json/)
 		.expect(bodyHasUserProperty)
 		.expect(bodyHasJwtProperty)
+		.expect((res) => (user1Id = res.body.user._id))
 		.expect(201);
 	await request(app)
 		.post('/users')
@@ -111,6 +114,7 @@ beforeEach(async () => {
 		.expect((res) => {
 			user1Post1Id = res.body.post._id;
 			indexTotalPosts += 1;
+			usersPostsIndexTotalPosts += 1;
 		})
 		.expect(201);
 	await request(app)
@@ -203,6 +207,7 @@ beforeEach(async () => {
 });
 afterEach(async () => {
 	indexTotalPosts = 0;
+	usersPostsIndexTotalPosts = 0;
 	await emptyDir(imagesPath, ['user.jpg', 'post.jpg']);
 	await mongoConfigTesting.clear();
 });
@@ -931,5 +936,191 @@ describe('destroy', () => {
 		} catch (err) {
 			done(err);
 		}
+	});
+});
+
+describe('usersPostsIndex', () => {
+	test('should require a valid JWT', (done) => {
+		request(app)
+			.get(`/users/${user1Id}/posts`)
+			.set('Accept', 'application/json')
+			.expect('Content-Type', /json/)
+			.expect(bodyHasErrProperty)
+			.expect(401, done);
+	});
+
+	describe('posts', () => {
+		let user1PostId;
+
+		beforeEach(async () => {
+			await request(app)
+				.post('/posts')
+				.send({
+					text: 'user1Post',
+				})
+				.set('Accept', 'application/json')
+				.set('Authorization', `Bearer ${user1Jwt}`)
+				.expect('Content-Type', /json/)
+				.expect(bodyHasPostProperty)
+				.expect((res) => (user1PostId = res.body.post._id))
+				.expect(201);
+		});
+
+		test('should be recent', (done) => {
+			request(app)
+				.get(`/users/${user1Id}/posts`)
+				.set('Accept', 'application/json')
+				.set('Authorization', `Bearer ${user1Jwt}`)
+				.expect('Content-Type', /json/)
+				.expect(bodyHasPostsProperty)
+				.expect((res) => {
+					if (
+						!(
+							res.body.posts[0]._id === user1PostId &&
+							res.body.posts[res.body.posts.length - 1]._id === user1Post1Id
+						)
+					) {
+						throw new Error('posts are not recent');
+					}
+				})
+				.expect(200, done);
+		});
+
+		describe('individual post', () => {
+			describe('author', () => {
+				test('should be populated', (done) => {
+					request(app)
+						.get(`/users/${user1Id}/posts`)
+						.set('Accept', 'application/json')
+						.set('Authorization', `Bearer ${user1Jwt}`)
+						.expect('Content-Type', /json/)
+						.expect(bodyHasPostsProperty)
+						.expect((res) => {
+							if (!res.body.posts[0].author._id) {
+								throw new Error('individual post author is not populated');
+							}
+						})
+						.expect(200, done);
+				});
+			});
+
+			describe('picture', () => {
+				test('should be populated', (done) => {
+					request(app)
+						.get(`/users/${user1Id}/posts`)
+						.set('Accept', 'application/json')
+						.set('Authorization', `Bearer ${user1Jwt}`)
+						.expect('Content-Type', /json/)
+						.expect(bodyHasPostsProperty)
+						.expect((res) => {
+							if (!res.body.posts[0].picture._id) {
+								throw new Error('individual post picture is not populated');
+							}
+						})
+						.expect(200, done);
+				});
+			});
+		});
+	});
+
+	describe('pagination', () => {
+		let firstPostId;
+		let fifteenthPostId;
+		let twentyFirstPostId;
+		let thirtiethPostId;
+
+		beforeEach(async () => {
+			for (let i = 1; i < 31; i++) {
+				await request(app)
+					.post('/posts')
+					.send({
+						text: `usersPostIndexPagination${i}`,
+					})
+					.set('Accept', 'application/json')
+					.set('Authorization', `Bearer ${user1Jwt}`)
+					.expect('Content-Type', /json/)
+					.expect(bodyHasPostProperty)
+					.expect((res) => {
+						const post = res.body.post;
+						usersPostsIndexTotalPosts += 1;
+						if (i === 1) {
+							firstPostId = post._id;
+						} else if (i === 15) {
+							fifteenthPostId = post._id;
+						} else if (i === 21) {
+							twentyFirstPostId = post._id;
+						} else if (i === 30) {
+							thirtiethPostId = post._id;
+						}
+					})
+					.expect(201);
+			}
+		});
+
+		test('works with or without query parameters', async (done) => {
+			await request(app)
+				.get(`/users/${user1Id}/posts`)
+				.set('Accept', 'application/json')
+				.set('Authorization', `Bearer ${user1Jwt}`)
+				.expect('Content-Type', /json/)
+				.expect(bodyHasPostsProperty)
+				.expect(bodyHasTotalPostsProperty)
+				.expect((res) => {
+					const { posts, totalPosts } = res.body;
+					if (posts.length !== 10) {
+						throw new Error(
+							'posts#usersPostsIndex pagination - posts body property length error.'
+						);
+					}
+					if (totalPosts !== usersPostsIndexTotalPosts) {
+						throw new Error(
+							'posts#usersPostsIndex pagination - totalPosts body property error.'
+						);
+					}
+					if (posts[0]._id !== thirtiethPostId) {
+						throw new Error(
+							'posts#usersPostsIndex pagination - incorrect first post.'
+						);
+					}
+					if (posts[posts.length - 1]._id !== twentyFirstPostId) {
+						throw new Error(
+							'posts#usersPostsIndex pagination - incorrect last post.'
+						);
+					}
+				})
+				.expect(200);
+
+			request(app)
+				.get(`/users/${user1Id}/posts?page=2&limit=15`)
+				.set('Accept', 'application/json')
+				.set('Authorization', `Bearer ${user1Jwt}`)
+				.expect('Content-Type', /json/)
+				.expect(bodyHasPostsProperty)
+				.expect(bodyHasTotalPostsProperty)
+				.expect((res) => {
+					const { posts, totalPosts } = res.body;
+					if (posts.length !== 15) {
+						throw new Error(
+							'posts#usersPostsIndex pagination - posts body property length error.'
+						);
+					}
+					if (totalPosts !== usersPostsIndexTotalPosts) {
+						throw new Error(
+							'posts#usersPostsIndex pagination - totalPosts body property error.'
+						);
+					}
+					if (posts[0]._id !== fifteenthPostId) {
+						throw new Error(
+							'posts#usersPostsIndex pagination - incorrect first post.'
+						);
+					}
+					if (posts[posts.length - 1]._id !== firstPostId) {
+						throw new Error(
+							'posts#usersPostsIndex pagination - incorrect last post.'
+						);
+					}
+				})
+				.expect(200, done);
+		});
 	});
 });
