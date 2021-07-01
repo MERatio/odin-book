@@ -172,6 +172,7 @@ exports.destroy = [
 
 exports.usersPostsIndex = [
 	authenticated,
+	validMongoObjectIdRouteParams,
 	// Check if user exists.
 	async (req, res, next) => {
 		try {

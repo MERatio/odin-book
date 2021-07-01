@@ -940,13 +940,35 @@ describe('destroy', () => {
 });
 
 describe('usersPostsIndex', () => {
-	test('should require a valid JWT', (done) => {
-		request(app)
-			.get(`/users/${user1Id}/posts`)
-			.set('Accept', 'application/json')
-			.expect('Content-Type', /json/)
-			.expect(bodyHasErrProperty)
-			.expect(401, done);
+	describe('body has err property', () => {
+		test('if JWT is not valid or not supplied', (done) => {
+			request(app)
+				.get(`/users/${user1Id}/posts`)
+				.set('Accept', 'application/json')
+				.expect('Content-Type', /json/)
+				.expect(bodyHasErrProperty)
+				.expect(401, done);
+		});
+
+		test('if userId route parameter is not valid', (done) => {
+			request(app)
+				.get(`/users/${user1Id + '123'}/posts`)
+				.set('Accept', 'application/json')
+				.set('Authorization', `Bearer ${user1Jwt}`)
+				.expect('Content-Type', /json/)
+				.expect(bodyHasErrProperty)
+				.expect(404, done);
+		});
+
+		test('if user does not exists', (done) => {
+			request(app)
+				.get(`/users/${user1Id.substring(0, user1Id.length - 3) + '123'}/posts`)
+				.set('Accept', 'application/json')
+				.set('Authorization', `Bearer ${user1Jwt}`)
+				.expect('Content-Type', /json/)
+				.expect(bodyHasErrProperty)
+				.expect(404, done);
+		});
 	});
 
 	describe('posts', () => {
