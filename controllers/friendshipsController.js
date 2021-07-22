@@ -156,6 +156,22 @@ exports.friendRequests = [
 	},
 	async (req, res, next) => {
 		try {
+			const totalFriendships = await Friendship.countDocuments({
+				requestee: req.currentUser._id,
+				status: 'pending',
+			}).exec();
+			if (req.query.noDocs) {
+				res.json({ totalFriendships });
+			} else {
+				req.totalFriendships = totalFriendships;
+				next();
+			}
+		} catch (err) {
+			next(err);
+		}
+	},
+	async (req, res, next) => {
+		try {
 			const friendships = await Friendship.find({
 				requestee: req.currentUser._id,
 				status: 'pending',
@@ -165,11 +181,7 @@ exports.friendRequests = [
 				.sort({ updatedAt: -1 })
 				.populate('requestor')
 				.exec();
-			const totalFriendships = await Friendship.countDocuments({
-				requestee: req.currentUser._id,
-				status: 'pending',
-			}).exec();
-			res.json({ friendships, totalFriendships });
+			res.json({ friendships, totalFriendships: req.totalFriendships });
 		} catch (err) {
 			next(err);
 		}

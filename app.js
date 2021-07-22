@@ -56,9 +56,21 @@ app.use(compression()); // Compress all routes
 app.use(passportConfig.initialize({ userProperty: 'currentUser' }));
 app.use(setCurrentUser);
 
-function setPaginationVariables(req, pageName, limitName, skipName) {
+function setPaginationVariables(
+	req,
+	noDocsName,
+	pageName,
+	limitName,
+	skipName
+) {
 	const page = parseInt(req.query[pageName], 10);
 	const limit = parseInt(req.query[limitName], 10);
+
+	if (req.query[noDocsName] === 'true') {
+		req.query[noDocsName] = true;
+	} else {
+		req.query[noDocsName] = false;
+	}
 
 	if (isNaN(page) || page < 1) {
 		req.query[pageName] = 1;
@@ -87,7 +99,7 @@ app.get(
 		'/posts/:postId/comments',
 	],
 	(req, res, next) => {
-		setPaginationVariables(req, 'page', 'limit', 'skip');
+		setPaginationVariables(req, 'noDocs', 'page', 'limit', 'skip');
 		next();
 	}
 );

@@ -21,21 +21,37 @@ const postValidationAndSanitation = [
 exports.index = [
 	authenticated,
 	async (req, res, next) => {
+		const friendsIds = await req.currentUser.getFriendsIds();
+		const userIds = [req.currentUser._id, ...friendsIds];
+		req.userIds = userIds;
+		next();
+	},
+	async (req, res, next) => {
 		try {
-			const friendsIds = await req.currentUser.getFriendsIds();
-			const userIds = [req.currentUser._id, ...friendsIds];
+			const totalPosts = await Post.countDocuments({
+				author: { $in: req.userIds },
+			}).exec();
+			if (req.query.noDocs) {
+				res.json({ totalPosts });
+			} else {
+				req.totalPosts = totalPosts;
+				next();
+			}
+		} catch (err) {
+			next(err);
+		}
+	},
+	async (req, res, next) => {
+		try {
 			// currentUser and friends posts per page.
 			const posts = await Post.find({})
 				.where('author')
-				.in(userIds)
+				.in(req.userIds)
 				.skip(req.skip)
 				.limit(req.query.limit)
 				.sort({ updatedAt: -1 })
 				.exec();
-			const totalPosts = await Post.countDocuments({
-				author: { $in: userIds },
-			}).exec();
-			res.json({ posts, totalPosts });
+			res.json({ posts, totalPosts: req.totalPosts });
 		} catch (err) {
 			next(err);
 		}
@@ -190,15 +206,27 @@ exports.usersPostsIndex = [
 	},
 	async (req, res, next) => {
 		try {
+			const totalPosts = await Post.countDocuments({
+				author: req.params.userId,
+			}).exec();
+			if (req.query.noDocs) {
+				res.json({ totalPosts });
+			} else {
+				req.totalPosts = totalPosts;
+				next();
+			}
+		} catch (err) {
+			next(err);
+		}
+	},
+	async (req, res, next) => {
+		try {
 			const posts = await Post.find({ author: req.params.userId })
 				.skip(req.skip)
 				.limit(req.query.limit)
 				.sort({ updatedAt: -1 })
 				.exec();
-			const totalPosts = await Post.countDocuments({
-				author: req.params.userId,
-			}).exec();
-			res.json({ posts, totalPosts });
+			res.json({ posts, totalPosts: req.totalPosts });
 		} catch (err) {
 			next(err);
 		}

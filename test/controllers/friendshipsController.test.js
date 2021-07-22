@@ -493,6 +493,28 @@ describe('friendRequests', () => {
 		});
 	});
 
+	test('noDocs query parameter set to true should only return the total documents', (done) => {
+		request(app)
+			.get(`/users/${user1Id}/friend-requests?noDocs=true&limit=15&page=1`)
+			.set('Accept', 'application/json')
+			.set('Authorization', `Bearer ${user1Jwt}`)
+			.expect('Content-Type', /json/)
+			.expect(bodyHasTotalFriendshipsProperty)
+			.expect((res) => {
+				if (Object.keys(res.body).length !== 1) {
+					throw new Error(
+						'friendships#index - should only return total document'
+					);
+				}
+				if (res.body.totalFriendships !== user1TotalFriendRequests) {
+					throw new Error(
+						'friendships#index - totalFriendships body property error.'
+					);
+				}
+			})
+			.expect(200, done);
+	});
+
 	describe('pagination', () => {
 		let firstFriendshipId;
 		let fifteenthFriendshipId;

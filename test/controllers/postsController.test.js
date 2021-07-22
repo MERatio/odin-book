@@ -361,6 +361,24 @@ describe('index', () => {
 		});
 	});
 
+	test('noDocs query parameter set to true should only return the total documents', (done) => {
+		request(app)
+			.get(`/posts?noDocs=true&limit=15&page=1`)
+			.set('Accept', 'application/json')
+			.set('Authorization', `Bearer ${user1Jwt}`)
+			.expect('Content-Type', /json/)
+			.expect(bodyHasTotalPostsProperty)
+			.expect((res) => {
+				if (Object.keys(res.body).length !== 1) {
+					throw new Error('posts#index - should only return total document');
+				}
+				if (res.body.totalPosts !== indexTotalPosts) {
+					throw new Error('posts#index - totalPosts body property error.');
+				}
+			})
+			.expect(200, done);
+	});
+
 	describe('pagination', () => {
 		let firstPostId;
 		let fifteenthPostId;
@@ -1043,6 +1061,24 @@ describe('usersPostsIndex', () => {
 				});
 			});
 		});
+	});
+
+	test('noDocs query parameter set to true should only return the total documents', (done) => {
+		request(app)
+			.get(`/users/${user1Id}/posts?noDocs=true&limit=15&page=1`)
+			.set('Accept', 'application/json')
+			.set('Authorization', `Bearer ${user1Jwt}`)
+			.expect('Content-Type', /json/)
+			.expect(bodyHasTotalPostsProperty)
+			.expect((res) => {
+				if (Object.keys(res.body).length !== 1) {
+					throw new Error('posts#index - should only return total document');
+				}
+				if (res.body.totalPosts !== usersPostsIndexTotalPosts) {
+					throw new Error('posts#index - totalPosts body property error.');
+				}
+			})
+			.expect(200, done);
 	});
 
 	describe('pagination', () => {

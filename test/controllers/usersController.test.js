@@ -24,6 +24,7 @@ const {
 let user1Id;
 let user1Jwt;
 let imagesDirFileInitialCount = 0;
+let indexTotalUsers = 0;
 
 beforeAll(async () => {
 	await mongoConfigTesting.connect();
@@ -43,7 +44,10 @@ beforeEach(async () => {
 		.expect('Content-Type', /json/)
 		.expect(bodyHasUserProperty)
 		.expect(bodyHasJwtProperty)
-		.expect((res) => (user1Id = res.body.user._id))
+		.expect((res) => {
+			indexTotalUsers += 0;
+			user1Id = res.body.user._id;
+		})
 		.expect(201);
 
 	await request(app)
@@ -60,6 +64,7 @@ beforeEach(async () => {
 		.expect(200);
 });
 afterEach(async () => {
+	indexTotalUsers = 0;
 	await emptyDir(imagesPath, ['user.jpg', 'post.jpg']);
 	await mongoConfigTesting.clear();
 });
@@ -335,8 +340,25 @@ describe('index', () => {
 		});
 	});
 
+	test('noDocs query parameter set to true should only return the total documents', (done) => {
+		request(app)
+			.get(`/users?noDocs=true&limit=15&page=1`)
+			.set('Accept', 'application/json')
+			.set('Authorization', `Bearer ${user1Jwt}`)
+			.expect('Content-Type', /json/)
+			.expect(bodyHasTotalUsersProperty)
+			.expect((res) => {
+				if (Object.keys(res.body).length !== 1) {
+					throw new Error('users#index - should only return total document');
+				}
+				if (res.body.totalUsers !== indexTotalUsers) {
+					throw new Error('users#index - totalUsers body property error.');
+				}
+			})
+			.expect(200, done);
+	});
+
 	describe('pagination', () => {
-		let indexTotalUsers = 0;
 		let firstUserId;
 		let fifteenthUserId;
 		let twentyFirstUserId;
@@ -1075,6 +1097,24 @@ describe('friends', () => {
 				});
 			});
 		});
+	});
+
+	test('noDocs query parameter set to true should only return the total documents', (done) => {
+		request(app)
+			.get(`/users/${user1Id}/friends?noDocs=true&limit=15&page=1`)
+			.set('Accept', 'application/json')
+			.set('Authorization', `Bearer ${user1Jwt}`)
+			.expect('Content-Type', /json/)
+			.expect(bodyHasTotalUsersProperty)
+			.expect((res) => {
+				if (Object.keys(res.body).length !== 1) {
+					throw new Error('users#index - should only return total document');
+				}
+				if (res.body.totalUsers !== indexTotalUsers) {
+					throw new Error('users#index - totalUsers body property error.');
+				}
+			})
+			.expect(200, done);
 	});
 
 	describe('pagination', () => {

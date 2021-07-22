@@ -25,6 +25,21 @@ exports.index = [
 	},
 	async (req, res, next) => {
 		try {
+			const totalReactions = await Reaction.countDocuments({
+				post: req.params.postId,
+			}).exec();
+			if (req.query.noDocs) {
+				res.json({ totalReactions });
+			} else {
+				req.totalReactions = totalReactions;
+				next();
+			}
+		} catch (err) {
+			next(err);
+		}
+	},
+	async (req, res, next) => {
+		try {
 			const reactions = await Reaction.find({
 				post: req.params.postId,
 			})
@@ -33,10 +48,7 @@ exports.index = [
 				.sort({ updatedAt: -1 })
 				.populate('user')
 				.exec();
-			const totalReactions = await Reaction.countDocuments({
-				post: req.params.postId,
-			}).exec();
-			res.json({ reactions, totalReactions });
+			res.json({ reactions, totalReactions: req.totalReactions });
 		} catch (err) {
 			next(err);
 		}

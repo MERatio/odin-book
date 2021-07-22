@@ -36,6 +36,21 @@ exports.index = [
 	},
 	async (req, res, next) => {
 		try {
+			const totalComments = await Comment.countDocuments({
+				post: req.params.postId,
+			}).exec();
+			if (req.query.noDocs) {
+				res.json({ totalComments });
+			} else {
+				req.totalComments = totalComments;
+				next();
+			}
+		} catch (err) {
+			next(err);
+		}
+	},
+	async (req, res, next) => {
+		try {
 			const comments = await Comment.find({
 				post: req.params.postId,
 			})
@@ -44,10 +59,7 @@ exports.index = [
 				.sort({ updatedAt: -1 })
 				.populate('author')
 				.exec();
-			const totalComments = await Comment.countDocuments({
-				post: req.params.postId,
-			}).exec();
-			res.json({ comments, totalComments });
+			res.json({ comments, totalComments: req.totalComments });
 		} catch (err) {
 			next(err);
 		}

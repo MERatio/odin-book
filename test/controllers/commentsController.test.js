@@ -198,6 +198,26 @@ describe('index', () => {
 		});
 	});
 
+	test('noDocs query parameter set to true should only return the total documents', (done) => {
+		request(app)
+			.get(`/posts/${post1Id}/comments?noDocs=true&limit=15&page=1`)
+			.set('Accept', 'application/json')
+			.set('Authorization', `Bearer ${user1Jwt}`)
+			.expect('Content-Type', /json/)
+			.expect(bodyHasTotalCommentsProperty)
+			.expect((res) => {
+				if (Object.keys(res.body).length !== 1) {
+					throw new Error('comments#index - should only return total document');
+				}
+				if (res.body.totalComments !== indexTotalComments) {
+					throw new Error(
+						'comments#index - totalComments body property error.'
+					);
+				}
+			})
+			.expect(200, done);
+	});
+
 	describe('pagination', () => {
 		let firstCommentId;
 		let fifteenthCommentId;

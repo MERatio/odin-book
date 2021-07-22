@@ -66,21 +66,41 @@ exports.index = [
 				.distinct('requestor')
 				.exec();
 			const userIds = [req.currentUser._id, ...requesteesIds, ...requestorsIds];
+			req.userIds = userIds;
+			next();
+		} catch (err) {
+			next(err);
+		}
+	},
+	async (req, res, next) => {
+		try {
+			// Total count of users with no friendship with currentUser.
+			const totalUsers = await User.countDocuments({
+				_id: { $nin: req.userIds },
+			}).exec();
+			if (req.query.noDocs) {
+				res.json({ totalUsers });
+			} else {
+				req.totalUsers = totalUsers;
+				next();
+			}
+		} catch (err) {
+			next(err);
+		}
+	},
+	async (req, res, next) => {
+		try {
 			// Subset of users with no friendship with currentUser (users per page).
 			const users = await User.find()
 				.where('_id')
-				.nin(userIds)
+				.nin(req.userIds)
 				.skip(req.skip)
 				.limit(req.query.limit)
 				.sort({ updatedAt: -1 })
 				.exec();
-			// Total count of users with no friendship with currentUser.
-			const totalUsers = await User.countDocuments({
-				_id: { $nin: userIds },
-			}).exec();
 			res.json({
 				users,
-				totalUsers,
+				totalUsers: req.totalUsers,
 			});
 		} catch (err) {
 			next(err);
@@ -199,15 +219,34 @@ exports.friends = [
 	async (req, res, next) => {
 		try {
 			const friendsIds = await req.user.getFriendsIds();
+			req.friendsIds = friendsIds;
+			next();
+		} catch (err) {
+			next(err);
+		}
+	},
+	async (req, res, next) => {
+		try {
+			if (req.query.noDocs) {
+				res.json({ totalUsers: req.friendsIds.length });
+			} else {
+				next();
+			}
+		} catch (err) {
+			next(err);
+		}
+	},
+	async (req, res, next) => {
+		try {
 			const users = await User.find({})
 				.where('_id')
-				.in(friendsIds)
+				.in(req.friendsIds)
 				.skip(req.skip)
 				.limit(req.query.limit)
 				.sort({ updatedAt: -1 })
 				.populate('author')
 				.exec();
-			res.json({ users, totalUsers: friendsIds.length });
+			res.json({ users, totalUsers: req.friendsIds.length });
 		} catch (err) {
 			next(err);
 		}
