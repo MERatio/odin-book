@@ -119,7 +119,7 @@ function createUsers(cb) {
         nonMassCreatedUserCount += 1;
       },
     ];
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 31; i++) {
       tasks.push((callback) => {
         const firstName = faker.name.firstName();
         const lastName = faker.name.lastName();
@@ -167,9 +167,18 @@ function createFriendships(cb) {
 
   function createTasks() {
     const tasks = [];
-    for (let i = nonMassCreatedUserCount; i < users.length; i++) {
+    for (
+      let i = nonMassCreatedUserCount;
+      i < 22 + nonMassCreatedUserCount;
+      i++
+    ) {
       tasks.push((callback) => {
-        createFriendship(users[0], users[i], 'friends', callback);
+        createFriendship(
+          users[0],
+          users[i],
+          i < 11 + nonMassCreatedUserCount ? 'pending' : 'friends',
+          callback
+        );
       });
     }
     return tasks;
@@ -210,14 +219,6 @@ function createPosts(cb) {
           isLocal: true,
         });
         createPost(users[0], faker.lorem.paragraph(), picture, callback);
-      },
-      (callback) => {
-        const picture = new Picture({
-          ofModel: 'Post',
-          filename: faker.image.image(),
-          isLocal: false,
-        });
-        createPost(users[1], faker.lorem.paragraph(), picture, callback);
       },
     ];
     for (let i = 0; i < 10; i++) {
@@ -268,15 +269,12 @@ function createReactions(cb) {
   }
 
   function createTasks() {
-    const tasks = [
-      (callback) => {
-        createReaction(users[0], posts[1], 'like', callback);
-      },
-      (callback) => {
-        createReaction(users[1], posts[0], 'like', callback);
-      },
-    ];
-    for (let i = nonMassCreatedUserCount; i < users.length; i++) {
+    const tasks = [];
+    for (
+      let i = nonMassCreatedUserCount;
+      i < 11 + nonMassCreatedUserCount;
+      i++
+    ) {
       tasks.push((callback) => {
         createReaction(users[i], posts[0], 'like', callback);
       });
@@ -307,15 +305,12 @@ function createComments(cb) {
   }
 
   function createTasks() {
-    const tasks = [
-      (callback) => {
-        createComment(users[0], posts[1], faker.lorem.sentence(), callback);
-      },
-      (callback) => {
-        createComment(users[1], posts[0], faker.lorem.sentence(), callback);
-      },
-    ];
-    for (let i = nonMassCreatedUserCount; i < users.length; i++) {
+    const tasks = [];
+    for (
+      let i = nonMassCreatedUserCount;
+      i < 11 + nonMassCreatedUserCount;
+      i++
+    ) {
       tasks.push((callback) => {
         createComment(users[i], posts[0], faker.lorem.sentence(), callback);
       });
