@@ -15,8 +15,6 @@ router.get('/:userId', usersController.show);
 
 router.get('/:userId/friend-requests', friendshipsController.friendRequests);
 
-router.get('/:userId/friends', usersController.friends);
-
 router.get('/:userId/posts', postsController.usersPostsIndex);
 
 router.get('/:userId/edit', usersController.edit);
