@@ -24,7 +24,6 @@ const {
 let user1Id;
 let user1Jwt;
 let imagesDirFileInitialCount = 0;
-let indexTotalUsers = 0;
 
 beforeAll(async () => {
 	await mongoConfigTesting.connect();
@@ -45,7 +44,6 @@ beforeEach(async () => {
 		.expect(bodyHasUserProperty)
 		.expect(bodyHasJwtProperty)
 		.expect((res) => {
-			indexTotalUsers += 0;
 			user1Id = res.body.user._id;
 		})
 		.expect(201);
@@ -64,7 +62,6 @@ beforeEach(async () => {
 		.expect(200);
 });
 afterEach(async () => {
-	indexTotalUsers = 0;
 	await emptyDir(imagesPath, ['user.jpg', 'post.jpg']);
 	await mongoConfigTesting.clear();
 });
@@ -351,7 +348,7 @@ describe('index', () => {
 				if (Object.keys(res.body).length !== 1) {
 					throw new Error('users#index - should only return total document');
 				}
-				if (res.body.totalUsers !== indexTotalUsers) {
+				if (res.body.totalUsers !== 0) {
 					throw new Error('users#index - totalUsers body property error.');
 				}
 			})
@@ -359,6 +356,7 @@ describe('index', () => {
 	});
 
 	describe('pagination', () => {
+		let indexTotalUsers = 0;
 		let firstUserId;
 		let fifteenthUserId;
 		let twentyFirstUserId;
