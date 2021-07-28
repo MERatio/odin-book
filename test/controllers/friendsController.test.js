@@ -12,7 +12,11 @@ const {
 } = require('../assertionFunctions');
 
 let user1Id;
+let user2Id;
 let user1Jwt;
+let user2Jwt;
+let friendshipId;
+let user1TotalFriends = 0;
 
 beforeAll(async () => {
 	await mongoConfigTesting.connect();
@@ -35,6 +39,22 @@ beforeEach(async () => {
 		.expect(201);
 
 	await request(app)
+		.post('/users')
+		.send({
+			firstName: 'user2',
+			lastName: 'user2',
+			email: 'user2@example.com',
+			password: 'password123',
+			passwordConfirmation: 'password123',
+		})
+		.set('Accept', 'application/json')
+		.expect('Content-Type', /json/)
+		.expect(bodyHasUserProperty)
+		.expect(bodyHasJwtProperty)
+		.expect((res) => (user2Id = res.body.user._id))
+		.expect(201);
+
+	await request(app)
 		.post('/auth/local')
 		.send({
 			email: 'user1@example.com',
@@ -46,8 +66,50 @@ beforeEach(async () => {
 		.expect(bodyHasCurrentUserProperty)
 		.expect((res) => (user1Jwt = res.body.jwt))
 		.expect(200);
+
+	await request(app)
+		.post('/auth/local')
+		.send({
+			email: 'user2@example.com',
+			password: 'password123',
+		})
+		.set('Accept', 'application/json')
+		.expect('Content-Type', /json/)
+		.expect(bodyHasJwtProperty)
+		.expect(bodyHasCurrentUserProperty)
+		.expect((res) => (user2Jwt = res.body.jwt))
+		.expect(200);
+
+	// user2 send friend request to 1.
+	await request(app)
+		.post('/friendships')
+		.send({ requesteeId: user1Id })
+		.set('Accept', 'application/json')
+		.set('Authorization', `Bearer ${user2Jwt}`)
+		.expect('Content-Type', /json/)
+		.expect((res) => {
+			friendshipId = res.body.friendship._id;
+		})
+		.expect(201);
+
+	// user1 accepts user2's friend request.
+	await request(app)
+		.put(`/friendships/${friendshipId}`)
+		.set('Accept', 'application/json')
+		.set('Authorization', `Bearer ${user1Jwt}`)
+		.expect('Content-Type', /json/)
+		.expect(bodyHasFriendshipProperty)
+		.expect((res) => {
+			if (res.body.friendship.status !== 'friends') {
+				throw new Error('Friend request is not accepted.');
+			} else {
+				user1TotalFriends += 1;
+			}
+		})
+		.expect(200);
 });
 afterEach(async () => {
+	user1TotalFriends = 0;
 	await mongoConfigTesting.clear();
 });
 afterAll(async () => await mongoConfigTesting.close());
@@ -199,7 +261,7 @@ describe('index', () => {
 				if (Object.keys(res.body).length !== 1) {
 					throw new Error('users#index - should only return total document');
 				}
-				if (res.body.totalUsers !== 0) {
+				if (res.body.totalUsers !== user1TotalFriends) {
 					throw new Error('users#index - totalUsers body property error.');
 				}
 			})
@@ -207,7 +269,6 @@ describe('index', () => {
 	});
 
 	describe('pagination', () => {
-		let user1TotalFriends = 0;
 		let firstFriendId;
 		let fifteenthFriendId;
 		let twentyFirstFriendshipId;
@@ -334,6 +395,83 @@ describe('index', () => {
 					}
 				})
 				.expect(200, done);
+		});
+	});
+});
+
+describe('show', () => {
+	describe('body has err property', () => {
+		test('if JWT is not valid or not supplied', (done) => {
+			request(app)
+				.get(`/users/${user1Id}/friends/${user2Id}`)
+				.set('Accept', 'application/json')
+				.expect('Content-Type', /json/)
+				.expect(bodyHasErrProperty)
+				.expect(401, done);
+		});
+
+		test('if userId route parameter is not valid', (done) => {
+			request(app)
+				.get(`/users/${user1Id}/friends/${user2Id + '123'}`)
+				.set('Accept', 'application/json')
+				.set('Authorization', `Bearer ${user1Jwt}`)
+				.expect('Content-Type', /json/)
+				.expect(bodyHasErrProperty)
+				.expect(404, done);
+		});
+
+		test('if user does not exists', (done) => {
+			request(app)
+				.get(
+					`/users/${user1Id}/friends/${
+						user2Id.substring(0, user2Id.length - 3) + '123'
+					}`
+				)
+				.set('Accept', 'application/json')
+				.set('Authorization', `Bearer ${user1Jwt}`)
+				.expect('Content-Type', /json/)
+				.expect(bodyHasErrProperty)
+				.expect(404, done);
+		});
+	});
+
+	it('should get user information (except password) as user property', (done) => {
+		request(app)
+			.get(`/users/${user1Id}/friends/${user2Id}`)
+			.set('Accept', 'application/json')
+			.set('Authorization', `Bearer ${user1Jwt}`)
+			.expect('Content-Type', /json/)
+			.expect(bodyHasUserProperty)
+			.expect((res) => {
+				if (res.body.user._id !== user2Id) {
+					throw new Error('Did not get user information.');
+				}
+				const userPropertyNames = Object.keys(res.body.user);
+				if (userPropertyNames.includes('password')) {
+					throw new Error(
+						'(users#show) Password should not be included in user info.'
+					);
+				}
+			})
+			.expect(200, done);
+	});
+
+	describe("user's", () => {
+		describe('picture ', () => {
+			test('should be populated', (done) => {
+				request(app)
+					.get(`/users/${user1Id}/friends/${user2Id}`)
+					.set('Accept', 'application/json')
+					.set('Authorization', `Bearer ${user1Jwt}`)
+					.expect('Content-Type', /json/)
+					.expect(bodyHasUserProperty)
+					.expect((res) => {
+						if (!res.body.user.picture._id) {
+							throw new Error("user's picture is not populated");
+						}
+					})
+					.expect(200, done);
+			});
 		});
 	});
 });

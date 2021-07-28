@@ -57,3 +57,23 @@ exports.index = [
 		}
 	},
 ];
+
+// Get friends's profile information except password.
+exports.show = [
+	authenticated,
+	validMongoObjectIdRouteParams,
+	async (req, res, next) => {
+		try {
+			const user = await User.findById(req.params.friendId).exec();
+			if (user === null) {
+				const err = new Error('User not found.');
+				err.status = 404;
+				next(err);
+			} else {
+				res.json({ user });
+			}
+		} catch (err) {
+			next(err);
+		}
+	},
+];
