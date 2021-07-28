@@ -881,7 +881,7 @@ describe('show', () => {
 		});
 	});
 
-	it('should get own user information (except password) as user property', (done) => {
+	it('should get user information (except password) as user property', (done) => {
 		request(app)
 			.get(`/users/${user1Id}`)
 			.set('Accept', 'application/json')
@@ -890,12 +890,12 @@ describe('show', () => {
 			.expect(bodyHasUserProperty)
 			.expect((res) => {
 				if (res.body.user._id !== user1Id) {
-					throw new Error('Did not get own user information.');
+					throw new Error('Did not get user information.');
 				}
-				const ownUserPropertyNames = Object.keys(res.body.user);
-				if (ownUserPropertyNames.includes('password')) {
+				const userPropertyNames = Object.keys(res.body.user);
+				if (userPropertyNames.includes('password')) {
 					throw new Error(
-						'(users#show) Password should not included in own user info.'
+						'(users#show) Password should not be included in user info.'
 					);
 				}
 			})
