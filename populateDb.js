@@ -119,7 +119,7 @@ function createUsers(cb) {
         nonMassCreatedUserCount += 1;
       },
     ];
-    for (let i = 0; i < 31; i++) {
+    for (let i = 0; i < 33; i++) {
       tasks.push((callback) => {
         const firstName = faker.name.firstName();
         const lastName = faker.name.lastName();
